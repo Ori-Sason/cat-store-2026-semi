@@ -8,6 +8,12 @@
   ],
   "scripts": {
     "dev:be": "npm run dev -w backend",
-    "dev:fe": "npm run dev -w frontend"
+    "dev:fe": "npm run dev -w frontend",
+    "lint": "oxlint",
+    "format": "oxfmt '**/*.{ts,tsx,js,mjs}'"
+  },
+  "devDependencies": {
+    "oxfmt": "^0.68.0",
+    "oxlint": "^1.86.0"
   }
 }

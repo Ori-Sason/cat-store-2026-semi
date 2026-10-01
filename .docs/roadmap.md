@@ -15,7 +15,6 @@ Mark items `- [x]` as they're done, and keep the **Current** line above up to da
 
 Temporary home. These move to `.claude/rules/` (see `FIX.md`), and then this section is deleted.
 
-- `async/await` + `try/catch` everywhere.
 - The FE imports shared types straight from `@cat-store/shared`, with no FE re-export file.
 - Backend-only DB types (`CatDoc` with `_id: ObjectId`) live in `backend/models/`.
 - `shared/` code: erasable TS syntax only. No mongodb, React or DOM imports. Platform
