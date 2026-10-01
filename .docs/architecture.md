@@ -79,6 +79,10 @@ Env: `node --env-file=.env.local`, no dotenv. Prod needs `JWT_SECRET`, Mongo URL
   `backend/.env.test`. Supertest calls the Express app in memory.
   Why: mocking the native driver tests the mock, not the queries. A second database is free,
   so no extra container is needed.
+- **The app never connects as root.** `db-local/init/create-app-users.js` creates one user
+  per database, each with `readWrite` on its own database only (`cats` → dev, `catsTest` → tests).
+  Why: least privilege. And since tests wipe their database, a test config pointing at `cats`
+  by mistake fails on auth instead of deleting dev data.
 - **E2E with the Playwright CLI, from Part 3.** Headless Chromium on the VM, no browser-driving MCP.
   Why: before auth there's no full flow worth covering end to end. The CLI only reports
   pass/fail, while driving a browser step by step costs many tokens.

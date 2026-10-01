@@ -6,6 +6,8 @@ services:
       - "127.0.0.1:27017:27017"
     volumes:
       - mongo_cats:/data/db
+      # runs only when the volume is empty; see init/create-app-users.js
+      - ./init:/docker-entrypoint-initdb.d:ro
     env_file:
       - ./.env
     healthcheck:
