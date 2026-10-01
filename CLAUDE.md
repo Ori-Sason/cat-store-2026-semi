@@ -18,16 +18,16 @@ script. Stack and decisions live in `.docs/architecture.md`.
 ## Repository Layout
 - `.docs/` — hand-written product and architecture docs, plus `roadmap.md` (parts
   with status, open questions). Never create a `docs/` directory.
-- `.claude/rules/` — always-on constraints, imported below. Short by design.
+- `.claude/rules/` — always-on constraints, listed below. Short by design.
 - `.claude/skills/` — procedural know-how, loaded on demand by task.
 - `.claude/agents/` — sub-agent definitions.
 - `.claude/hooks/` — guardrail hooks, wired by `.claude/settings.json`.
 - `shared/` — `@cat-store/shared`, the wire contract: types, Zod schemas, constants,
-  `catFilterService`. No build step, erasable TS only, no DOM/Node/mongodb imports.
-- `frontend/` — Vite + React + TS SPA. `react-router` v8, Zustand, axios with relative
-  `/api/...` URLs only (Vite dev proxy, no CORS). SCSS. Not Next.js.
-- `backend/` — Express 5 + native `mongodb` driver (no Mongoose). route → controller →
-  service layers. Node runs `.ts` directly (type stripping), env via `--env-file`.
+  `catFilterService`. No build step.
+- `frontend/` — Vite + React + TS SPA. `react-router` v8, Zustand, axios, SCSS.
+  Not Next.js.
+- `backend/` — Express 5 + native `mongodb` driver (no Mongoose). Node runs `.ts`
+  directly (type stripping), env via `--env-file`.
 - `db-local/` — docker-compose for the local MongoDB.
 - `learning-notes/` — the user's study notes. Edit only when asked.
 
@@ -35,7 +35,15 @@ npm workspaces: install from the root, run with `npm run <script> -w <pkg>`
 (shortcuts: `npm run dev:fe`, `npm run dev:be`).
 
 ## Rules — always in context
-<!-- TODO: @-import .claude/rules/*.md once they exist -->
+Claude Code auto-loads `.claude/rules/*.md`, so they're listed here, not `@`-imported.
+Files with `paths:` frontmatter load only when matching files are touched.
+- `code-style.md` — formatting, lint, async/await.
+- `naming.md` — routes, DB, code, files, domain terms.
+- `git-workflow.md` — approval gates, branches, commits.
+- `shared.md` (`shared/**`) — erasable TS, no platform imports, models vs services.
+- `frontend.md` (`frontend/**`) — shared imports, relative `/api` URLs.
+- `ui-and-styling.md` (`frontend/**`) — SCSS structure, tokens, class names.
+- `backend.md` (`backend/**`) — layering, DB types, server-set fields.
 
 ## Skills — load when the task calls for it
 <!-- TODO: table of skill → when to use -->
