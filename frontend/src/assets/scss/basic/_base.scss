@@ -1,0 +1,50 @@
+@use '../setup/' as *;
+
+body {
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  font-family: Monserrat;
+  background-color: $primary-clr-200;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* FORM INPUTS */
+button {
+  cursor: pointer;
+  font-family: inherit;
+  font-size: inherit;
+}
+
+input,
+select,
+textarea {
+  padding: 0.5em;
+  border-radius: 4px;
+  border: 1px solid black;
+
+  &:focus-visible {
+    outline: 1px solid black;
+  }
+}
+
+textarea {
+  font-family: inherit;
+}
+
+/* FIX - radiobutton and scroll bars*/

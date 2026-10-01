@@ -1,0 +1,13 @@
+{
+  "name": "cat-store-2026-semi",
+  "private": true,
+  "workspaces": [
+    "shared",
+    "frontend",
+    "backend"
+  ],
+  "scripts": {
+    "dev:be": "npm run dev -w backend",
+    "dev:fe": "npm run dev -w frontend"
+  }
+}

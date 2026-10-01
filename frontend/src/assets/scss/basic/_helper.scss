@@ -1,0 +1,58 @@
+@use '../setup/' as *;
+@use 'sass:color';
+
+.clean-list {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+
+.center-text {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.bold {
+  font-weight: bold;
+}
+
+.main-btn {
+  padding: 0.5em 1em;
+  color: $primary-clr-100;
+  border: none;
+  border-radius: 6px;
+  box-shadow: 0 0 5px $primary-clr-300;
+  background-color: $primary-clr-500;
+
+  &:hover {
+    background-color: color.scale($primary-clr-500, $lightness: -5%);
+  }
+}
+
+.sub-btn {
+  padding: 0.5em;
+  border: none;
+  color: $primary-clr-500;
+  border: 1px solid $primary-clr-500;
+  border-radius: 6px;
+  background-color: $primary-clr-100;
+  box-shadow: 0 0 5px $primary-clr-300;
+
+  &:hover {
+    background-color: color.scale($primary-clr-100, $lightness: 100%);
+  }
+}
+
+.danger-btn {
+  background-color: $clr-danger;
+
+  &:hover {
+    background-color: color.scale($clr-danger, $lightness: -5%);
+  }
+}
+
+/* DEBUG */
+.debug > * {
+  border: 1px solid red;
+}

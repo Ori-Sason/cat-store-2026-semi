@@ -1,0 +1,18 @@
+@use 'sass:color';
+
+/* COLOR PALETTE */
+$primary-clr-100: rgb(240, 248, 255);
+$primary-clr-200: rgb(203, 227, 252);
+$primary-clr-300: rgb(147, 197, 253);
+$primary-clr-500: rgb(59, 130, 246);
+$primary-clr-600: rgb(37, 99, 235);
+$primary-clr-800: rgb(30, 64, 175);
+$primary-clr-850: rgb(23, 50, 140);
+$primary-clr-900: rgb(17, 39, 105);
+
+$clr-pink: rgb(255, 218, 255);
+$clr-dark-pink: color.scale($clr-pink, $lightness: -20%);
+
+$clr-danger: rgb(233, 24, 24);
+$clr-grey: rgb(207, 205, 205);
+$clr-black: rgb(33, 33, 33);

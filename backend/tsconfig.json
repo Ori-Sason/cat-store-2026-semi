@@ -1,0 +1,33 @@
+{
+  // Visit https://aka.ms/tsconfig to read more about this file
+  "compilerOptions": {
+    // Environment Settings
+    // See also https://aka.ms/tsconfig/module
+    "module": "nodenext",
+    "target": "esnext",
+    "types": ["node"],
+    "lib": ["esnext"],
+
+    // Stricter Typechecking Options
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+
+    // Style Options
+    // "noImplicitReturns": true,
+    // "noImplicitOverride": true,
+    // "noUnusedLocals": true,
+    // "noUnusedParameters": true,
+    // "noFallthroughCasesInSwitch": true,
+    // "noPropertyAccessFromIndexSignature": true,
+
+    // Recommended Options
+    "strict": true,
+    "noEmit": true, // tsc only checks; Node runs the .ts
+    "allowImportingTsExtensions": true, // lets you write './x.ts'
+    "erasableSyntaxOnly": true,    // errors on enum/namespace/param-props
+    "verbatimModuleSyntax": true, // forces `import type` for type-only imports
+    "noUncheckedSideEffectImports": true,
+    "moduleDetection": "force", //treats every file as a module, so two files that each declare const router don't clash as globals
+    "skipLibCheck": true,
+  }
+}

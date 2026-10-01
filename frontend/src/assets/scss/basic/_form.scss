@@ -1,0 +1,9 @@
+@use '../setup/' as *;
+
+input[aria-invalid='true'] {
+  border-color: $clr-danger;
+}
+
+.field-error {
+  color: $clr-danger;
+}

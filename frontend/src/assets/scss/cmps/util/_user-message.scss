@@ -1,0 +1,80 @@
+@use '../../setup/' as *;
+@use 'sass:color';
+
+.user-message {
+  min-width: 20rem;
+  position: fixed;
+  bottom: 20px;
+  right: -10px;
+  transform: translateX(100%);
+  transition: var(--close-anim-duration);
+  opacity: 0;
+  border-radius: 6px;
+  overflow: hidden;
+
+  &.open {
+    right: 20px;
+    transform: translateX(0);
+    opacity: 1;
+  }
+
+  .content-container {
+    padding: 0.5rem 1rem;
+    display: flex;
+    flex-direction: column;
+    color: $primary-clr-100;
+    background-color: $clr-black;
+
+    pre {
+      margin: 0;
+      font-family: inherit;
+    }
+
+    .close-btn {
+      align-self: flex-end;
+
+      height: 2rem;
+      aspect-ratio: 1/1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+
+      &:hover {
+        background-color: color.scale($clr-black, $lightness: 10%);
+      }
+    }
+  }
+
+  .timer {
+    position: relative;
+    height: 0.5rem;
+    background-color: $clr-black;
+
+    .thumb {
+      position: absolute;
+      bottom: 0;
+      height: 100%;
+      width: 100%;
+
+      border-radius: 0 6px 6px 0;
+      animation: shrinkAndVanish var(--display-anim-duration) linear forwards;
+
+      &.success {
+        background-color: green;
+      }
+
+      &.error {
+        background-color: $clr-danger;
+      }
+    }
+  }
+}
+
+@keyframes shrinkAndVanish {
+  100% {
+    width: 0;
+  }
+}

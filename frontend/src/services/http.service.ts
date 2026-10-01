@@ -1,0 +1,78 @@
+import Axios from 'axios'
+import { ERROR_CODES, type ApiErrorBody } from '@cat-store/shared'
+import { ApiError } from '../models/api-error'
+// import { useLoggedInUserStore } from '../store/logged-in-user.store'
+
+const BASE_URL = '/api'
+
+const axios = Axios.create({
+  withCredentials: true, // relevant on cross-origin (irrelevant for this project since we use Vite's proxy)
+})
+
+export const httpService = {
+  get<T>(endpoint: string, data?: unknown): Promise<T> {
+    return ajax(endpoint, 'GET', data)
+  },
+  post<T>(endpoint: string, data?: unknown): Promise<T> {
+    return ajax(endpoint, 'POST', data)
+  },
+  put<T>(endpoint: string, data?: unknown): Promise<T> {
+    return ajax(endpoint, 'PUT', data)
+  },
+  delete<T>(endpoint: string, data?: unknown): Promise<T> {
+    return ajax(endpoint, 'DELETE', data)
+  },
+}
+
+const ajax = async <T>(endpoint: string, method = 'GET', data: unknown = null): Promise<T> => {
+  try {
+    const res = await axios({
+      url: `${BASE_URL}/${endpoint}`,
+      method,
+      data: method === 'GET' ? undefined : data,
+      params: method === 'GET' ? data : null,
+    })
+    return res.data
+  } catch (err) {
+    console.log(
+      `Had Issues ${method}ing to the backend, endpoint: ${endpoint}, with data:`,
+      describeData(data),
+    )
+    console.dir(err)
+    if (Axios.isAxiosError(err) && err.response?.status === 401) {
+      // useLoggedInUserStore.getState().clearUser()
+    }
+    throw toApiError(err)
+  }
+}
+
+const toApiError = (err: unknown): ApiError => {
+  if (!Axios.isAxiosError(err)) return new ApiError(0, 'UNKNOWN', String(err))
+
+  // Request went out but nothing came back (server down, offline, CORS)
+  if (!err.response) return new ApiError(0, 'NETWORK_ERROR', err.message)
+
+  const { status, data } = err.response
+  if (isApiErrorBody(data)) {
+    return new ApiError(status, data.code, data.message, data.fieldErrors, data.requestId)
+  }
+
+  // A response that isn't ours - e.g. an HTML 502 page from a proxy
+  return new ApiError(status, 'UNKNOWN', err.message)
+}
+
+const isApiErrorBody = (data: unknown): data is ApiErrorBody => {
+  return (
+    typeof data === 'object' &&
+    data !== null &&
+    'code' in data &&
+    typeof data.code === 'string' &&
+    (ERROR_CODES as readonly string[]).includes(data.code)
+  )
+}
+
+const describeData = (data: unknown) => {
+  if (data instanceof URLSearchParams) return data.toString()
+  if (data instanceof FormData) return [...data.entries()]
+  return data
+}
