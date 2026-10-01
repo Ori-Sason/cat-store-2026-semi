@@ -39,6 +39,13 @@ The order of BE and FE can go either way, as long as the DB comes first.
 - SCSS from the start: nesting, variables, mixins, functions.
 - Responsive on desktop, tablet and mobile as each feature is built.
 
+## Testing (ongoing, not a separate stage)
+
+- [ ] Remove `passWithNoTests` (root `vitest.config.ts`, and `--passWithNoTests` in the
+   `shared`, `frontend` and `backend` test scripts) once every package has at least one test.
+   Until then it keeps an empty package from failing the run. After that, it would hide a broken
+   `include` pattern that finds 0 tests.
+
 ## Part 2: Dashboard + About page
 
 - [ ] 1. Dashboard with charts: price per label, in-stock % per label. **The chart library is still open.**
@@ -63,6 +70,12 @@ The order of BE and FE can go either way, as long as the DB comes first.
    | Edit / delete   | ❌    | Own cats only   | ✅    |
 
 - [ ] 6. Backend middleware enforces these rules. The FE hides buttons and pages the user can't use.
+- [ ] 7. E2E with Playwright. This is the first point with a full flow, so no E2E before it.
+   - Install the test runner with headless Chromium only (`npx playwright install --with-deps chromium`).
+     It runs on the VM from the CLI. No browser-driving MCP.
+   - Specs live in `frontend/e2e/`, excluded from Vitest's `include`.
+   - Start with a few critical flows: browse → filter → cat details, sign up → log in, admin cat CRUD.
+   - After that, add E2E only when asked, or when a part adds a new end-to-end flow.
 
 ## Part 4: Reviews + user page
 

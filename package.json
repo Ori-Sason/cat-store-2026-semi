@@ -10,10 +10,13 @@
     "dev:be": "npm run dev -w backend",
     "dev:fe": "npm run dev -w frontend",
     "lint": "oxlint",
-    "format": "oxfmt '**/*.{ts,tsx,js,mjs}'"
+    "format": "oxfmt '**/*.{ts,tsx,js,mjs}'",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "devDependencies": {
     "oxfmt": "^0.68.0",
-    "oxlint": "^1.86.0"
+    "oxlint": "^1.86.0",
+    "vitest": "^5.0.2"
   }
 }
