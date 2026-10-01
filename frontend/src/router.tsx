@@ -18,7 +18,8 @@ export const router = createBrowserRouter([
               // pages with app-header
               {
                 path: '/',
-                element: <div>EMPTY</div>},
+                element: <div>EMPTY</div>,
+              },
               {
                 path: '*',
                 loader: () => {

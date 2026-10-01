@@ -44,7 +44,10 @@ const SECRET_FILE_PATTERN = new RegExp(`(^|[/\\\\])${ENV_SUFFIX}`, 'i')
 // `.env`, so it gets blocked. Backslash has to stay a separator for `type
 // frontend\.env` to be caught, and over-blocking a search beats under-blocking
 // a read. Search for the unescaped string instead.
-const SECRET_IN_COMMAND_PATTERN = new RegExp(`(^|[\\s"'=;|&(:<>{},])(?:[\\w.\\\\/-]*[\\\\/])?${ENV_SUFFIX}`, 'i')
+const SECRET_IN_COMMAND_PATTERN = new RegExp(
+  `(^|[\\s"'=;|&(:<>{},])(?:[\\w.\\\\/-]*[\\\\/])?${ENV_SUFFIX}`,
+  'i',
+)
 
 // Only fields that NAME a target are inspected. Deliberately not scanning the
 // whole tool_input: a Write's `content` can legitimately mention an env file
@@ -59,7 +62,9 @@ const PATH_FIELDS = ['file_path', 'path', 'notebook_path', 'glob']
 const TOOL_PATH_FIELDS = { Glob: ['pattern'] }
 
 let input = ''
-process.stdin.on('data', chunk => { input += chunk })
+process.stdin.on('data', (chunk) => {
+  input += chunk
+})
 process.stdin.on('end', () => {
   let payload
   try {
@@ -75,8 +80,8 @@ process.stdin.on('end', () => {
   const fields = [...PATH_FIELDS, ...(TOOL_PATH_FIELDS[payload?.tool_name] ?? [])]
 
   const blockedPath = fields
-    .map(field => toolInput[field])
-    .find(value => typeof value === 'string' && SECRET_FILE_PATTERN.test(value))
+    .map((field) => toolInput[field])
+    .find((value) => typeof value === 'string' && SECRET_FILE_PATTERN.test(value))
 
   // A shell command can reach a secret file without ever naming a path field:
   // `cat .env`, `grep -r KEY .env`, `type frontend\.env`.
@@ -86,7 +91,7 @@ process.stdin.on('end', () => {
   if (blockedPath || blockedCommand) {
     console.error(
       `[guardrail] Blocked ${payload?.tool_name ?? 'tool'} call touching an env/secret file` +
-      `${blockedPath ? `: ${blockedPath}` : ''}. Use .env.example instead.`
+        `${blockedPath ? `: ${blockedPath}` : ''}. Use .env.example instead.`,
     )
     process.exit(2)
   }

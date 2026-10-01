@@ -14,14 +14,16 @@
 
 // A short flag token containing `letter`, e.g. -f, -rf, -fr, -Rf. Anchored to
 // whitespace so a path like `some-folder` doesn't count as a flag.
-const shortFlag = letters => `(?:^|\\s)-[a-zA-Z]*[${letters}][a-zA-Z]*(?=\\s|$)`
+const shortFlag = (letters) => `(?:^|\\s)-[a-zA-Z]*[${letters}][a-zA-Z]*(?=\\s|$)`
 // Stay within one command segment, so `rm -r x; git status -f` isn't joined up.
 const SAME_CMD = '[^|;&\\n]*'
 
 const DENY_PATTERNS = [
   // --- Filesystem ---
   // rm with both recursive and force, in any spelling: -rf, -fr, -r -f, --recursive --force
-  new RegExp(`\\brm\\b(?=${SAME_CMD}(?:${shortFlag('rR')}|\\s--recursive\\b))(?=${SAME_CMD}(?:${shortFlag('f')}|\\s--force\\b))`),
+  new RegExp(
+    `\\brm\\b(?=${SAME_CMD}(?:${shortFlag('rR')}|\\s--recursive\\b))(?=${SAME_CMD}(?:${shortFlag('f')}|\\s--force\\b))`,
+  ),
 
   // --- Git ---
   // force push: --force, --force-with-lease, -f, or a +refspec (`git push origin +main`)
@@ -30,7 +32,9 @@ const DENY_PATTERNS = [
   new RegExp(`\\bgit\\b${SAME_CMD}\\sreset\\b${SAME_CMD}\\s--hard\\b`),
   new RegExp(`\\bgit\\s+clean\\b${SAME_CMD}(?:${shortFlag('f')}|\\s--force\\b)`),
   // Discarding uncommitted work: `checkout -- <path>`, `checkout .`, `checkout -f`
-  new RegExp(`\\bgit\\s+checkout\\b${SAME_CMD}(?:\\s--(?=\\s|$)|\\s\\.(?=\\s|$)|${shortFlag('f')}|\\s--force\\b)`),
+  new RegExp(
+    `\\bgit\\s+checkout\\b${SAME_CMD}(?:\\s--(?=\\s|$)|\\s\\.(?=\\s|$)|${shortFlag('f')}|\\s--force\\b)`,
+  ),
   // `git restore` overwrites the working tree unless it's only unstaging
   // (--staged / -S). Adding --worktree / -W brings the overwrite back.
   new RegExp(`\\bgit\\s+restore\\b(?!${SAME_CMD}(?:\\s--staged\\b|${shortFlag('S')}))`),
@@ -43,18 +47,22 @@ const DENY_PATTERNS = [
 
   // --- MongoDB (mongosh --eval, docker exec ... mongosh) ---
   /\bdropDatabase\s*\(/,
-  /\.drop\s*\(\s*\)/,                                // db.<collection>.drop()
-  /\b(deleteMany|remove)\s*\(\s*(\{\s*\})?\s*\)/,    // empty filter = wipe the collection
-  /\bmongorestore\b.*\s--drop\b/,                     // drops each collection before restoring
+  /\.drop\s*\(\s*\)/, // db.<collection>.drop()
+  /\b(deleteMany|remove)\s*\(\s*(\{\s*\})?\s*\)/, // empty filter = wipe the collection
+  /\bmongorestore\b.*\s--drop\b/, // drops each collection before restoring
 
   // --- Docker volumes (where local DB data actually lives) ---
-  new RegExp(`\\bdocker(?:\\s+|-)compose\\b${SAME_CMD}\\bdown\\b${SAME_CMD}(?:${shortFlag('v')}|\\s--volumes\\b)`),
+  new RegExp(
+    `\\bdocker(?:\\s+|-)compose\\b${SAME_CMD}\\bdown\\b${SAME_CMD}(?:${shortFlag('v')}|\\s--volumes\\b)`,
+  ),
   /\bdocker\s+volume\s+(rm|prune)\b/,
   new RegExp(`\\bdocker\\s+system\\s+prune\\b${SAME_CMD}\\s--volumes\\b`),
 ]
 
 let input = ''
-process.stdin.on('data', chunk => { input += chunk })
+process.stdin.on('data', (chunk) => {
+  input += chunk
+})
 process.stdin.on('end', () => {
   let payload
   try {
@@ -64,7 +72,7 @@ process.stdin.on('end', () => {
   }
 
   const command = payload?.tool_input?.command ?? ''
-  const match = DENY_PATTERNS.find(pattern => pattern.test(command))
+  const match = DENY_PATTERNS.find((pattern) => pattern.test(command))
 
   if (match) {
     console.error(`[guardrail] Blocked command matching ${match}: ${command}`)

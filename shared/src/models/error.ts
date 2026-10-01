@@ -3,14 +3,14 @@
 export const ERROR_CODES = [
   'VALIDATION_FAILED',
   'ROUTE_NOT_FOUND',
-  
+
   'CAT_NOT_FOUND',
-  
+
   'INVALID_CREDENTIALS',
   'USERNAME_TAKEN',
   'UNAUTHORIZED',
   'FORBIDDEN',
-  
+
   'INTERNAL',
 ] as const
 

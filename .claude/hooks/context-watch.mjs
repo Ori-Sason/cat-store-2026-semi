@@ -25,7 +25,7 @@ const BUDGETS = [
   ['claude-haiku-4-5', 200_000], // real window is 200K - budget is the wall
 ]
 const DEFAULT_BUDGET = 600_000
-const WARN_AT = 0.80          // inject a hint once 80% of the budget is used
+const WARN_AT = 0.8 // inject a hint once 80% of the budget is used
 const TAIL_BYTES = 512 * 1024 // transcripts reach tens of MB; only the tail is scanned
 
 function budgetFor(model) {
@@ -36,9 +36,11 @@ function budgetFor(model) {
 // Cached and uncached input both occupy the window. output_tokens do not -
 // they become the next turn's input and are already counted there.
 function contextOf(usage) {
-  return (usage.input_tokens ?? 0)
-    + (usage.cache_read_input_tokens ?? 0)
-    + (usage.cache_creation_input_tokens ?? 0)
+  return (
+    (usage.input_tokens ?? 0) +
+    (usage.cache_read_input_tokens ?? 0) +
+    (usage.cache_creation_input_tokens ?? 0)
+  )
 }
 
 // Scans backwards for the newest main-thread turn that reports usage, and the
@@ -116,8 +118,7 @@ process.stdin.on('end', () => {
   const transcript = data.transcript_path
   // The transcript file is named after the session, so it stands in for a
   // missing session_id.
-  const sessionId = data.session_id
-    ?? (transcript && path.basename(transcript, '.jsonl'))
+  const sessionId = data.session_id ?? (transcript && path.basename(transcript, '.jsonl'))
 
   let turn = null
   try {
@@ -150,7 +151,7 @@ process.stdin.on('end', () => {
   const hint =
     `[context-watch] Context is ~${Math.round(pct * 100)}% full. ` +
     'Before continuing: finish the current step, write a short handoff ' +
-    'summary to HANDOFF.md (goal, what\'s done, next steps, key files), ' +
+    "summary to HANDOFF.md (goal, what's done, next steps, key files), " +
     'then tell the user to run /clear and resume from that file.'
 
   // No process.exit() after this: exiting can truncate a pipe mid-write.
@@ -161,6 +162,6 @@ process.stdin.on('end', () => {
         hookEventName: 'UserPromptSubmit',
         additionalContext: hint,
       },
-    })
+    }),
   )
 })

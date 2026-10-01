@@ -20,16 +20,22 @@
 import path from 'path'
 
 const ALLOWED_WRITE_PREFIXES = {
-  frontend: ['frontend/', '.orchestrate/api-contract.yaml', '.orchestrate/frontend-agent-report.md'],
+  frontend: [
+    'frontend/',
+    '.orchestrate/api-contract.yaml',
+    '.orchestrate/frontend-agent-report.md',
+  ],
   backend: ['backend/', '.orchestrate/backend-agent-report.md'],
   // QA writes its report plus tests — it may add coverage but never feature source.
   // Both suites live under frontend/tests/ (unit/ and e2e/); `tests/` covers a
   // future backend suite at the repo root.
-  qa: ['.orchestrate/qa-report.md', 'frontend/tests/', 'tests/']
+  qa: ['.orchestrate/qa-report.md', 'frontend/tests/', 'tests/'],
 }
 
 let input = ''
-process.stdin.on('data', chunk => { input += chunk })
+process.stdin.on('data', (chunk) => {
+  input += chunk
+})
 process.stdin.on('end', () => {
   const role = process.env.AGENT_ROLE
   const allowedPrefixes = role && ALLOWED_WRITE_PREFIXES[role]
@@ -57,12 +63,12 @@ process.stdin.on('end', () => {
 
   // A write that escapes the repo entirely is out of every role's lane.
   const escapesRepo = filePath.startsWith('../') || path.isAbsolute(filePath)
-  const isAllowed = !escapesRepo && allowedPrefixes.some(prefix => filePath.startsWith(prefix))
+  const isAllowed = !escapesRepo && allowedPrefixes.some((prefix) => filePath.startsWith(prefix))
 
   if (!isAllowed) {
     console.error(
       `[guardrail] "${role}" agent tried to write outside its allowed paths: "${filePath}". ` +
-      `Allowed: ${allowedPrefixes.join(', ')}`
+        `Allowed: ${allowedPrefixes.join(', ')}`,
     )
     process.exit(2)
   }
@@ -71,8 +77,6 @@ process.stdin.on('end', () => {
 })
 
 function toRepoRelative(rawPath, projectRoot) {
-  const normalized = path.isAbsolute(rawPath)
-    ? path.relative(projectRoot, rawPath)
-    : rawPath
+  const normalized = path.isAbsolute(rawPath) ? path.relative(projectRoot, rawPath) : rawPath
   return normalized.replace(/\\/g, '/').replace(/^\.\//, '')
 }

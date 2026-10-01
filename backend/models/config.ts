@@ -1,14 +1,13 @@
 interface MongoDbConfig {
-    mongoDbURL: string
-    dbName: string
+  mongoDbURL: string
+  dbName: string
 }
 
 interface JwtConfig {
-    jwtSecret: string
+  jwtSecret: string
 }
 
-
-export interface Config { 
-    mongoDbConfig: MongoDbConfig,
-    jwtConfig: JwtConfig
+export interface Config {
+  mongoDbConfig: MongoDbConfig
+  jwtConfig: JwtConfig
 }
