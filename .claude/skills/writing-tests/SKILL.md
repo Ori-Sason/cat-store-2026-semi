@@ -1,0 +1,62 @@
+---
+name: writing-tests
+description: Write or review unit, integration, and end-to-end tests. Use when adding tests for a new feature, writing a regression test for a bug fix, deciding what needs coverage, or judging whether a test suite is good enough to ship. Covers coverage areas, test structure, fixtures, flakiness rules, and how to run each suite in this repo.
+---
+
+# Writing Tests
+
+How to write tests. When to write them lives in `.claude/rules/testing.md`.
+
+## Principles
+- Test **behavior**, not implementation details.
+- Keep tests deterministic and isolated.
+- Fast feedback first: unit tests, integration where needed, e2e for critical flows.
+
+## What to cover
+- Domain logic: filtering, sorting, schema validation.
+- API request validation and error responses (`ApiErrorBody` shape, `code`, status).
+- Auth and ownership rules: guest / owner / admin on cats and reviews (Part 3 on).
+- Server-set fields: the client can't set `_id`, `createdAt`, `updatedAt` or `ownerId`.
+- User-facing failure flows for key features.
+
+## Structure
+- Clear setup → action → assertion phases.
+- Descriptive names that state the expected behavior.
+- One primary assertion intent per test.
+- No shared mutable state between tests, and no reliance on execution order.
+
+## Data and fixtures
+- Minimal fixtures, focused on the scenario.
+- Prefer factories/builders over large static fixtures.
+- Never embed real secrets, keys, or credentials in test data.
+
+## Reliability
+- No flaky tests on mainline branches.
+- Mock only unstable external dependencies. Don't mock the `mongodb` driver. Backend
+  tests hit the real test DB.
+- Freeze or override time and randomness when behavior depends on them.
+
+## When a test fails
+- Fix the code, unless the behavior changed on purpose. Then update or delete the test.
+
+## This repository
+
+| Suite | Location | Run |
+|---|---|---|
+| All | — | `npm test` (root, runs every project) |
+| Shared | `shared/src/**/*.test.ts` | `npm test -w shared` (Vitest, node) |
+| Frontend | `frontend/src/**/*.test.{ts,tsx}` | `npm test -w frontend` (Vitest + RTL, jsdom) |
+| Backend | `backend/**/*.test.ts` | `npm test -w backend` (Vitest + Supertest, node) |
+| E2E | `frontend/e2e/` | Not set up yet. Playwright arrives in Part 3. |
+
+- Unit tests sit next to the file they test: `cat.service.ts` → `cat.service.test.ts`.
+- Vitest runs with `globals: false`, so import explicitly:
+  `import { describe, expect, it } from 'vitest'`.
+- Frontend: `src/test-setup.ts` registers the jest-dom matchers (`toBeInTheDocument()`,
+  `toHaveValue()`, ...) and runs RTL `cleanup` after each test. Don't repeat either in a test file.
+- Backend: Supertest calls the Express app in memory, with no open port. Tests use a separate
+  database (`MONGODB_DATABASE` in `backend/.env.test`) in the same `db-local` container, and
+  wipe it freely. Never point tests at the dev database.
+- Tooling is installed and configured. Don't reinstall or reconfigure it without a plan that
+  calls for it.
+- Keep output short when running suites, e.g. `npm test -- --reporter=dot`.

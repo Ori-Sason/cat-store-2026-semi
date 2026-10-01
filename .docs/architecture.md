@@ -31,6 +31,10 @@ prod: browser ──▶ Express (static FE + /api + socket.io) ──▶ MongoDB
 | backend | @cat-store/shared, express 5, mongodb, zod | typescript, @types/node, @types/express |
 | backend, Part 3 | jsonwebtoken, bcrypt, cookie-parser | matching @types/* |
 | Part 5 | socket.io (BE), socket.io-client (FE) | |
+| root | | vitest |
+| frontend, tests | | @testing-library/react, @testing-library/jest-dom, @testing-library/user-event, jsdom |
+| backend, tests | | supertest, @types/supertest |
+| frontend, Part 3 | | @playwright/test (headless Chromium) |
 
 - Validation: `zod`, with the schemas shared by FE and BE through `@cat-store/shared`.
 - Lint/format: `oxlint`, `oxfmt`.
@@ -65,6 +69,19 @@ Env: `node --env-file=.env.local`, no dotenv. Prod needs `JWT_SECRET`, Mongo URL
   - Same-origin cookies (auth from Part 3) need no `cors({ credentials })` / `withCredentials`.
   - `ws: true` forwards WebSocket upgrades too, for Socket.io in Part 5.
   - CORS would only be needed for split hosting: FE on one domain, API on another.
+
+- **Tests: Vitest everywhere, one root run.** The root `vitest.config.ts` lists `shared`,
+  `frontend` and `backend` as projects, so `npm test` runs all three. Each package can still
+  run alone with `npm test -w <pkg>`. Unit tests sit next to their source as `*.test.ts(x)`.
+  Why: Vitest reuses the Vite config, so the FE tests get the same plugins and SCSS paths as
+  the app. It runs TS directly, matching the no-build-step setup.
+- **Backend tests hit a real MongoDB.** Same `db-local` container, separate database, set via
+  `backend/.env.test`. Supertest calls the Express app in memory.
+  Why: mocking the native driver tests the mock, not the queries. A second database is free,
+  so no extra container is needed.
+- **E2E with the Playwright CLI, from Part 3.** Headless Chromium on the VM, no browser-driving MCP.
+  Why: before auth there's no full flow worth covering end to end. The CLI only reports
+  pass/fail, while driving a browser step by step costs many tokens.
 
 Open questions live in `roadmap.md`. When one is decided, record it here.
 

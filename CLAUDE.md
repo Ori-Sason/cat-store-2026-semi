@@ -40,6 +40,7 @@ Files with `paths:` frontmatter load only when matching files are touched.
 - `code-style.md` — formatting, lint, async/await.
 - `naming.md` — routes, DB, code, files, domain terms.
 - `git-workflow.md` — approval gates, branches, commits.
+- `testing.md` — when to write tests, E2E timing, done = tests + lint pass.
 - `shared.md` (`shared/**`) — erasable TS, no platform imports, models vs services.
 - `frontend.md` (`frontend/**`) — shared imports, relative `/api` URLs.
 - `ui-and-styling.md` (`frontend/**`) — SCSS structure, tokens, class names.
