@@ -24,7 +24,6 @@ Temporary home. These move to `.claude/rules/` (see `FIX.md`), and then this sec
   `SortByDirection`, `DynamicObj`). `shared/src/services/` holds logic
   (`catFilterService.paramsToFilter`: query string → `SortFilterMap`, used by both the FE loader
   and the BE `GET /api/cats` controller).
-- Git history should show real step-by-step progress, not one big commit.
 
 ## Part 1: DB + backend + frontend skeleton (CRUD over cats)
 
