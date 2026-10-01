@@ -27,7 +27,6 @@
 - `isAdmin`
 	- Canonical meaning: admin flag on a user.
 	- Avoid: `role`, `admin`.
-	- Rule: booleans take an `is` prefix (`isInStock`).
 - `auth` vs `login` / `signup` / `logout`
 	- Canonical meaning: `auth` is the area (routes, service, middleware).
 	  `login` / `signup` / `logout` are the actions.
@@ -61,18 +60,6 @@
 	  `AlsStore`).
 	- Rule: short form only.
 	- Avoid: `context`, `ctx`, `requestContext`.
-
-### Code conventions
-- `*Service`
-	- Canonical meaning: a module of related functions (`catService`, `authService`).
-	- Rule: file name `<thing>.service.ts`.
-- `_` prefix
-	- Canonical meaning: module-private helper, not exported (`_toErrorResponse`,
-	  `_adminOnly`).
-- unit suffix on constants
-	- Canonical meaning: the unit lives in the name (`SESSION_TTL_MS`).
-	- Rule: required whenever a number has a unit. JWT `expiresIn` is seconds,
-	  cookie `maxAge` is ms, so the suffix is what keeps them apart.
 
 ## Naming Alignment
 - Keep this glossary aligned with naming decisions in `../.claude/rules/naming.md`.

@@ -16,7 +16,7 @@ prod: browser ──▶ Express (static FE + /api + socket.io) ──▶ MongoDB
   HTTP via axios with relative URLs only (`/api/...`).
 - `backend/` — Express 5, route → controller → service layers, native `mongodb`
   driver (no Mongoose). Node runs `.ts` directly (type stripping).
-- Collections: `cat`, `user`, `review`. Every doc has server-set `createdAt`/`updatedAt`.
+- Collections: `cats`, `users`, `reviews`. Every doc has server-set `createdAt`/`updatedAt`.
 
 ## Auth Boundary
 - JWT in an httpOnly cookie (`loginToken`). Backend middleware enforces
@@ -49,7 +49,7 @@ Env: `node --env-file=.env.local`, no dotenv. Prod needs `JWT_SECRET`, Mongo URL
   Why: no build step means no stale build output and no watch process. The cost is
   erasable-only TS syntax and no DOM/Node types in shared's tsconfig.
 - **The query-string → filter parsing lives in shared** (`catFilterService.paramsToFilter`),
-  and both the FE loader and the BE `GET /api/cat` controller call it.
+  and both the FE loader and the BE `GET /api/cats` controller call it.
   Why: one parser, so the FE and BE can't disagree on what a URL means.
 - **Server-set timestamps:** every doc (cats, users, reviews) has `createdAt`/`updatedAt`, set
   by the server with `Date.now()`. `updatedAt` changes on every update. Client-sent values are

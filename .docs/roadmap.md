@@ -23,21 +23,21 @@ Temporary home. These move to `.claude/rules/` (see `FIX.md`), and then this sec
   `Cat` with `_id: string`, Zod `catSchema`, `FILTER_LABELS`/`CatLabelFilter`, `SortFilterMap`,
   `SortByDirection`, `DynamicObj`). `shared/src/services/` holds logic
   (`catFilterService.paramsToFilter`: query string → `SortFilterMap`, used by both the FE loader
-  and the BE `GET /api/cat` controller).
+  and the BE `GET /api/cats` controller).
 - Git history should show real step-by-step progress, not one big commit.
 
 ## Part 1: DB + backend + frontend skeleton (CRUD over cats)
 
 No localStorage and no JSON-file stage. The app runs on a real DB from day one.
 
-- [x] 1. Set up MongoDB with a `cat` collection.
+- [x] 1. Set up MongoDB with a `cats` collection.
 - [ ] 2. Cat shape: `{ _id, name, price, labels: [...], isInStock, imgUrl, createdAt, updatedAt }`.
    No `ownerId` yet. It's added in Part 3, when users exist.
    `imgUrl` is optional in the form, and the user can leave it empty. If it's empty, the backend fills in a default image link before saving. There's no upload. The field is a URL only.
 - [ ] 3. Express backend split into service, controller and route layers.
 - [ ] 4. Build the routes in Postman order: GET list (with filterBy) → GET by id → DELETE → POST → PUT.
 - [ ] 5. No CORS. Use the Vite dev proxy (`/api` → `:8000`, with `ws: true`). The FE calls relative
-   URLs only (`/api/cat`). Why: see `architecture.md` → Decisions.
+   URLs only (`/api/cats`). Why: see `architecture.md` → Decisions.
 - [ ] 6. Zod validation on backend requests, using the shared `catSchema`. The schema covers only the fields the client may send. `_id`, `createdAt`, `updatedAt` (and later `ownerId`) are set by the server, and Zod strips unknown keys, so the client can't set them.
 - [ ] 7. Scaffold `frontend/` with a CLI (Vite + React + TS). `catService` calls the API over AJAX (axios).
 - [ ] 8. `cat-app` page (smart, routable), made of `cat-list`, `cat-preview` and `cat-filter`.
@@ -61,7 +61,7 @@ The order of BE and FE can go either way, as long as the DB comes first.
 
 ## Part 3: Users + auth
 
-- [ ] 1. `user` collection: `{ _id, fullname, username, password, isAdmin, createdAt, updatedAt }`, with one seeded admin.
+- [ ] 1. `users` collection: `{ _id, fullname, username, password, isAdmin, createdAt, updatedAt }`, with one seeded admin.
    `password` is a bcrypt hash, never the plain text.
 - [ ] 2. Login and signup pages.
 - [ ] 3. Auth uses a JWT stored in a cookie.
@@ -81,7 +81,7 @@ The order of BE and FE can go either way, as long as the DB comes first.
 
 ## Part 4: Reviews + user page
 
-- [ ] 1. `review` collection: `{ _id, userId, catId, content, createdAt, updatedAt }`.
+- [ ] 1. `reviews` collection: `{ _id, userId, catId, content, createdAt, updatedAt }`.
 - [ ] 2. An aggregation (`$lookup`) that joins review + cat + user into one shape.
 - [ ] 3. On `cat-details`: a list of that cat's reviews plus a form to add one.
 - [ ] 4. Rules for reviews:

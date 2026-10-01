@@ -9,7 +9,7 @@ interface IndexDef {
 }
 
 const INDEXES: IndexDef[] = [
-  { collection: 'user', key: { username: 1 }, options: { unique: true } },
+  { collection: 'users', key: { username: 1 }, options: { unique: true } },
 ]
 
 let client: MongoClient | null = null
