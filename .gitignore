@@ -27,3 +27,6 @@ dist-ssr
 .env*
 !.env.example
 
+
+# Claude session handoff (written by context-watch hook)
+HANDOFF.md
