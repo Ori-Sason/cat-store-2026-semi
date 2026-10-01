@@ -11,25 +11,11 @@ and the cat seed. Cat routes haven't been started.
 
 Mark items `- [x]` as they're done, and keep the **Current** line above up to date.
 
-## Carried-over decisions — coding conventions
-
-Temporary home. These move to `.claude/rules/` (see `FIX.md`), and then this section is deleted.
-
-- The FE imports shared types straight from `@cat-store/shared`, with no FE re-export file.
-- Backend-only DB types (`CatDoc` with `_id: ObjectId`) live in `backend/models/`.
-- `shared/` code: erasable TS syntax only. No mongodb, React or DOM imports. Platform
-  objects are typed structurally (e.g. `QueryParamsReader` instead of `URLSearchParams`).
-- `shared/src/models/` holds types plus their constants and schemas (`CAT_LABELS`/`CatLabel`,
-  `Cat` with `_id: string`, Zod `catSchema`, `FILTER_LABELS`/`CatLabelFilter`, `SortFilterMap`,
-  `SortByDirection`, `DynamicObj`). `shared/src/services/` holds logic
-  (`catFilterService.paramsToFilter`: query string → `SortFilterMap`, used by both the FE loader
-  and the BE `GET /api/cats` controller).
-
 ## Part 1: DB + backend + frontend skeleton (CRUD over cats)
 
 No localStorage and no JSON-file stage. The app runs on a real DB from day one.
 
-- [x] 1. Set up MongoDB with a `cats` collection.
+- [ ] 1. Set up MongoDB with a `cats` collection.
 - [ ] 2. Cat shape: `{ _id, name, price, labels: [...], isInStock, imgUrl, createdAt, updatedAt }`.
    No `ownerId` yet. It's added in Part 3, when users exist.
    `imgUrl` is optional in the form, and the user can leave it empty. If it's empty, the backend fills in a default image link before saving. There's no upload. The field is a URL only.
