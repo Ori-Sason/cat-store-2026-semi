@@ -12,7 +12,7 @@ export const UserMessage: React.FC = () => {
   const [closedMsgId, setClosedMsgId] = useState<number | null>(null)
   const isOpen = !!userMsg && userMsg.id !== closedMsgId
 
-  const compnentTimeoutId = useRef(0)
+  const componentTimeoutId = useRef(0)
   const openTimeoutId = useRef(0)
 
   useEffect(() => {
@@ -22,12 +22,12 @@ export const UserMessage: React.FC = () => {
       setClosedMsgId(userMsg.id)
     }, DISPLAY_ANIM_MS)
 
-    compnentTimeoutId.current = setTimeout(() => {
+    componentTimeoutId.current = setTimeout(() => {
       useUserMsgStore.getState().clearMsg()
     }, DISPLAY_ANIM_MS + CLOSE_ANIM_MS)
 
     return () => {
-      clearTimeout(compnentTimeoutId.current)
+      clearTimeout(componentTimeoutId.current)
       clearTimeout(openTimeoutId.current)
     }
   }, [userMsg])
@@ -36,8 +36,8 @@ export const UserMessage: React.FC = () => {
     ev.stopPropagation()
     clearTimeout(openTimeoutId.current)
     setClosedMsgId(userMsg!.id)
-    clearTimeout(compnentTimeoutId.current)
-    compnentTimeoutId.current = setTimeout(
+    clearTimeout(componentTimeoutId.current)
+    componentTimeoutId.current = setTimeout(
       () => useUserMsgStore.getState().clearMsg(),
       CLOSE_ANIM_MS,
     )
