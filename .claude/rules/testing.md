@@ -19,4 +19,4 @@ When to write tests. How to write them lives in the `writing-tests` skill.
 - Run the Playwright CLI headless. Never drive a browser through an MCP.
 
 ## Done means
-- `npm test` passes alongside `npm run lint` before a task is finished.
+- `npm test`, `npm run lint` and `npm run typecheck` pass before a task is finished.

@@ -10,6 +10,7 @@
     "dev:be": "npm run dev -w backend",
     "dev:fe": "npm run dev -w frontend",
     "lint": "oxlint",
+    "typecheck": "npm run typecheck --workspaces",
     "format": "oxfmt '**/*.{ts,tsx,js,mjs}'",
     "test": "vitest run",
     "test:watch": "vitest"
