@@ -120,6 +120,8 @@ Before the first real deploy. This turns into a `deploy` skill once Part 5 start
 ## Extras (optional)
 
 - [ ] Pagination on the cat list.
+- [ ] CI: GitHub Actions runs lint, typecheck and tests on every push and PR, with a `mongo`
+   service container for the backend tests. Most useful before the Part 5 deploy.
 
 ## Open questions
 
