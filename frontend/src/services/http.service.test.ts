@@ -1,0 +1,108 @@
+import { AxiosError, type AxiosResponse } from 'axios'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { ApiError } from '../models/api-error'
+import { httpService } from './http.service'
+
+// The service calls the instance from Axios.create() - swap it for a mock,
+// keep the real isAxiosError so the error mapping runs as in the app
+const { mockRequest } = vi.hoisted(() => ({ mockRequest: vi.fn() }))
+vi.mock('axios', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('axios')>()
+  return {
+    ...actual,
+    default: { create: () => mockRequest, isAxiosError: actual.isAxiosError },
+  }
+})
+
+function _axiosError(response?: { status: number; data: unknown }) {
+  return new AxiosError(
+    'Request failed',
+    undefined,
+    undefined,
+    undefined,
+    response as AxiosResponse | undefined,
+  )
+}
+
+describe('httpService', () => {
+  beforeEach(() => {
+    mockRequest.mockReset()
+    // the service logs every failed call - keep test output clean
+    vi.spyOn(console, 'log').mockImplementation(() => {})
+    vi.spyOn(console, 'dir').mockImplementation(() => {})
+  })
+
+  it('returns the response data', async () => {
+    mockRequest.mockResolvedValue({ data: [{ name: 'Mitzi' }] })
+
+    expect(await httpService.get('cats')).toEqual([{ name: 'Mitzi' }])
+  })
+
+  it('sends GET data as query params', async () => {
+    mockRequest.mockResolvedValue({ data: [] })
+    await httpService.get('cats', { name: 'Mitzi' })
+
+    expect(mockRequest).toHaveBeenCalledWith(
+      expect.objectContaining({ url: '/api/cats', params: { name: 'Mitzi' }, data: undefined }),
+    )
+  })
+
+  it('sends POST data as the body', async () => {
+    mockRequest.mockResolvedValue({ data: {} })
+    await httpService.post('cats', { name: 'Mitzi' })
+
+    expect(mockRequest).toHaveBeenCalledWith(
+      expect.objectContaining({ method: 'POST', data: { name: 'Mitzi' }, params: null }),
+    )
+  })
+
+  it('turns an API error body into an ApiError', async () => {
+    const fieldErrors = { name: ['Required'] }
+    mockRequest.mockRejectedValue(
+      _axiosError({
+        status: 400,
+        data: { code: 'VALIDATION_FAILED', message: 'Bad cat', fieldErrors, requestId: 'req-1' },
+      }),
+    )
+
+    await expect(httpService.post('cats', {})).rejects.toMatchObject({
+      status: 400,
+      code: 'VALIDATION_FAILED',
+      message: 'Bad cat',
+      fieldErrors,
+      requestId: 'req-1',
+    })
+  })
+
+  it('throws NETWORK_ERROR with status 0 when no response comes back', async () => {
+    mockRequest.mockRejectedValue(_axiosError())
+
+    await expect(httpService.get('cats')).rejects.toMatchObject({
+      status: 0,
+      code: 'NETWORK_ERROR',
+    })
+  })
+
+  it('throws UNKNOWN for a response that is not an API error body', async () => {
+    mockRequest.mockRejectedValue(_axiosError({ status: 502, data: '<html>Bad Gateway</html>' }))
+
+    await expect(httpService.get('cats')).rejects.toMatchObject({ status: 502, code: 'UNKNOWN' })
+  })
+
+  it('throws UNKNOWN for a body with a code the API does not define', async () => {
+    mockRequest.mockRejectedValue(
+      _axiosError({ status: 418, data: { code: 'I_AM_A_TEAPOT', message: 'Nope' } }),
+    )
+
+    await expect(httpService.get('cats')).rejects.toMatchObject({ status: 418, code: 'UNKNOWN' })
+  })
+
+  it('throws UNKNOWN with status 0 for an error that is not from axios', async () => {
+    mockRequest.mockRejectedValue(new TypeError('boom'))
+
+    const promise = httpService.get('cats')
+
+    await expect(promise).rejects.toBeInstanceOf(ApiError)
+    await expect(promise).rejects.toMatchObject({ status: 0, code: 'UNKNOWN' })
+  })
+})
