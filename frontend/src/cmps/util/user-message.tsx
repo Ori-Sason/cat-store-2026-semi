@@ -32,7 +32,7 @@ export const UserMessage: React.FC = () => {
     }
   }, [userMsg])
 
-  const onCloseMsg = (ev: React.MouseEvent<HTMLDivElement>) => {
+  const onCloseMsg = (ev: React.MouseEvent<HTMLButtonElement>) => {
     ev.stopPropagation()
     clearTimeout(openTimeoutId.current)
     setClosedMsgId(userMsg!.id)
@@ -60,9 +60,9 @@ export const UserMessage: React.FC = () => {
       }
     >
       <div className="content-container">
-        <div className="close-btn" onClick={onCloseMsg}>
+        <button type="button" className="close-btn" aria-label="Close" onClick={onCloseMsg}>
           X
-        </div>
+        </button>
         <pre className="content">{userMsg?.txt}</pre>
       </div>
       <div className="timer">

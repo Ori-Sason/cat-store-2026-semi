@@ -26,9 +26,13 @@ a {
 
 /* FORM INPUTS */
 button {
+  padding: 0;
   cursor: pointer;
   font-family: inherit;
   font-size: inherit;
+  color: inherit;
+  background-color: transparent;
+  border: none;
 }
 
 input,
