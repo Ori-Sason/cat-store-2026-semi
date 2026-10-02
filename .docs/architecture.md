@@ -79,6 +79,12 @@ Env: `node --env-file=.env.local`, no dotenv. Prod needs `JWT_SECRET`, Mongo URL
   `backend/.env.test`. Supertest calls the Express app in memory.
   Why: mocking the native driver tests the mock, not the queries. A second database is free,
   so no extra container is needed.
+- **DB setup is opt-in per test file.** A file that touches Mongo calls `setupTestDb()`
+  (`backend/test/test-db.helper.ts`). It empties collections with `deleteMany` before each test.
+  Why: files without DB work never connect. `deleteMany` keeps the indexes, which a drop would lose.
+- **Backend test files run one at a time** (`fileParallelism: false`).
+  Why: they share `catsTest`, so a parallel file's wipe would delete another file's data.
+  If the suite gets slow, move to one DB per worker. That needs the `catStoreTest` user widened.
 - **The app never connects as root.** `db-local/init/create-app-users.js` creates one user
   per database, each with `readWrite` on its own database only (`cats` → dev, `catsTest` → tests).
   Why: least privilege. And since tests wipe their database, a test config pointing at `cats`
