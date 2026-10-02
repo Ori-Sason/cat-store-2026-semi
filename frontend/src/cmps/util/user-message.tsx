@@ -3,8 +3,8 @@ import { useEffect, useRef, useState } from 'react'
 import { useUserMsgStore } from '../../store/user-msg.store'
 import { useNavigation } from 'react-router'
 
-const CLOSE_ANIM_MS = 700
-const DISPLAY_ANIM_MS = 5000
+export const CLOSE_ANIM_MS = 700
+export const DISPLAY_ANIM_MS = 5000
 
 export const UserMessage: React.FC = () => {
   const navigatorState = useNavigation().state
@@ -63,7 +63,9 @@ export const UserMessage: React.FC = () => {
         <button type="button" className="close-btn" aria-label="Close" onClick={onCloseMsg}>
           X
         </button>
-        <pre className="content">{userMsg?.txt}</pre>
+        <pre className="content" role="status">
+          {userMsg?.txt}
+        </pre>
       </div>
       <div className="timer">
         <div className={`thumb ${userMsg?.type ?? ''}`} key={userMsg?.id}></div>

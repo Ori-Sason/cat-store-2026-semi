@@ -199,3 +199,4 @@
   // Safe "fire-and-forget" call that satisfies ESLint
   void trackAnalytics(); 
   ```
+* HTML `aria-label` isn't an identifier. It's the text a screen reader speaks, like a visible button label, so it reads "Close". The test has to match it exactly, because string name matching is case-sensitive. This is why we use sentence capitalize.
