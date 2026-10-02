@@ -35,6 +35,9 @@ How to write tests. When to write them lives in `.claude/rules/testing.md`.
 - Mock only unstable external dependencies. Don't mock the `mongodb` driver. Backend
   tests hit the real test DB.
 - Freeze or override time and randomness when behavior depends on them.
+- With `vi.useFakeTimers()`, user-event hangs: its async wrapper waits on a `setTimeout` the
+  fake clock never fires. Use `fireEvent` for clicks, or
+  `vi.useFakeTimers({ shouldAdvanceTime: true })` when you need user-event (typing, focus).
 
 ## When a test fails
 - Fix the code, unless the behavior changed on purpose. Then update or delete the test.
