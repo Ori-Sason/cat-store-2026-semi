@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest'
+import { setupTestDb } from '../test/test-db.helper.ts'
 import { mongoService } from './mongodb.service.ts'
+
+setupTestDb()
 
 describe('mongoService', () => {
   it('connects to the test database', async () => {
@@ -12,7 +15,7 @@ describe('mongoService', () => {
     const collection = await mongoService.getCollection('smokeTest')
     await collection.insertOne({ isLeftover: true })
 
-    // the setup file's beforeEach wipe runs before the next test reads it
+    // setupTestDb's beforeEach wipe runs before the next test reads it
     expect(await collection.countDocuments()).toBe(1)
   })
 

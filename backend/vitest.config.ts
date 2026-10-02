@@ -12,8 +12,7 @@ export default defineProject({
     name: 'backend',
     environment: 'node',
     env: testEnv,
-    setupFiles: ['./test-setup.ts'],
-    // every file shares one test DB, so a parallel file's wipe would delete this one's data
+    // every DB file shares one test DB, so a parallel file's wipe would delete this one's data
     fileParallelism: false,
   },
 })

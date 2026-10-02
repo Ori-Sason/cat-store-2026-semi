@@ -57,6 +57,9 @@ How to write tests. When to write them lives in `.claude/rules/testing.md`.
 - Backend: Supertest calls the Express app in memory, with no open port. Tests use a separate
   database (`MONGODB_DATABASE` in `backend/.env.test`) in the same `db-local` container, and
   wipe it freely. Never point tests at the dev database.
+- Backend DB tests call `setupTestDb()` (`backend/test/test-db.helper.ts`) at the top level of
+  the file. It refuses to run unless the DB is `catsTest`, empties every collection before
+  each test, and closes the client after the file. Files that don't touch the DB skip it.
 - Tooling is installed and configured. Don't reinstall or reconfigure it without a plan that
   calls for it.
 - Keep output short when running suites, e.g. `npm test -- --reporter=dot`.
