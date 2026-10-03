@@ -9,13 +9,14 @@ Stack, dependencies and the **why** behind decisions live in `architecture.md`.
 **Current:** Part 1. The skeleton is in place: the BE server (error middleware, ALS, Mongo
 connection), the FE scaffold (router, layout, HTTP and error services, user messages), the
 shared user, error and cat models (`catSchema` with tests), and Vitest in every package.
-Seed data is in `backend/scripts/data/cats.json`, but there's no seed script or cat route yet.
+`npm run seed -w backend` wipes and re-seeds the `cats` collection from
+`backend/scripts/data/cats.json`, adding random labels and a robohash `imgUrl`. There's no cat route yet.
 
 ## Part 1: DB + backend + frontend skeleton (CRUD over cats)
 
 No localStorage and no JSON-file stage. The app runs on a real DB from day one.
 
-- [ ] 1. Set up MongoDB with a `cats` collection.
+- [x] 1. Set up MongoDB with a `cats` collection.
 - [x] 2. Cat shape: `{ _id, name, price, labels: [...], isInStock, imgUrl, createdAt, updatedAt }`.
    No `ownerId` yet. It's added in Part 3, when users exist.
    `imgUrl` is optional in the form, and the user can leave it empty. If it's empty, the backend fills in a default image link before saving. There's no upload. The field is a URL only.
