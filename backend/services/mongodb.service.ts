@@ -8,9 +8,7 @@ interface IndexDef {
   options?: CreateIndexesOptions
 }
 
-const INDEXES: IndexDef[] = [
-  { collection: 'users', key: { username: 1 }, options: { unique: true } },
-]
+const INDEXES: IndexDef[] = []
 
 let client: MongoClient | null = null
 // Cache the promise, not the resolved Db - it's assigned synchronously,

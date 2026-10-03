@@ -10,11 +10,7 @@ const mongoDbConfig = {
   mongoDbURL: requireEnv('MONGODB_URI'),
   dbName: requireEnv('MONGODB_DATABASE'),
 }
-const jwtConfig = {
-  jwtSecret: requireEnv('JWT_SECRET'),
-}
 
 export const config: Config = {
   mongoDbConfig,
-  jwtConfig,
 }

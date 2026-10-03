@@ -11,20 +11,20 @@ const axios = Axios.create({
 
 export const httpService = {
   get<T>(endpoint: string, data?: unknown): Promise<T> {
-    return ajax(endpoint, 'GET', data)
+    return _ajax(endpoint, 'GET', data)
   },
   post<T>(endpoint: string, data?: unknown): Promise<T> {
-    return ajax(endpoint, 'POST', data)
+    return _ajax(endpoint, 'POST', data)
   },
   put<T>(endpoint: string, data?: unknown): Promise<T> {
-    return ajax(endpoint, 'PUT', data)
+    return _ajax(endpoint, 'PUT', data)
   },
   delete<T>(endpoint: string, data?: unknown): Promise<T> {
-    return ajax(endpoint, 'DELETE', data)
+    return _ajax(endpoint, 'DELETE', data)
   },
 }
 
-const ajax = async <T>(endpoint: string, method = 'GET', data: unknown = null): Promise<T> => {
+const _ajax = async <T>(endpoint: string, method = 'GET', data: unknown = null): Promise<T> => {
   try {
     const res = await axios({
       url: `${BASE_URL}/${endpoint}`,
@@ -36,24 +36,24 @@ const ajax = async <T>(endpoint: string, method = 'GET', data: unknown = null): 
   } catch (err) {
     console.log(
       `Had Issues ${method}ing to the backend, endpoint: ${endpoint}, with data:`,
-      describeData(data),
+      _describeData(data),
     )
     console.dir(err)
     if (Axios.isAxiosError(err) && err.response?.status === 401) {
       // useLoggedInUserStore.getState().clearUser()
     }
-    throw toApiError(err)
+    throw _toApiError(err)
   }
 }
 
-const toApiError = (err: unknown): ApiError => {
+const _toApiError = (err: unknown): ApiError => {
   if (!Axios.isAxiosError(err)) return new ApiError(0, 'UNKNOWN', String(err))
 
   // Request went out but nothing came back (server down, offline, CORS)
   if (!err.response) return new ApiError(0, 'NETWORK_ERROR', err.message)
 
   const { status, data } = err.response
-  if (isApiErrorBody(data)) {
+  if (_isApiErrorBody(data)) {
     return new ApiError(status, data.code, data.message, data.fieldErrors, data.requestId)
   }
 
@@ -61,7 +61,7 @@ const toApiError = (err: unknown): ApiError => {
   return new ApiError(status, 'UNKNOWN', err.message)
 }
 
-const isApiErrorBody = (data: unknown): data is ApiErrorBody => {
+const _isApiErrorBody = (data: unknown): data is ApiErrorBody => {
   return (
     typeof data === 'object' &&
     data !== null &&
@@ -71,7 +71,7 @@ const isApiErrorBody = (data: unknown): data is ApiErrorBody => {
   )
 }
 
-const describeData = (data: unknown) => {
+const _describeData = (data: unknown) => {
   if (data instanceof URLSearchParams) return data.toString()
   if (data instanceof FormData) return [...data.entries()]
   return data
