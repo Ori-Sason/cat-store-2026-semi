@@ -10,7 +10,9 @@ Stack, dependencies and the **why** behind decisions live in `architecture.md`.
 connection), the FE scaffold (router, layout, HTTP and error services, user messages), the
 shared user, error and cat models (`catSchema` with tests), and Vitest in every package.
 `npm run seed -w backend` wipes and re-seeds the `cats` collection from
-`backend/scripts/data/cats.json`, adding random labels and a robohash `imgUrl`. There's no cat route yet.
+`backend/scripts/data/cats.json`, adding random labels and a robohash `imgUrl`.
+The read routes are in (`backend/api/cat/`): `GET /api/cats` with filterBy (parsed by the shared
+`catFilterService.paramsToFilter`) and `GET /api/cats/:id`. Next: DELETE → POST → PUT with Zod validation.
 
 ## Part 1: DB + backend + frontend skeleton (CRUD over cats)
 

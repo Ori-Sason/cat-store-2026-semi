@@ -1,6 +1,6 @@
 import { ObjectId } from 'mongodb'
 import request from 'supertest'
-import { beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Cat } from '@cat-store/shared'
 import { app } from '../../app.ts'
 import { CAT_COLLECTION, type CatDoc } from '../../models/cat.ts'
@@ -102,5 +102,42 @@ describe('GET /api/cats', () => {
       'bella',
       'tom',
     ])
+  })
+})
+
+describe('GET /api/cats/:id', () => {
+  beforeEach(() => {
+    // 404s are logged as warnings by the error handler - keep test output clean
+    vi.spyOn(console, 'warn').mockImplementation(() => {})
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  it('returns the cat', async () => {
+    const cat = _buildCat({ name: 'Mitzi' })
+    const collection = await mongoService.getCollection<CatDoc>(CAT_COLLECTION)
+    await collection.insertOne(cat)
+
+    const res = await request(app).get(`/api/cats/${cat._id.toHexString()}`)
+
+    expect(res.status).toBe(200)
+    expect(res.body).toEqual({ ...cat, _id: cat._id.toHexString() })
+  })
+
+  it('returns 404 CAT_NOT_FOUND for an id that does not exist', async () => {
+    const res = await request(app).get(`/api/cats/${new ObjectId().toHexString()}`)
+
+    expect(res.status).toBe(404)
+    expect(res.body).toMatchObject({ code: 'CAT_NOT_FOUND' })
+    expect(res.body.requestId).toEqual(expect.any(String))
+  })
+
+  it('returns 404 CAT_NOT_FOUND for a malformed id, not 500', async () => {
+    const res = await request(app).get('/api/cats/twelve chars')
+
+    expect(res.status).toBe(404)
+    expect(res.body).toMatchObject({ code: 'CAT_NOT_FOUND' })
   })
 })

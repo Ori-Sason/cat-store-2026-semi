@@ -10,3 +10,8 @@ export async function getCats(req: Request, res: Response) {
   const cats = await catService.query(filterBy)
   res.json(cats)
 }
+
+export async function getCatById(req: Request<{ id: string }>, res: Response) {
+  const cat = await catService.getById(req.params.id)
+  res.json(cat)
+}
