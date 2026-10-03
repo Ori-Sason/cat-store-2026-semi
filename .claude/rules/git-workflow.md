@@ -3,6 +3,9 @@
 ## Approval gates
 - Commit, merge and push only after the user explicitly approves. Settings enforce this
   with `ask` rules: a denied prompt means "not yet", so don't retry.
+- Ask before every single commit. Show the diff summary and the proposed message, then
+  wait for an OK for that commit. Approving a plan like "one commit per test" is not
+  approval to make those commits.
 
 ## Branches
 - Do implementation work on a dedicated branch, never on `main`.

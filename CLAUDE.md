@@ -7,20 +7,19 @@ script. Stack and decisions live in `.docs/architecture.md`.
 
 ## Security
 - Never commit or expose secrets (JWT secret, Mongo credentials, `.env*` values).
-  `backend/.env.local`, `backend/.env.prod`, `db-local/.env` are local-only. Only
-  `.env.example` files are committed.
+  Every `.env*` file is local-only, except `.env.example` templates.
 
 ## Guardrails
 - Hooks live in `.claude/hooks/` and only run if wired in `.claude/settings.json`.
-- Don't duplicate permission or hook rules in other docs. If an instruction conflicts
-  with a hook, the hook wins.
+- Settings and hooks are the source of truth for permissions and guardrails. Other docs
+  may point to them in a line, but don't restate their rules. If an instruction
+  conflicts with a hook, the hook wins.
 
 ## Repository Layout
 - `.docs/` — hand-written product and architecture docs, plus `roadmap.md` (parts
   with status, open questions). Never create a `docs/` directory.
 - `.claude/rules/` — always-on constraints, listed below. Short by design.
 - `.claude/skills/` — procedural know-how, loaded on demand by task.
-- `.claude/agents/` — sub-agent definitions.
 - `.claude/hooks/` — guardrail hooks, wired by `.claude/settings.json`.
 - `shared/` — `@cat-store/shared`, the wire contract: types, Zod schemas, constants,
   `catFilterService`. No build step.
@@ -40,14 +39,15 @@ Files with `paths:` frontmatter load only when matching files are touched.
 - `code-style.md` — formatting, lint, async/await.
 - `naming.md` — routes, DB, code, files, domain terms.
 - `git-workflow.md` — approval gates, branches, commits.
-- `testing.md` — when to write tests, E2E timing, done = tests + lint pass.
+- `testing.md` — when to write tests, E2E timing, done = tests + lint + typecheck pass.
 - `shared.md` (`shared/**`) — erasable TS, no platform imports, models vs services.
 - `frontend.md` (`frontend/**`) — shared imports, relative `/api` URLs.
 - `ui-and-styling.md` (`frontend/**`) — SCSS structure, tokens, class names.
 - `backend.md` (`backend/**`) — layering, DB types, server-set fields.
 
 ## Skills — load when the task calls for it
-<!-- TODO: table of skill → when to use -->
+- `writing-tests` — how to write and run tests: structure, the test DB helper, mocking,
+  per-suite commands. Load it before adding or reviewing tests.
 
 ## Product and Domain
 - Product definition: `.docs/product-definition.md`.
@@ -59,11 +59,17 @@ Files with `paths:` frontmatter load only when matching files are touched.
   shapes change, or when the plan diverges.
 
 ## Calibration
-Background: `.claude/user-background.md`. Skip 101-level Docker/K8s/AWS/Git/Linux/
-networking/JS-async explanations. Don't extend that skip-list to React, Express,
-TS types, MongoDB (incl. aggregation), SCSS, or Socket.io. Explain those at the
-depth asked.
+Know who you're talking to. The user is a full-stack engineer (JS/TS, React, Express,
+MongoDB, SQL) who recently added DevOps (Docker, K8s, AWS, CI/CD, Terraform). This
+project is also practice, so explanations are welcome. Build on what they already know
+instead of re-teaching from scratch: skip the 101 level, start from the mechanism, and
+go as deep as asked. Courses, completion levels and projects:
+`.claude/user-background.md`. Read it when an explanation needs that context.
 
 ## Library docs
 Use the context7 MCP for fast-moving libraries (react-router 8, Express 5, zod 4,
 Zustand, Socket.io, Vite) instead of relying on training-data recall.
+
+## Update Triggers
+- Update this file when the repo layout, stack, workspace scripts, or the list of rules
+  and skills changes.

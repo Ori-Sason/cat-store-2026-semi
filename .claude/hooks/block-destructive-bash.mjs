@@ -1,8 +1,7 @@
 #!/usr/bin/env node
 // PreToolUse guardrail: blocks destructive shell patterns before they run.
-// Demo purpose: show that a hook enforces a hard boundary even if the
-// agent's plan or prompt would have allowed the command, and even when
-// the sub-agent was launched with --permission-mode bypassPermissions.
+// A hook enforces a hard boundary even if the plan or prompt would have
+// allowed the command, and even under --permission-mode bypassPermissions.
 //
 // This is a speed bump, not a sandbox. It only sees the command string, so
 // anything destructive done *inside* a script (`npm run seed` calling

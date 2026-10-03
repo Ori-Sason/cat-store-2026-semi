@@ -1,16 +1,11 @@
 ---
 name: writing-tests
-description: Write or review unit, integration, and end-to-end tests. Use when adding tests for a new feature, writing a regression test for a bug fix, deciding what needs coverage, or judging whether a test suite is good enough to ship. Covers coverage areas, test structure, fixtures, flakiness rules, and how to run each suite in this repo.
+description: Write or review unit, integration, and end-to-end tests. Use when adding tests for a new feature, writing a regression test for a bug fix, deciding what needs coverage, or judging whether a test suite is good enough to ship. Covers coverage areas, mocking and timer rules, the test DB helper, and how to run each suite in this repo.
 ---
 
 # Writing Tests
 
 How to write tests. When to write them lives in `.claude/rules/testing.md`.
-
-## Principles
-- Test **behavior**, not implementation details.
-- Keep tests deterministic and isolated.
-- Fast feedback first: unit tests, integration where needed, e2e for critical flows.
 
 ## What to cover
 - Domain logic: filtering, sorting, schema validation.
@@ -19,19 +14,7 @@ How to write tests. When to write them lives in `.claude/rules/testing.md`.
 - Server-set fields: the client can't set `_id`, `createdAt`, `updatedAt` or `ownerId`.
 - User-facing failure flows for key features.
 
-## Structure
-- Clear setup → action → assertion phases.
-- Descriptive names that state the expected behavior.
-- One primary assertion intent per test.
-- No shared mutable state between tests, and no reliance on execution order.
-
-## Data and fixtures
-- Minimal fixtures, focused on the scenario.
-- Prefer factories/builders over large static fixtures.
-- Never embed real secrets, keys, or credentials in test data.
-
 ## Reliability
-- No flaky tests on mainline branches.
 - Mock only unstable external dependencies. Don't mock the `mongodb` driver. Backend
   tests hit the real test DB.
 - Freeze or override time and randomness when behavior depends on them.

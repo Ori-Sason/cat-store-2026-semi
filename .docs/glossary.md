@@ -5,9 +5,19 @@
 
 ## Core Terms
 ### Entities
+- cat (`cats`, `Cat`, `catService`)
+	- Canonical meaning: one cat offered on the store by its owner. The core entity:
+	  it has a name, price, labels, stock flag and photo, plus reviews and a chat room.
+	- Avoid: `listing`, `item`, `product`, `pet`.
+- owner (`ownerId`)
+	- Canonical meaning: the user who created a cat. Only the owner (or an admin) can
+	  edit or delete it. Set by the server, never by the client.
+	- Rule: `ownerId` is named for the role, not the entity, a deliberate exception to
+	  the `<entity>Id` rule in `naming.md`. It holds a `users` `_id`.
+	- Avoid: `seller`, `creator`, `createdBy`, `userId` (on a cat).
 - label (`labels`, `CatLabel`, `CAT_LABELS`)
 	- Canonical meaning: one of a fixed set of descriptors attached to a cat.
-	  A cat can have several. Used for filtering listings and for dashboard stats.
+	  A cat can have several. Used for filtering cats and for dashboard stats.
 	- Values: `Kitten`, `Adult`, `Senior`, `Playful`, `Calm`, `Affectionate`,
 	  `Long-hair`, `Short-hair`, `Indoor`, `Good with kids`.
 	- Avoid: `traits`, `tags`, `categories`, `type`.
@@ -65,6 +75,6 @@
 - Keep this glossary aligned with naming decisions in `../.claude/rules/naming.md`.
 - If a new domain term is introduced, add it here before broad usage.
 
-## Update Rules
+## Update Triggers
 - Add new terms when introducing a new bounded context, entity, or shared API concept.
 - Avoid synonyms for existing terms unless explicitly approved and documented here.

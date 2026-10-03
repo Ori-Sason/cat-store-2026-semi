@@ -6,10 +6,10 @@ The roadmap gives the shape of the project, not a literal script.
 This file covers **what** gets built, **in what order**, and how far along it is.
 Stack, dependencies and the **why** behind decisions live in `architecture.md`.
 
-**Current:** Part 1. The skeleton is in place: the BE server, the FE scaffold, shared models
-and the cat seed. Cat routes haven't been started.
-
-Mark items `- [x]` as they're done, and keep the **Current** line above up to date.
+**Current:** Part 1. The skeleton is in place: the BE server (error middleware, ALS, Mongo
+connection), the FE scaffold (router, layout, HTTP and error services, user messages), the
+shared user and error models, and Vitest in every package. Seed data is in
+`backend/scripts/data/cats.json`, but there's no seed script, cat model or cat route yet.
 
 ## Part 1: DB + backend + frontend skeleton (CRUD over cats)
 
@@ -21,7 +21,7 @@ No localStorage and no JSON-file stage. The app runs on a real DB from day one.
    `imgUrl` is optional in the form, and the user can leave it empty. If it's empty, the backend fills in a default image link before saving. There's no upload. The field is a URL only.
 - [ ] 3. Express backend split into service, controller and route layers.
 - [ ] 4. Build the routes in Postman order: GET list (with filterBy) → GET by id → DELETE → POST → PUT.
-- [ ] 5. No CORS. Use the Vite dev proxy (`/api` → `:8000`, with `ws: true`). The FE calls relative
+- [x] 5. No CORS. Use the Vite dev proxy (`/api` → `:8000`). The FE calls relative
    URLs only (`/api/cats`). Why: see `architecture.md` → Decisions.
 - [ ] 6. Zod validation on backend requests, using the shared `catSchema`. The schema covers only the fields the client may send. `_id`, `createdAt`, `updatedAt` (and later `ownerId`) are set by the server, and Zod strips unknown keys, so the client can't set them.
 - [ ] 7. Scaffold `frontend/` with a CLI (Vite + React + TS). `catService` calls the API over AJAX (axios).
@@ -99,6 +99,9 @@ The order of BE and FE can go either way, as long as the DB comes first.
 - [ ] 1. Deploy to Render, with MongoDB Atlas as the prod DB. Express serves the built FE from `backend/public`.
    **Open:** the Render build/start steps aren't configured yet.
 - [ ] 2. Socket.io chat room on `cat-details`, one room per `cat._id`:
+   - Dev proxy first: Socket.io connects on `/socket.io/`, not `/api`. So add a
+     `'/socket.io'` entry with `ws: true` to the Vite proxy. `ws: true` on the `/api`
+     entry wouldn't catch it.
    - Chat log with a username before each message.
    - A "X is typing…" indicator.
    - Chat history saved on the cat document.
@@ -130,3 +133,7 @@ Single home for open questions. Once one is decided, record the answer in `archi
 - Which chart library to use for the dashboard.
 - Which maps library to use (Google Maps is one option).
 - Deploy: Render build/start steps.
+
+## Update Triggers
+- Mark an item `[x]` only when it's fully done, and update the **Current** line in the same change.
+- Update this file when a part's scope or order changes, or when an open question is added or decided.

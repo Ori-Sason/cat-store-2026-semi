@@ -5,7 +5,7 @@ TypeScript monorepo (npm workspaces): `shared`, `frontend`, `backend`.
 One Express server serves both `/api` and the built FE in prod → same-origin, no CORS.
 
 ```
-dev:  browser ──▶ Vite :5173 ──(proxy /api, ws)──▶ Express :8000 ──▶ MongoDB
+dev:  browser ──▶ Vite :5173 ──(proxy /api)──▶ Express :8000 ──▶ MongoDB
 prod: browser ──▶ Express (static FE + /api + socket.io) ──▶ MongoDB (Atlas)
 ```
 
@@ -23,22 +23,15 @@ prod: browser ──▶ Express (static FE + /api + socket.io) ──▶ MongoDB
   guest / owner / admin rules on cats and reviews. The FE only hides UI.
 - `ownerId` / `userId` are set by the server, never accepted from the client.
 
-## Dependencies
-| Package | Runtime | Dev |
-|---|---|---|
-| shared | zod | — (uses root-hoisted typescript) |
-| frontend | @cat-store/shared, react, react-dom, react-router 8, zustand, axios, zod | vite, @vitejs/plugin-react, typescript, sass, oxlint, oxfmt, @types/react, @types/react-dom |
-| backend | @cat-store/shared, express 5, mongodb, zod | typescript, @types/node, @types/express |
-| backend, Part 3 | jsonwebtoken, bcrypt, cookie-parser | matching @types/* |
-| Part 5 | socket.io (BE), socket.io-client (FE) | |
-| root | | vitest |
-| frontend, tests | | @testing-library/react, @testing-library/jest-dom, @testing-library/user-event, jsdom |
-| backend, tests | | supertest, @types/supertest |
-| frontend, Part 3 | | @playwright/test (headless Chromium) |
-
-- Validation: `zod`, with the schemas shared by FE and BE through `@cat-store/shared`.
-- Lint/format: `oxlint`, `oxfmt`.
-- Backend TS: Node runs `.ts` directly via type stripping. No build step, no `ts-node`/`tsx`.
+## Stack
+Main libraries only. Exact versions and `@types/*` live in each `package.json`.
+- shared: zod. Its schemas are the validation for both FE and BE.
+- frontend: React, TypeScript, react-router 8, Zustand, axios, Vite, Sass.
+- backend: Express 5, native `mongodb` driver. No Mongoose, no `ts-node`/`tsx`.
+- auth: jsonwebtoken, bcrypt, cookie-parser. Installed already, used from Part 3.
+- testing: Vitest everywhere, React Testing Library + jsdom (FE), Supertest (BE).
+- tooling: oxlint, oxfmt.
+- planned: Playwright (Part 3), socket.io + socket.io-client (Part 5).
 
 External services: MongoDB (local in dev, Atlas in prod), Render (hosting).
 Env: `node --env-file=.env.local`, no dotenv. Prod needs `JWT_SECRET`, Mongo URL,
@@ -59,7 +52,7 @@ Env: `node --env-file=.env.local`, no dotenv. Prod needs `JWT_SECRET`, Mongo URL
   by the server with `Date.now()`. `updatedAt` changes on every update. Client-sent values are
   stripped by Zod.
   Why: the client clock and the client itself aren't trusted.
-- **No CORS. Use the Vite dev proxy** (`/api` → `:8000`, `ws: true`), and the FE uses only
+- **No CORS. Use the Vite dev proxy** (`/api` → `:8000`), and the FE uses only
   relative URLs.
   Why:
   - CORS is a browser rule. It only applies to browser requests to a *different origin*.
@@ -67,7 +60,8 @@ Env: `node --env-file=.env.local`, no dotenv. Prod needs `JWT_SECRET`, Mongo URL
     Node → Node, with no browser in that hop, so there's no CORS check.
   - In prod, Express serves the FE and `/api` from one origin, so the proxy is dev-only.
   - Same-origin cookies (auth from Part 3) need no `cors({ credentials })` / `withCredentials`.
-  - `ws: true` forwards WebSocket upgrades too, for Socket.io in Part 5.
+  - Socket.io (Part 5) needs its own proxy entry: `'/socket.io'` with `ws: true`. Its
+    default request path is `/socket.io/`, so `ws: true` on `/api` wouldn't catch it.
   - CORS would only be needed for split hosting: FE on one domain, API on another.
 
 - **Tests: Vitest everywhere, one root run.** The root `vitest.config.ts` lists `shared`,
@@ -96,7 +90,11 @@ Env: `node --env-file=.env.local`, no dotenv. Prod needs `JWT_SECRET`, Mongo URL
 Open questions live in `roadmap.md`. When one is decided, record it here.
 
 ## Update Triggers
-- Update this file when API routes, auth boundaries, org boundaries, or major component ownership changes.
+- Update this file when the stack, auth boundaries, collections, or the dev/prod topology
+  change, or when an open question from `roadmap.md` is decided.
+- Add a Change Log line (date + one line) only when the architecture itself changes:
+  components, how they connect (dev/prod topology), data flow, or the auth boundary.
+  New decisions inside the same shape, config, and doc edits don't count.
 
 ## Change Log
 - 2026-10-01 — Initial architecture.
