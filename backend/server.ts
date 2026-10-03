@@ -3,7 +3,7 @@ import cookieParser from 'cookie-parser'
 import path from 'node:path'
 import { createServer } from 'node:http'
 
-import { setupAsyncLocalStorage } from './middlewares/setup.als.middleware.ts'
+import { setupAsyncLocalStorage } from './middlewares/setup-als.middleware.ts'
 
 import { HttpError } from './models/http-error.ts'
 import { errorHandler } from './middlewares/error.middleware.ts'
