@@ -23,7 +23,11 @@
 	- Avoid: `traits`, `tags`, `categories`, `type`.
 
 ### Type shapes
-
+- `Cat` vs `CatInput`
+	- Canonical meaning: `Cat` is a stored cat as the API returns it (with `_id`,
+	  `createdAt`, `updatedAt`, and an `imgUrl` that is always set). `CatInput` is
+	  what the client sends (POST / PUT body, edit-form state), inferred from `catSchema`.
+	- Avoid: `CatDto`, `NewCat`, `CatPayload`, `CatToSave`.
 
 ### Auth
 - `loggedInUser` / `LoggedInUser`
