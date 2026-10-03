@@ -3,12 +3,16 @@ import cookieParser from 'cookie-parser'
 import path from 'node:path'
 import { createServer } from 'node:http'
 
+import { setupAsyncLocalStorage } from './middlewares/setup.als.middleware.ts'
+
 import { HttpError } from './models/http-error.ts'
 import { errorHandler } from './middlewares/error.middleware.ts'
 import { mongoService } from './services/mongodb.service.ts'
 
 const app = express()
 const http = createServer(app)
+
+app.use(setupAsyncLocalStorage) // first - creates the per-request store
 
 if (process.env.NODE_ENV === 'production') {
   app.use(express.static(path.resolve(import.meta.dirname, 'public')))
