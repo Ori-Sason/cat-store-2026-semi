@@ -29,6 +29,14 @@
 	  what the client sends (POST / PUT body, edit-form state), inferred from `catSchema`.
 	- Avoid: `CatDto`, `NewCat`, `CatPayload`, `CatToSave`.
 
+- `CatFilter` / `filterBy` / `catFilterService`
+	- Canonical meaning: `CatFilter` is the type for how the cat list is filtered and
+	  sorted (`txt`, `isInStock`, `labels`, `sortBy`, `sortDir`). `filterBy` is a variable
+	  that holds one. `catFilterService.paramsToFilter` parses the query string into it,
+	  on both the FE and the BE.
+	- Rule: several `labels` match with `$all`, so a cat must have every selected label.
+	- Avoid: `criteria` (that's the Mongo query built from it), `query`, `searchParams` (for the parsed value).
+
 ### Auth
 - `loggedInUser` / `LoggedInUser`
 	- Canonical meaning: the session identity. `_id`, `username`, `fullname`,

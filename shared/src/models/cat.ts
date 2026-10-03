@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import type { SortByDirection } from './util.ts'
 
 export const CAT_LABELS = [
   'Kitten',
@@ -47,4 +48,29 @@ export interface Cat extends CatInput {
   _id: string
   createdAt: number
   updatedAt: number
+}
+
+export const CAT_SORT_FIELDS = [
+  'name',
+  'price',
+  'createdAt',
+] as const satisfies readonly (keyof Cat)[]
+
+export type CatSortField = (typeof CAT_SORT_FIELDS)[number]
+
+// What the cat list is filtered and sorted by - the query string, parsed
+export interface CatFilter {
+  txt: string
+  isInStock: Cat['isInStock'] | null // null = any
+  labels: Cat['labels'] // a cat must have every one of them
+  sortBy: CatSortField
+  sortDir: SortByDirection
+}
+
+export const DEFAULT_CAT_FILTER: CatFilter = {
+  txt: '',
+  isInStock: null,
+  labels: [],
+  sortBy: 'createdAt',
+  sortDir: 'desc',
 }
