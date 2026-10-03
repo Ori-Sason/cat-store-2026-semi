@@ -7,6 +7,8 @@ import { setupAsyncLocalStorage } from './middlewares/setup-als.middleware.ts'
 import { HttpError } from './models/http-error.ts'
 import { errorHandler } from './middlewares/error.middleware.ts'
 
+import { catRoutes } from './api/cat/cat.routes.ts'
+
 // The Express app alone - no DB connect, no listen. server.ts boots it,
 // and tests hand it to Supertest directly
 export const app = express()
@@ -23,6 +25,7 @@ app.use(express.json())
 app.use(cookieParser())
 
 /* ROUTES */
+app.use('/api/cats', catRoutes)
 
 app.use('/api', (req) => {
   throw new HttpError(
