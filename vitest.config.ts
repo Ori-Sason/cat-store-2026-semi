@@ -4,7 +4,5 @@ import { defineConfig } from 'vitest/config'
 export default defineConfig({
   test: {
     projects: ['shared', 'frontend', 'backend'],
-    // a package with no tests yet shouldn't fail the whole run
-    passWithNoTests: true,
   },
 })

@@ -41,7 +41,7 @@ The order of BE and FE can go either way, as long as the DB comes first.
 
 ## Testing (ongoing, not a separate stage)
 
-- [ ] Remove `passWithNoTests` (root `vitest.config.ts`, and `--passWithNoTests` in the
+- [x] Remove `passWithNoTests` (root `vitest.config.ts`, and `--passWithNoTests` in the
    `shared`, `frontend` and `backend` test scripts) once every package has at least one test.
    Until then it keeps an empty package from failing the run. After that, it would hide a broken
    `include` pattern that finds 0 tests.

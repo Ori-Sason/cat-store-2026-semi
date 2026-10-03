@@ -8,7 +8,7 @@
     "start": "node server.ts",
     "seed": "node --env-file=.env.local scripts/seed.ts",
     "typecheck": "tsc",
-    "test": "vitest run --passWithNoTests"
+    "test": "vitest run"
   },
   "keywords": [],
   "author": "",
