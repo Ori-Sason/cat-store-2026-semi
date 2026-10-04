@@ -27,4 +27,37 @@
     color: $primary-clr-850;
     background-color: $primary-clr-100;
   }
+
+  // A popover in the top layer, anchored to its .more chip
+  .more-popover {
+    inset: auto;
+    margin: $space-1 0;
+    position-area: top;
+    position-try-fallbacks: flip-block;
+    max-width: 220px;
+    padding: $space-2;
+    border: 1px solid rgba($primary-clr-900, 0.08);
+    border-radius: $radius-md;
+    background-color: $clr-white;
+    box-shadow: $shadow-md;
+    pointer-events: none;
+
+    &:popover-open {
+      display: flex;
+      flex-wrap: wrap;
+      gap: $space-1;
+      opacity: 1;
+      transition: opacity 0.15s ease;
+
+      @starting-style {
+        opacity: 0;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      &:popover-open {
+        transition: none;
+      }
+    }
+  }
 }

@@ -8,7 +8,7 @@ Stack, dependencies and the **why** behind decisions live in `architecture.md`.
 
 **Current:** Part 1 is done: the cat API, the FE list, details and edit pages (over loaders and
 actions), and Vitest in every package. `npm run seed -w backend` re-seeds the `cats` collection.
-Open: the `filter-debounce` and `label-more-tooltip` handoffs. Next: Part 2 (dashboard + about).
+Open: the `filter-debounce` handoff. Next: Part 2 (dashboard + about).
 The chart library is still open.
 
 ## Part 1: DB + backend + frontend skeleton (CRUD over cats)
