@@ -6,32 +6,10 @@ The roadmap gives the shape of the project, not a literal script.
 This file covers **what** gets built, **in what order**, and how far along it is.
 Stack, dependencies and the **why** behind decisions live in `architecture.md`.
 
-**Current:** Part 1. The skeleton is in place: the BE server (error middleware, ALS, Mongo
-connection), the FE scaffold (router, layout, HTTP and error services, user messages), the
-shared user, error and cat models (`catSchema` with tests), and Vitest in every package.
-`npm run seed -w backend` wipes and re-seeds the `cats` collection from
-`backend/scripts/data/cats.json`, adding random labels and a robohash `imgUrl`.
-The cat API is done (`backend/api/cat/`): `GET /api/cats` with filterBy (parsed by the shared
-`catFilterService.paramsToFilter`), `GET`, `PUT` and `DELETE /api/cats/:id`, and `POST /api/cats`.
-POST and PUT validate the body with `validateBody(catSchema)`, so server-set fields can't be sent.
-The FE `catService` (`query`, `getById`, `save`, `remove`) is done. `query` sends the filter
-through the shared `catFilterService.filterToParams`, so `labels` go out as repeated keys and
-default values stay out of the URL.
-FE data flow: loaders and actions for cat data, Zustand only for client state.
-The cat list (`/cat`) is done: the header, a route error page, and a loader that parses the URL.
-The filter bar writes the filter back to the URL, so it survives a reload and works with Back.
-Cards fit their labels to one line, with "+N" for the rest. The SCSS has spacing, radius, shadow
-and breakpoint tokens, and label colors live in `LABEL_COLORS` (`frontend/src/models/label.ts`).
-Cat details (`/cat/:id`) is done. Delete goes through a route action, after a `ConfirmModal`
-(`cmps/util/`, a native `<dialog>`). Back returns to the list with the filter it came from.
-Cat edit is done: one page at `/cat/new` and `/cat/:id/edit` ("+ Add cat" on the list head).
-The form validates with `catSchema` on every render and shows errors after blur or submit. Price
-stays a string until it's parsed. Save goes through a route action to the cat's details, and Cancel
-goes back to details (edit) or the list (add). A failed save stays on the page with the form filled.
-Server field errors aren't shown: the form runs the same schema, so a 400 gets the generic
-message (`utilService.toActionError`). `LabelToggles` and `ToggleSwitch` are shared components.
-Part 1 is done, apart from the open `filter-debounce` and `label-more-tooltip` handoffs. Next:
-Part 2 (dashboard + about). The chart library is still open.
+**Current:** Part 1 is done: the cat API, the FE list, details and edit pages (over loaders and
+actions), and Vitest in every package. `npm run seed -w backend` re-seeds the `cats` collection.
+Open: the `filter-debounce` and `label-more-tooltip` handoffs. Next: Part 2 (dashboard + about).
+The chart library is still open.
 
 ## Part 1: DB + backend + frontend skeleton (CRUD over cats)
 
@@ -49,11 +27,16 @@ No localStorage and no JSON-file stage. The app runs on a real DB from day one.
 - [x] 7. Scaffold `frontend/` with a CLI (Vite + React + TS). `catService` calls the API over AJAX (axios).
 - [x] 8. `cat-app` page (smart, routable), made of `cat-list`, `cat-preview` and `cat-filter-bar`.
 - [x] 9. Filter by name, in-stock and several labels at once. Sort by name, price or created.
+   The filter lives in the URL, so it survives a reload and works with Back.
 - [x] 10. `cat-details` page (smart, routable). No reviews yet.
 - [x] 11. `cat-edit` page (smart, routable) for add and edit.
+   One page at `/cat/new` and `/cat/:id/edit`. Save → the cat's details. Cancel → details (edit)
+   or the list (add), keeping the list filter. A failed save stays on the page with the form filled.
+   Server field errors aren't shown: the form runs the same `catSchema`, so a 400 gets the generic message.
 - [x] 12. Client state lives in Zustand (user messages, later the logged-in user). Cat data loads
   through react-router loaders and actions, with no cat store (`architecture.md` → Decisions).
 - [x] 13. Hand-rolled form validation: errors come from the Zod schema on every render, plus `touched`/`isSubmitted` state. No form library.
+   Price stays a string in form state until it's parsed, so an empty field shows empty, not 0.
 
 The order of BE and FE can go either way, as long as the DB comes first.
 
@@ -82,15 +65,23 @@ The order of BE and FE can go either way, as long as the DB comes first.
 
 ## Part 3: Users + auth
 
-- [ ] 1. `users` collection: `{ _id, fullname, username, password, isAdmin, createdAt, updatedAt }`, with one seeded admin.
+- [ ] 1. Set up Playwright E2E first, before any auth code.
+   - Install the test runner with headless Chromium only (`npx playwright install --with-deps chromium`).
+     It runs on the VM from the CLI. No browser-driving MCP.
+   - Specs live in `frontend/e2e/`, excluded from Vitest's `include`.
+   - Prove the setup with one guest smoke flow: browse → filter → cat details.
+   - Then add an E2E test with each auth piece as it lands: sign up → log in, the cat rules,
+     admin cat CRUD. Auth is where mocks hide the most (cookies, the proxy, BE guards).
+   - After Part 3, add E2E only when asked, or when a part adds a new end-to-end flow.
+- [ ] 2. `users` collection: `{ _id, fullname, username, password, isAdmin, createdAt, updatedAt }`, with one seeded admin.
    `password` is a bcrypt hash, never the plain text.
-- [ ] 2. Login and signup pages.
-- [ ] 3. Auth uses a JWT stored in a cookie.
-- [ ] 4. Add `ownerId` to cats:
+- [ ] 3. Login and signup pages.
+- [ ] 4. Auth uses a JWT stored in a cookie.
+- [ ] 5. Add `ownerId` to cats:
    - New cats get `ownerId` = the logged-in user's `_id`, set by the server.
    - `ownerId` is not in `catSchema`, so the client can't send or change it.
    - Existing cats need an owner, e.g. backfill them to the seeded admin.
-- [ ] 5. Rules for cats:
+- [ ] 6. Rules for cats:
 
    | Action          | Guest | Logged-in user  | Admin |
    |-----------------|-------|-----------------|-------|
@@ -98,13 +89,7 @@ The order of BE and FE can go either way, as long as the DB comes first.
    | Add             | ❌    | ✅              | ✅    |
    | Edit / delete   | ❌    | Own cats only   | ✅    |
 
-- [ ] 6. Backend middleware enforces these rules. The FE hides buttons and pages the user can't use.
-- [ ] 7. E2E with Playwright. This is the first point with a full flow, so no E2E before it.
-   - Install the test runner with headless Chromium only (`npx playwright install --with-deps chromium`).
-     It runs on the VM from the CLI. No browser-driving MCP.
-   - Specs live in `frontend/e2e/`, excluded from Vitest's `include`.
-   - Start with a few critical flows: browse → filter → cat details, sign up → log in, admin cat CRUD.
-   - After that, add E2E only when asked, or when a part adds a new end-to-end flow.
+- [ ] 7. Backend middleware enforces these rules. The FE hides buttons and pages the user can't use.
 
 ## Part 4: Reviews + user page
 
