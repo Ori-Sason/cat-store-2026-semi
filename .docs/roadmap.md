@@ -14,7 +14,10 @@ shared user, error and cat models (`catSchema` with tests), and Vitest in every 
 The cat API is done (`backend/api/cat/`): `GET /api/cats` with filterBy (parsed by the shared
 `catFilterService.paramsToFilter`), `GET`, `PUT` and `DELETE /api/cats/:id`, and `POST /api/cats`.
 POST and PUT validate the body with `validateBody(catSchema)`, so server-set fields can't be sent.
-Next: the FE `catService` over axios (item 7), then the cat pages.
+The FE `catService` (`query`, `getById`, `save`, `remove`) is done. `query` sends the filter
+through the shared `catFilterService.filterToParams`, so `labels` go out as repeated keys and
+default values stay out of the URL.
+Next: decide where FE data loads (see Open questions), then the cat pages (item 8).
 
 ## Part 1: DB + backend + frontend skeleton (CRUD over cats)
 
@@ -29,7 +32,7 @@ No localStorage and no JSON-file stage. The app runs on a real DB from day one.
 - [x] 5. No CORS. Use the Vite dev proxy (`/api` → `:8000`). The FE calls relative
    URLs only (`/api/cats`). Why: see `architecture.md` → Decisions.
 - [x] 6. Zod validation on backend requests, using the shared `catSchema`. The schema covers only the fields the client may send. `_id`, `createdAt`, `updatedAt` (and later `ownerId`) are set by the server, and Zod strips unknown keys, so the client can't set them.
-- [ ] 7. Scaffold `frontend/` with a CLI (Vite + React + TS). `catService` calls the API over AJAX (axios).
+- [x] 7. Scaffold `frontend/` with a CLI (Vite + React + TS). `catService` calls the API over AJAX (axios).
 - [ ] 8. `cat-app` page (smart, routable), made of `cat-list`, `cat-preview` and `cat-filter`.
 - [ ] 9. Filter by name, in-stock and several labels at once. Sort by name, price or created.
 - [ ] 10. `cat-details` page (smart, routable). No reviews yet.
@@ -138,6 +141,8 @@ Before the first real deploy. This turns into a `deploy` skill once Part 5 start
 
 Single home for open questions. Once one is decided, record the answer in `architecture.md` → Decisions and remove it here.
 
+- Where FE data loads: react-router 8 loaders/actions, the Zustand cat store (item 12), or
+  both (a loader for page data, a store for state shared across pages). Decide before item 8.
 - Which layout direction to use for the cat pages (decided from the mockups, before Part 1 item 8).
 - Which chart library to use for the dashboard.
 - Which maps library to use (Google Maps is one option).
