@@ -1,15 +1,13 @@
 import type React from 'react'
 import { useEffect, useRef } from 'react'
 import {
-  CAT_LABELS,
   catFilterService,
   DEFAULT_CAT_FILTER,
   type CatFilter,
-  type CatLabel,
   type CatSortField,
   type SortByDirection,
 } from '@cat-store/shared'
-import { LABEL_COLORS } from '../../../models/label'
+import { LabelToggles } from '../label-toggles'
 
 interface SortOption {
   txt: string
@@ -49,12 +47,6 @@ export const CatFilterBar: React.FC<CatFilterBarProps> = ({ filterBy, onSetFilte
 
   const sortValue = `${filterBy.sortBy}-${filterBy.sortDir}`
   const isDefault = catFilterService.filterToParams(filterBy).length === 0
-
-  function onToggleLabel(label: CatLabel) {
-    const isOn = filterBy.labels.includes(label)
-    const labels = CAT_LABELS.filter((l) => (l === label ? !isOn : filterBy.labels.includes(l)))
-    onSetFilter({ ...filterBy, labels })
-  }
 
   function onSetSort(value: string) {
     const option = SORT_OPTIONS.find(({ sortBy, sortDir }) => `${sortBy}-${sortDir}` === value)
@@ -101,23 +93,11 @@ export const CatFilterBar: React.FC<CatFilterBarProps> = ({ filterBy, onSetFilte
           </button>
         )}
       </div>
-      <div className="labels" role="group" aria-label="Labels">
-        {CAT_LABELS.map((label) => {
-          const { bg, fg } = LABEL_COLORS[label]
-          return (
-            <button
-              key={label}
-              type="button"
-              className="label-toggle"
-              style={{ '--label-bg': bg, '--label-fg': fg } as React.CSSProperties}
-              aria-pressed={filterBy.labels.includes(label)}
-              onClick={() => onToggleLabel(label)}
-            >
-              {label}
-            </button>
-          )
-        })}
-      </div>
+      <LabelToggles
+        labels={filterBy.labels}
+        onChange={(labels) => onSetFilter({ ...filterBy, labels })}
+        aria-label="Labels"
+      />
     </form>
   )
 }

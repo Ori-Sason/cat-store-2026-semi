@@ -1,0 +1,26 @@
+@use 'setup' as *;
+
+.label-toggles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $space-1;
+
+  // --label-bg / --label-fg come from LABEL_COLORS; a label only takes its colors when on
+  .label-toggle {
+    flex-shrink: 0;
+    padding: 5px 12px;
+    border: 1px solid $primary-clr-200;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    white-space: nowrap;
+    color: $primary-clr-850;
+    background-color: $clr-white;
+
+    &[aria-pressed='true'] {
+      font-weight: 700;
+      color: var(--label-fg);
+      border-color: var(--label-fg);
+      background-color: var(--label-bg);
+    }
+  }
+}

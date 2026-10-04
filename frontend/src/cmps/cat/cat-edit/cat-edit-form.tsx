@@ -3,8 +3,9 @@ import { useState } from 'react'
 import { Link } from 'react-router'
 import { z } from 'zod'
 import { CAT_LABELS, catSchema, type Cat, type CatInput, type CatLabel } from '@cat-store/shared'
-import { LABEL_COLORS } from '../../../models/label'
+import { ToggleSwitch } from '../../util/toggle-switch'
 import { CatImg } from '../cat-img'
+import { LabelToggles } from '../label-toggles'
 
 // Price stays a string while typing, so an empty field shows empty instead of 0
 type CatForm = Omit<CatInput, 'price'> & { price: string }
@@ -65,12 +66,8 @@ export const CatEditForm: React.FC<CatEditFormProps> = ({ cat, isSaving, cancelT
     )
   }
 
-  function onToggleLabel(label: CatLabel) {
-    setForm((prev) => {
-      const isOn = prev.labels.includes(label)
-      const labels = CAT_LABELS.filter((l) => (l === label ? !isOn : prev.labels.includes(l)))
-      return { ...prev, labels }
-    })
+  function onSetLabels(labels: CatLabel[]) {
+    setForm((prev) => ({ ...prev, labels }))
   }
 
   function onSubmit(ev: React.SubmitEvent<HTMLFormElement>) {
@@ -93,7 +90,7 @@ export const CatEditForm: React.FC<CatEditFormProps> = ({ cat, isSaving, cancelT
         {renderError('price')}
       </div>
 
-      <div className="field" role="group" aria-labelledby="cat-labels-title">
+      <div className="field">
         <div className="field-head">
           <span id="cat-labels-title" className="field-title">
             Labels
@@ -102,7 +99,7 @@ export const CatEditForm: React.FC<CatEditFormProps> = ({ cat, isSaving, cancelT
             type="button"
             className="text-btn"
             disabled={form.labels.length === CAT_LABELS.length}
-            onClick={() => setForm((prev) => ({ ...prev, labels: [...CAT_LABELS] }))}
+            onClick={() => onSetLabels([...CAT_LABELS])}
           >
             Select all
           </button>
@@ -110,39 +107,23 @@ export const CatEditForm: React.FC<CatEditFormProps> = ({ cat, isSaving, cancelT
             type="button"
             className="text-btn"
             disabled={form.labels.length === 0}
-            onClick={() => setForm((prev) => ({ ...prev, labels: [] }))}
+            onClick={() => onSetLabels([])}
           >
             Remove all
           </button>
         </div>
-        <div className="labels">
-          {CAT_LABELS.map((label) => {
-            const { bg, fg } = LABEL_COLORS[label]
-            return (
-              <button
-                key={label}
-                type="button"
-                className="label-toggle"
-                style={{ '--label-bg': bg, '--label-fg': fg } as React.CSSProperties}
-                aria-pressed={form.labels.includes(label)}
-                onClick={() => onToggleLabel(label)}
-              >
-                {label}
-              </button>
-            )
-          })}
-        </div>
+        <LabelToggles
+          labels={form.labels}
+          onChange={onSetLabels}
+          aria-labelledby="cat-labels-title"
+        />
       </div>
 
-      <label className="switch">
-        <input
-          type="checkbox"
-          role="switch"
-          checked={form.isInStock}
-          onChange={(ev) => setForm((prev) => ({ ...prev, isInStock: ev.target.checked }))}
-        />
-        In stock
-      </label>
+      <ToggleSwitch
+        label="In stock"
+        isChecked={form.isInStock}
+        onChange={(isInStock) => setForm((prev) => ({ ...prev, isInStock }))}
+      />
 
       <div className="field">
         <label htmlFor="cat-imgUrl">Image URL</label>

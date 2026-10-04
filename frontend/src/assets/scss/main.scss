@@ -16,8 +16,10 @@
 @use './cmps/cat/cat-app/cat-preview';
 @use './cmps/cat/cat-edit/cat-edit-form';
 @use './cmps/cat/cat-img';
+@use './cmps/cat/label-toggles';
 @use './cmps/cat/label-chip';
 @use './cmps/layout/app-header';
 @use './cmps/util/confirm-modal';
 @use './cmps/util/route-error';
+@use './cmps/util/toggle-switch';
 @use './cmps/util/user-message';
