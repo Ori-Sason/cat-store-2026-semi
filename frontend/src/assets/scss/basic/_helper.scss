@@ -34,16 +34,17 @@
   color: $primary-clr-500;
   border: 1px solid $primary-clr-500;
   border-radius: $radius-sm;
-  background-color: $primary-clr-100;
+  background-color: $clr-white;
   box-shadow: 0 0 5px $primary-clr-300;
 
   &:hover {
-    background-color: color.scale($primary-clr-100, $lightness: 100%);
+    background-color: color.scale($clr-white, $lightness: -1%);
   }
 }
 
 .danger-btn {
   background-color: $clr-danger;
+  box-shadow: 0 0 5px color.scale($clr-danger, $lightness: 40%);
 
   &:hover {
     background-color: color.scale($clr-danger, $lightness: -5%);
