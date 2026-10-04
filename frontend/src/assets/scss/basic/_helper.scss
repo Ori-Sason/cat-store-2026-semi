@@ -20,7 +20,7 @@
 .main-btn {
   padding: 0.5em 1em;
   color: $primary-clr-100;
-  border-radius: 6px;
+  border-radius: $radius-sm;
   box-shadow: 0 0 5px $primary-clr-300;
   background-color: $primary-clr-500;
 
@@ -33,7 +33,7 @@
   padding: 0.5em;
   color: $primary-clr-500;
   border: 1px solid $primary-clr-500;
-  border-radius: 6px;
+  border-radius: $radius-sm;
   background-color: $primary-clr-100;
   box-shadow: 0 0 5px $primary-clr-300;
 

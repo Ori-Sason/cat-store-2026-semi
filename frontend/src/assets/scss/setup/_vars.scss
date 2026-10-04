@@ -14,5 +14,28 @@ $clr-pink: rgb(255, 218, 255);
 $clr-dark-pink: color.scale($clr-pink, $lightness: -20%);
 
 $clr-danger: rgb(233, 24, 24);
+$clr-success: rgb(30, 120, 70);
 $clr-grey: rgb(207, 205, 205);
 $clr-black: rgb(33, 33, 33);
+$clr-white: rgb(255, 255, 255);
+
+/* SPACING */
+$space-1: 4px;
+$space-2: 8px;
+$space-3: 12px;
+$space-4: 16px;
+$space-5: 24px;
+$space-6: 32px;
+
+/* RADIUS */
+$radius-sm: 6px;
+$radius-md: 8px;
+$radius-lg: 12px;
+
+/* SHADOWS */
+$shadow-sm: 0 1px 3px rgba($primary-clr-900, 0.08);
+$shadow-md: 0 8px 20px rgba($primary-clr-900, 0.14);
+
+/* BREAKPOINTS - mobile-first, used with the `from` mixin */
+$bp-md: 700px;
+$bp-lg: 1024px;

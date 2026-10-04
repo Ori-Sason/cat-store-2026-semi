@@ -1,0 +1,8 @@
+@use 'vars' as *;
+
+// Mobile-first: style the phone layout bare, then widen with `@include from($bp-md) { ... }`
+@mixin from($bp) {
+  @media (min-width: $bp) {
+    @content;
+  }
+}

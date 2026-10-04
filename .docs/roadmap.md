@@ -18,7 +18,8 @@ The FE `catService` (`query`, `getById`, `save`, `remove`) is done. `query` send
 through the shared `catFilterService.filterToParams`, so `labels` go out as repeated keys and
 default values stay out of the URL.
 FE data flow is decided: loaders and actions for cat data, Zustand only for client state.
-Next: pick the layout direction from the mockups (see Open questions), then the cat pages (item 8).
+The layout is picked from the mockups (see Design below).
+Next: the cat pages (item 8), starting with the missing SCSS tokens.
 
 ## Part 1: DB + backend + frontend skeleton (CRUD over cats)
 
@@ -50,7 +51,9 @@ The order of BE and FE can go either way, as long as the DB comes first.
 - Responsive on desktop, tablet and mobile as each feature is built.
 - No Figma. Before Part 1 item 8, pick a layout from 2–3 throwaway HTML mockups (kept out of
    the repo), then add spacing, breakpoint, radius and shadow tokens before the first real component.
-   **The mockup direction is still open.**
+   **Picked:** the list has a top filter bar (search, stock toggle, sort dropdown, label chips) over a
+   compact card grid. Details and edit use a two-column layout: a small image next to the info or form.
+   Keep the current blue palette. Each label gets its own soft color.
 
 ## Testing (ongoing, not a separate stage)
 
@@ -143,7 +146,6 @@ Before the first real deploy. This turns into a `deploy` skill once Part 5 start
 
 Single home for open questions. Once one is decided, record the answer in `architecture.md` → Decisions and remove it here.
 
-- Which layout direction to use for the cat pages (decided from the mockups, before Part 1 item 8).
 - Which chart library to use for the dashboard.
 - Which maps library to use (Google Maps is one option).
 - Deploy: Render build/start steps.
