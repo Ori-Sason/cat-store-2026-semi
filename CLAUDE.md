@@ -38,7 +38,7 @@ Claude Code auto-loads `.claude/rules/*.md`, so they're listed here, not `@`-imp
 Files with `paths:` frontmatter load only when matching files are touched.
 - `code-style.md` — formatting, lint, async/await.
 - `naming.md` — routes, DB, code, files, domain terms.
-- `git-workflow.md` — approval gates, branches, commits.
+- `git-workflow.md` — approval gates, branches, commits, the index as review marker.
 - `testing.md` — when to write tests, E2E timing, done = tests + lint + typecheck pass.
 - `shared.md` (`shared/**`) — erasable TS, no platform imports, models vs services.
 - `frontend.md` (`frontend/**`) — shared imports, relative `/api` URLs.

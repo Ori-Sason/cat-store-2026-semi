@@ -21,3 +21,7 @@
   - `summary`: imperative, lowercase, no period: `feat(fe): add sign-up page`.
 - One intent per commit. Keep commits small so the history shows step-by-step progress.
   Don't bundle unrelated changes.
+
+## The index
+- The index is the user's review marker: staged = reviewed. Don't stage, unstage or reset
+  until the user says to commit; then stage everything that belongs to the commit.
