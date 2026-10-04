@@ -1,0 +1,36 @@
+@use 'setup' as *;
+
+.confirm-modal {
+  width: min(400px, calc(100% - #{$space-6}));
+  padding: 0;
+  border: none;
+  border-radius: $radius-lg;
+  background-color: $clr-white;
+  box-shadow: $shadow-md;
+
+  &::backdrop {
+    background-color: rgba($primary-clr-900, 0.4);
+  }
+
+  .content {
+    display: grid;
+    gap: $space-3;
+    padding: $space-5;
+  }
+
+  h2 {
+    font-size: 1.15rem;
+    color: $primary-clr-900;
+  }
+
+  p {
+    color: $primary-clr-850;
+  }
+
+  .actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: $space-2;
+    margin-top: $space-2;
+  }
+}
