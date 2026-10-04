@@ -240,3 +240,78 @@ describe('POST /api/cats', () => {
     expect(await collection.countDocuments()).toBe(0)
   })
 })
+
+describe('PUT /api/cats/:id', () => {
+  const NOW = 50_000
+  const INPUT: CatInput = {
+    name: 'Mitzi the Second',
+    price: 250,
+    labels: ['Senior', 'Calm'],
+    isInStock: false,
+    imgUrl: '',
+  }
+
+  beforeEach(() => {
+    // only Date is faked - Supertest and the Mongo driver still need real timers
+    vi.useFakeTimers({ toFake: ['Date'] })
+    vi.setSystemTime(NOW)
+    vi.spyOn(console, 'warn').mockImplementation(() => {})
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+    vi.restoreAllMocks()
+  })
+
+  it('updates the cat, keeps createdAt and bumps updatedAt', async () => {
+    const cat = _buildCat({ name: 'Mitzi', createdAt: 1_000, updatedAt: 1_000 })
+    const collection = await mongoService.getCollection<CatDoc>(CAT_COLLECTION)
+    await collection.insertOne(cat)
+
+    const res = await request(app).put(`/api/cats/${cat._id.toHexString()}`).send(INPUT)
+
+    expect(res.status).toBe(200)
+    const expected = { ...INPUT, _id: cat._id.toHexString(), createdAt: 1_000, updatedAt: NOW }
+    expect(res.body).toEqual(expected)
+    expect(await collection.findOne({ _id: cat._id })).toEqual({ ...expected, _id: cat._id })
+  })
+
+  it('ignores a client-sent _id, createdAt and updatedAt', async () => {
+    const cat = _buildCat({ createdAt: 1_000, updatedAt: 1_000 })
+    const collection = await mongoService.getCollection<CatDoc>(CAT_COLLECTION)
+    await collection.insertOne(cat)
+
+    const res = await request(app)
+      .put(`/api/cats/${cat._id.toHexString()}`)
+      .send({ ...INPUT, _id: new ObjectId().toHexString(), createdAt: 1, updatedAt: 1 })
+
+    expect(res.status).toBe(200)
+    expect(res.body).toMatchObject({
+      _id: cat._id.toHexString(),
+      createdAt: 1_000,
+      updatedAt: NOW,
+    })
+  })
+
+  it('returns 404 CAT_NOT_FOUND for an id that does not exist', async () => {
+    const res = await request(app).put(`/api/cats/${new ObjectId().toHexString()}`).send(INPUT)
+
+    expect(res.status).toBe(404)
+    expect(res.body).toMatchObject({ code: 'CAT_NOT_FOUND' })
+  })
+
+  it('returns 400 VALIDATION_FAILED with fieldErrors and leaves the cat as it was', async () => {
+    const cat = _buildCat({ name: 'Mitzi' })
+    const collection = await mongoService.getCollection<CatDoc>(CAT_COLLECTION)
+    await collection.insertOne(cat)
+
+    const res = await request(app)
+      .put(`/api/cats/${cat._id.toHexString()}`)
+      .send({ ...INPUT, labels: ['Dog'] })
+
+    expect(res.status).toBe(400)
+    expect(res.body).toMatchObject({ code: 'VALIDATION_FAILED' })
+    expect(res.body.fieldErrors).toHaveProperty('labels')
+    expect(await collection.findOne({ _id: cat._id })).toEqual(cat)
+  })
+})

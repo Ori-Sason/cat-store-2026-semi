@@ -11,8 +11,10 @@ connection), the FE scaffold (router, layout, HTTP and error services, user mess
 shared user, error and cat models (`catSchema` with tests), and Vitest in every package.
 `npm run seed -w backend` wipes and re-seeds the `cats` collection from
 `backend/scripts/data/cats.json`, adding random labels and a robohash `imgUrl`.
-The read routes are in (`backend/api/cat/`): `GET /api/cats` with filterBy (parsed by the shared
-`catFilterService.paramsToFilter`) and `GET /api/cats/:id`. Next: DELETE → POST → PUT with Zod validation.
+The cat API is done (`backend/api/cat/`): `GET /api/cats` with filterBy (parsed by the shared
+`catFilterService.paramsToFilter`), `GET`, `PUT` and `DELETE /api/cats/:id`, and `POST /api/cats`.
+POST and PUT validate the body with `validateBody(catSchema)`, so server-set fields can't be sent.
+Next: the FE `catService` over axios (item 7), then the cat pages.
 
 ## Part 1: DB + backend + frontend skeleton (CRUD over cats)
 
@@ -22,11 +24,11 @@ No localStorage and no JSON-file stage. The app runs on a real DB from day one.
 - [x] 2. Cat shape: `{ _id, name, price, labels: [...], isInStock, imgUrl, createdAt, updatedAt }`.
    No `ownerId` yet. It's added in Part 3, when users exist.
    `imgUrl` is optional in the form, and the user can leave it empty. If it's empty, it's stored as `''` and the FE shows a default image (`cat-default-bw.png`), also used when an image fails to load. There's no upload. The field is a URL only.
-- [ ] 3. Express backend split into service, controller and route layers.
-- [ ] 4. Build the routes in Postman order: GET list (with filterBy) → GET by id → DELETE → POST → PUT.
+- [x] 3. Express backend split into service, controller and route layers.
+- [x] 4. Build the routes in Postman order: GET list (with filterBy) → GET by id → DELETE → POST → PUT.
 - [x] 5. No CORS. Use the Vite dev proxy (`/api` → `:8000`). The FE calls relative
    URLs only (`/api/cats`). Why: see `architecture.md` → Decisions.
-- [ ] 6. Zod validation on backend requests, using the shared `catSchema`. The schema covers only the fields the client may send. `_id`, `createdAt`, `updatedAt` (and later `ownerId`) are set by the server, and Zod strips unknown keys, so the client can't set them.
+- [x] 6. Zod validation on backend requests, using the shared `catSchema`. The schema covers only the fields the client may send. `_id`, `createdAt`, `updatedAt` (and later `ownerId`) are set by the server, and Zod strips unknown keys, so the client can't set them.
 - [ ] 7. Scaffold `frontend/` with a CLI (Vite + React + TS). `catService` calls the API over AJAX (axios).
 - [ ] 8. `cat-app` page (smart, routable), made of `cat-list`, `cat-preview` and `cat-filter`.
 - [ ] 9. Filter by name, in-stock and several labels at once. Sort by name, price or created.

@@ -30,6 +30,21 @@ async function add(input: CatInput): Promise<CatDoc> {
   return cat
 }
 
+async function update(catId: string, input: CatInput): Promise<CatDoc> {
+  const _id = utilService.toObjectId(catId)
+  const collection = await mongoService.getCollection<CatDoc>(CAT_COLLECTION)
+  // $set touches only the client fields and updatedAt - _id and createdAt stay as they are
+  const cat =
+    _id &&
+    (await collection.findOneAndUpdate(
+      { _id },
+      { $set: { ...input, updatedAt: Date.now() } },
+      { returnDocument: 'after' },
+    ))
+  if (!cat) throw new HttpError(404, 'CAT_NOT_FOUND', `Cat ${catId} not found`)
+  return cat
+}
+
 async function remove(catId: string): Promise<void> {
   const _id = utilService.toObjectId(catId)
   const collection = await mongoService.getCollection<CatDoc>(CAT_COLLECTION)
@@ -50,5 +65,6 @@ export const catService = {
   query,
   getById,
   add,
+  update,
   remove,
 }

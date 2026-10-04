@@ -22,6 +22,11 @@ export async function addCat(req: Request<object, unknown, CatInput>, res: Respo
   res.status(201).json(cat) // 201 Created
 }
 
+export async function updateCat(req: Request<{ id: string }, unknown, CatInput>, res: Response) {
+  const cat = await catService.update(req.params.id, req.body)
+  res.json(cat)
+}
+
 export async function removeCat(req: Request<{ id: string }>, res: Response) {
   await catService.remove(req.params.id)
   res.sendStatus(204) // 204 No Content
