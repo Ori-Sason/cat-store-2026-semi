@@ -1,6 +1,7 @@
 import type React from 'react'
-import { Link } from 'react-router'
+import { Link, useLocation } from 'react-router'
 import type { Cat } from '@cat-store/shared'
+import type { CatListLocationState } from '../../../models/util'
 import { utilService } from '../../../services/util.service'
 import { CatImg } from '../cat-img'
 import { CatLabels } from './cat-labels'
@@ -10,8 +11,11 @@ interface CatPreviewProps {
 }
 
 export const CatPreview: React.FC<CatPreviewProps> = ({ cat }) => {
+  const location = useLocation()
+  const state: CatListLocationState = { listSearch: location.search }
+
   return (
-    <Link to={`/cat/${cat._id}`} className="cat-preview">
+    <Link to={`/cat/${cat._id}`} state={state} className="cat-preview">
       <CatImg cat={cat} />
       <div className="body">
         <div className="top">

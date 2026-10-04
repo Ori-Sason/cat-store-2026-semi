@@ -50,6 +50,23 @@
   }
 }
 
+.danger-outline-btn {
+  padding: 0.5em 1em;
+  color: $clr-danger;
+  border: 1px solid $clr-danger;
+  border-radius: $radius-sm;
+  background-color: $clr-white;
+
+  &:hover:not(:disabled) {
+    background-color: color.scale($clr-danger, $lightness: 92%);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: default;
+  }
+}
+
 /* DEBUG */
 .debug > * {
   border: 1px solid red;

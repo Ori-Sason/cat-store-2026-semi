@@ -22,7 +22,9 @@ The cat list (`/cat`) is done: the header, a route error page, and a loader that
 The filter bar writes the filter back to the URL, so it survives a reload and works with Back.
 Cards fit their labels to one line, with "+N" for the rest. The SCSS has spacing, radius, shadow
 and breakpoint tokens, and label colors live in `LABEL_COLORS` (`frontend/src/models/label.ts`).
-Next: `cat-details` (item 10), then `cat-edit` with form validation (items 11, 13).
+Cat details (`/cat/:id`) is done. Delete goes through a route action, after a `ConfirmModal`
+(`cmps/util/`, a native `<dialog>`). Back returns to the list with the filter it came from.
+Next: `cat-edit` with form validation (items 11, 13), at `/cat/:id/edit` and `/cat/new` (one page).
 
 ## Part 1: DB + backend + frontend skeleton (CRUD over cats)
 
@@ -40,7 +42,7 @@ No localStorage and no JSON-file stage. The app runs on a real DB from day one.
 - [x] 7. Scaffold `frontend/` with a CLI (Vite + React + TS). `catService` calls the API over AJAX (axios).
 - [x] 8. `cat-app` page (smart, routable), made of `cat-list`, `cat-preview` and `cat-filter-bar`.
 - [x] 9. Filter by name, in-stock and several labels at once. Sort by name, price or created.
-- [ ] 10. `cat-details` page (smart, routable). No reviews yet.
+- [x] 10. `cat-details` page (smart, routable). No reviews yet.
 - [ ] 11. `cat-edit` page (smart, routable) for add and edit.
 - [ ] 12. Client state lives in Zustand (user messages, later the logged-in user). Cat data loads
   through react-router loaders and actions, with no cat store (`architecture.md` → Decisions).

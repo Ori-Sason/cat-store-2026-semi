@@ -47,3 +47,10 @@ describe('utilService.getFitCount', () => {
     expect(getFitCount([], 100, GAP, MORE_WIDTH)).toBe(0)
   })
 })
+
+describe('utilService.formatDate', () => {
+  it('shows a short month, the day and the year', () => {
+    // midday UTC, so any test machine's timezone lands on the same date
+    expect(utilService.formatDate(Date.UTC(2026, 9, 4, 12))).toBe('Oct 4, 2026')
+  })
+})

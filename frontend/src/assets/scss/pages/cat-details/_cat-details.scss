@@ -1,0 +1,116 @@
+@use 'setup' as *;
+
+.cat-details {
+  display: grid;
+  gap: $space-4;
+
+  .back-link {
+    justify-self: start;
+    font-weight: 700;
+    color: $primary-clr-600;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  .panel {
+    display: grid;
+    gap: $space-5;
+    padding: $space-4;
+    border: 1px solid rgba($primary-clr-900, 0.08);
+    border-radius: $radius-lg;
+    background-color: $clr-white;
+
+    @include from($bp-md) {
+      grid-template-columns: 300px 1fr;
+      align-items: start;
+      padding: $space-5;
+    }
+  }
+
+  .cat-img {
+    width: 200px;
+    justify-self: center;
+
+    @include from($bp-md) {
+      width: 100%;
+    }
+  }
+
+  .info {
+    display: grid;
+    align-content: start;
+    gap: $space-3;
+  }
+
+  h1 {
+    font-size: 1.5rem;
+    overflow-wrap: anywhere;
+    color: $primary-clr-900;
+  }
+
+  .price-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: $space-4;
+  }
+
+  .price {
+    font-size: 1.25rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: $primary-clr-900;
+  }
+
+  .stock {
+    display: inline-flex;
+    align-items: center;
+    gap: $space-2;
+    font-size: 0.9rem;
+    font-weight: 700;
+
+    &::before {
+      content: '';
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: currentColor;
+    }
+
+    &.in-stock {
+      color: $clr-success;
+    }
+
+    &.sold-out {
+      color: $clr-danger;
+    }
+  }
+
+  .labels {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $space-2;
+  }
+
+  .added {
+    font-size: 0.85rem;
+    color: $primary-clr-850;
+  }
+
+  .actions {
+    display: flex;
+    gap: $space-2;
+    margin-top: $space-2;
+  }
+
+  .placeholder {
+    grid-column: 1 / -1;
+    padding: $space-5;
+    border: 2px dashed $primary-clr-300;
+    border-radius: $radius-md;
+    text-align: center;
+    color: $primary-clr-850;
+  }
+}

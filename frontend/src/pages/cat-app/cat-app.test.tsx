@@ -1,7 +1,7 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { DEFAULT_CAT_FILTER, type Cat } from '@cat-store/shared'
-import { createMemoryRouter, RouterProvider } from 'react-router'
+import { createMemoryRouter, RouterProvider, useLocation } from 'react-router'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { catService } from '../../services/cat.service'
 import { CatApp } from './cat-app'
@@ -22,10 +22,18 @@ const _CATS = [
   },
 ] satisfies Cat[]
 
+function LocationStateProbe() {
+  return <pre>{JSON.stringify(useLocation().state)}</pre>
+}
+
 function _renderAt(path: string) {
-  const router = createMemoryRouter([{ path: '/cat', loader: catAppLoader, element: <CatApp /> }], {
-    initialEntries: [path],
-  })
+  const router = createMemoryRouter(
+    [
+      { path: '/cat', loader: catAppLoader, element: <CatApp /> },
+      { path: '/cat/:id', element: <LocationStateProbe /> },
+    ],
+    { initialEntries: [path] },
+  )
   render(<RouterProvider router={router} />)
   return router
 }
@@ -57,5 +65,14 @@ describe('CatApp', () => {
         labels: ['Calm'],
       }),
     )
+  })
+
+  it('hands the list filter to the details page', async () => {
+    const router = _renderAt('/cat?labels=Calm')
+
+    await userEvent.click(await screen.findByRole('heading', { name: 'Mitzi' }))
+
+    await waitFor(() => expect(router.state.location.pathname).toBe('/cat/cat-1'))
+    expect(screen.getByText('{"listSearch":"?labels=Calm"}')).toBeInTheDocument()
   })
 })

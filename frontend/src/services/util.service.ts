@@ -4,8 +4,14 @@ const _priceFormatter = new Intl.NumberFormat('en-US', {
   trailingZeroDisplay: 'stripIfInteger', // $120, not $120.00 - but $95.50, not $95.5
 })
 
+const _dateFormatter = new Intl.DateTimeFormat('en-US', { dateStyle: 'medium' })
+
 function formatPrice(price: number): string {
   return _priceFormatter.format(price)
+}
+
+function formatDate(ms: number): string {
+  return _dateFormatter.format(ms)
 }
 
 // How many items fit in one row, keeping room for a trailing "+N" chip while any are left out
@@ -22,5 +28,6 @@ function getFitCount(itemWidths: number[], rowWidth: number, gap: number, moreWi
 
 export const utilService = {
   formatPrice,
+  formatDate,
   getFitCount,
 }
