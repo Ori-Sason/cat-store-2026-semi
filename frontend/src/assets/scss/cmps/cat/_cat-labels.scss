@@ -1,0 +1,30 @@
+@use 'setup' as *;
+
+// One line only - useFitCount decides how many chips fit, the rest become "+N"
+.cat-labels {
+  position: relative;
+  display: flex;
+  flex-wrap: nowrap;
+  gap: $space-1;
+  min-width: 0;
+  overflow: hidden;
+
+  > * {
+    flex-shrink: 0;
+  }
+
+  // Out of flow and invisible, but keeps its natural width for useFitCount to measure
+  .is-hidden {
+    position: absolute;
+    visibility: hidden;
+  }
+
+  .more {
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: $primary-clr-850;
+    background-color: $primary-clr-100;
+  }
+}

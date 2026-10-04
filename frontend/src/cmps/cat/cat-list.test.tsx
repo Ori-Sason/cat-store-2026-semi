@@ -37,13 +37,12 @@ describe('CatList', () => {
     )
   })
 
-  it('shows two labels, then the hidden count', () => {
-    _renderList([_cat({ labels: ['Kitten', 'Calm', 'Indoor'] })])
+  // How many labels fit is layout - covered by utilService.getFitCount, since jsdom has none
+  it("shows the cat's labels", () => {
+    _renderList([_cat({ labels: ['Kitten', 'Calm'] })])
 
     expect(screen.getByText('Kitten')).toBeInTheDocument()
     expect(screen.getByText('Calm')).toBeInTheDocument()
-    expect(screen.queryByText('Indoor')).not.toBeInTheDocument()
-    expect(screen.getByText('+1')).toBeInTheDocument()
   })
 
   it('shows an empty state when no cat matches', () => {

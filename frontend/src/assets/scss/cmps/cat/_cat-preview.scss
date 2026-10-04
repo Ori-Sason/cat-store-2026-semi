@@ -57,19 +57,4 @@
     font-variant-numeric: tabular-nums;
     color: $primary-clr-900;
   }
-
-  .labels {
-    display: flex;
-    flex-wrap: wrap;
-    gap: $space-1;
-  }
-
-  .more {
-    padding: 3px 10px;
-    border-radius: 999px;
-    font-size: 0.75rem;
-    font-weight: 700;
-    color: $primary-clr-850;
-    background-color: $primary-clr-100;
-  }
 }

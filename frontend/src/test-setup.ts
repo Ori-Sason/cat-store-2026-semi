@@ -6,3 +6,10 @@ import { afterEach } from 'vitest'
 afterEach(() => {
   cleanup()
 })
+
+// jsdom has no layout, so no ResizeObserver - a no-op keeps layout hooks (useFitCount) mountable
+globalThis.ResizeObserver ??= class {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
