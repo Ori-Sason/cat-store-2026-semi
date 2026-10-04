@@ -1,0 +1,14 @@
+@use 'setup' as *;
+
+// --label-bg / --label-fg are set per label from LABEL_COLORS (models/label.ts)
+.label-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  white-space: nowrap;
+  color: var(--label-fg);
+  background-color: var(--label-bg);
+}

@@ -1,0 +1,28 @@
+@use 'setup' as *;
+
+.cat-img {
+  position: relative;
+  aspect-ratio: 1;
+  overflow: hidden;
+  background-color: $clr-white;
+
+  .photo {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  // Bottom-left: every robohash set4 face sits top-right
+  .badge {
+    position: absolute;
+    left: 4%;
+    bottom: 4%;
+    width: 42%;
+    transform: rotate(-7deg);
+  }
+
+  &.sold-out .photo {
+    filter: grayscale(0.85) opacity(0.6);
+  }
+}
