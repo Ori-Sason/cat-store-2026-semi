@@ -1,0 +1,22 @@
+@use 'setup' as *;
+
+.cat-app {
+  display: grid;
+  gap: $space-4;
+
+  .page-head {
+    display: flex;
+    align-items: baseline;
+    gap: $space-2;
+
+    h1 {
+      font-size: 1.5rem;
+      color: $primary-clr-900;
+    }
+
+    .count {
+      font-size: 0.85rem;
+      color: $primary-clr-850;
+    }
+  }
+}

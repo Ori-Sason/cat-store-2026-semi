@@ -5,10 +5,12 @@
 @use './basic/layout';
 
 /* PAGES */
-
+@use './pages/cat-app';
 
 /* COMPONENTS */
 @use './cmps/cat/cat-img';
+@use './cmps/cat/cat-list';
+@use './cmps/cat/cat-preview';
 @use './cmps/cat/label-chip';
 @use './cmps/layout/app-header';
 @use './cmps/util/route-error';
