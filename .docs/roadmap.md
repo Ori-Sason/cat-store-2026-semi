@@ -17,9 +17,12 @@ POST and PUT validate the body with `validateBody(catSchema)`, so server-set fie
 The FE `catService` (`query`, `getById`, `save`, `remove`) is done. `query` sends the filter
 through the shared `catFilterService.filterToParams`, so `labels` go out as repeated keys and
 default values stay out of the URL.
-FE data flow is decided: loaders and actions for cat data, Zustand only for client state.
-The layout is picked from the mockups (see Design below).
-Next: the cat pages (item 8), starting with the missing SCSS tokens.
+FE data flow: loaders and actions for cat data, Zustand only for client state.
+The cat list (`/cat`) is done: the header, a route error page, and a loader that parses the URL.
+The filter bar writes the filter back to the URL, so it survives a reload and works with Back.
+Cards fit their labels to one line, with "+N" for the rest. The SCSS has spacing, radius, shadow
+and breakpoint tokens, and label colors live in `LABEL_COLORS` (`frontend/src/models/label.ts`).
+Next: `cat-details` (item 10), then `cat-edit` with form validation (items 11, 13).
 
 ## Part 1: DB + backend + frontend skeleton (CRUD over cats)
 
@@ -35,8 +38,8 @@ No localStorage and no JSON-file stage. The app runs on a real DB from day one.
    URLs only (`/api/cats`). Why: see `architecture.md` → Decisions.
 - [x] 6. Zod validation on backend requests, using the shared `catSchema`. The schema covers only the fields the client may send. `_id`, `createdAt`, `updatedAt` (and later `ownerId`) are set by the server, and Zod strips unknown keys, so the client can't set them.
 - [x] 7. Scaffold `frontend/` with a CLI (Vite + React + TS). `catService` calls the API over AJAX (axios).
-- [ ] 8. `cat-app` page (smart, routable), made of `cat-list`, `cat-preview` and `cat-filter`.
-- [ ] 9. Filter by name, in-stock and several labels at once. Sort by name, price or created.
+- [x] 8. `cat-app` page (smart, routable), made of `cat-list`, `cat-preview` and `cat-filter-bar`.
+- [x] 9. Filter by name, in-stock and several labels at once. Sort by name, price or created.
 - [ ] 10. `cat-details` page (smart, routable). No reviews yet.
 - [ ] 11. `cat-edit` page (smart, routable) for add and edit.
 - [ ] 12. Client state lives in Zustand (user messages, later the logged-in user). Cat data loads

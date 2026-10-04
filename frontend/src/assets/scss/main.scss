@@ -8,6 +8,7 @@
 @use './pages/cat-app';
 
 /* COMPONENTS */
+@use './cmps/cat/cat-filter-bar';
 @use './cmps/cat/cat-img';
 @use './cmps/cat/cat-labels';
 @use './cmps/cat/cat-list';

@@ -1,0 +1,92 @@
+@use 'setup' as *;
+
+.cat-filter-bar {
+  display: grid;
+  gap: $space-3;
+  padding: $space-3;
+  border: 1px solid rgba($primary-clr-900, 0.08);
+  border-radius: $radius-lg;
+  background-color: $clr-white;
+
+  .controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: stretch;
+    gap: $space-2;
+    font-size: 0.875rem; // inputs, buttons and the select all inherit it
+  }
+
+  input[type='search'] {
+    flex: 1 1 200px;
+    min-width: 0;
+  }
+
+  select {
+    flex: 1 1 auto;
+
+    @include from($bp-md) {
+      flex: 0 0 auto;
+    }
+  }
+
+  .stock {
+    display: inline-flex;
+    flex: 1 1 auto;
+    overflow: hidden;
+    border: 1px solid $primary-clr-300;
+    border-radius: $radius-md;
+
+    @include from($bp-md) {
+      flex: 0 0 auto;
+    }
+
+    button {
+      flex: 1;
+      padding: 0.5em 0.85em;
+      white-space: nowrap;
+
+      & + button {
+        border-left: 1px solid $primary-clr-300;
+      }
+
+      &[aria-pressed='true'] {
+        font-weight: 700;
+        color: $clr-white;
+        background-color: $primary-clr-500;
+      }
+    }
+  }
+
+  // Phones: one row that scrolls sideways. Wider: wraps
+  .labels {
+    display: flex;
+    gap: $space-1;
+    overflow-x: auto;
+    padding-bottom: $space-1;
+
+    @include from($bp-md) {
+      flex-wrap: wrap;
+      overflow-x: visible;
+      padding-bottom: 0;
+    }
+  }
+
+  // --label-bg / --label-fg come from LABEL_COLORS; a label only takes its colors when on
+  .label-toggle {
+    flex-shrink: 0;
+    padding: 5px 12px;
+    border: 1px solid $primary-clr-200;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    white-space: nowrap;
+    color: $primary-clr-850;
+    background-color: $clr-white;
+
+    &[aria-pressed='true'] {
+      font-weight: 700;
+      color: var(--label-fg);
+      border-color: var(--label-fg);
+      background-color: var(--label-bg);
+    }
+  }
+}
