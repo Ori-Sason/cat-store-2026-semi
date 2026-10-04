@@ -7,6 +7,7 @@ import { RouteError } from '../../cmps/util/route-error'
 import { ApiError } from '../../models/api-error'
 import type { CatListLocationState } from '../../models/util'
 import { catService } from '../../services/cat.service'
+import { useUserMsgStore } from '../../store/user-msg.store'
 import { CatDetails } from './cat-details'
 import { catDetailsAction } from './cat-details.action'
 import { catDetailsLoader } from './cat-details.loader'
@@ -105,6 +106,23 @@ describe('CatDetails', () => {
     await waitFor(() => expect(router.state.location.pathname).toBe('/cat'))
     expect(catService.remove).toHaveBeenCalledWith('cat-1')
     expect(screen.getByText('Cat list')).toBeInTheDocument()
+  })
+
+  it('stays on the page with an error message when the delete fails', async () => {
+    const networkErr = new ApiError(0, 'NETWORK_ERROR', 'Network Error')
+    vi.mocked(catService.remove).mockRejectedValue(networkErr)
+    // the server is down, so a reload of the cat would fail too
+    vi.mocked(catService.getById).mockResolvedValueOnce(_CAT).mockRejectedValue(networkErr)
+    _renderAt('/cat/cat-1')
+    await userEvent.click(await screen.findByRole('button', { name: 'Delete' }))
+
+    const dialog = screen.getByRole('dialog', { name: 'Delete Mitzi?' })
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Delete' }))
+
+    expect(await screen.findByRole('button', { name: 'Delete' })).toBeEnabled()
+    expect(screen.getByRole('heading', { name: 'Mitzi' })).toBeInTheDocument()
+    expect(useUserMsgStore.getState().msg).toMatchObject({ type: 'error' })
+    expect(catService.getById).toHaveBeenCalledOnce()
   })
 
   it("shows the not-found message for a cat that doesn't exist", async () => {

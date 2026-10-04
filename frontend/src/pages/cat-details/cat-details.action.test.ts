@@ -25,14 +25,14 @@ describe('catDetailsAction', () => {
     expect((result as Response).headers.get('Location')).toBe('/cat')
   })
 
-  it('shows the error and stays when the delete fails', async () => {
+  it('shows the error and returns an error status when the delete fails', async () => {
     vi.mocked(catService.remove).mockRejectedValue(
       new ApiError(0, 'NETWORK_ERROR', 'Network Error'),
     )
 
     const result = await catDetailsAction({ params: { id: 'cat-1' } })
 
-    expect(result).toBeNull()
+    expect(result).toMatchObject({ data: null, init: { status: 500 } })
     expect(store().msg).toMatchObject({
       txt: "Can't reach the server. Check your connection.",
       type: 'error',
