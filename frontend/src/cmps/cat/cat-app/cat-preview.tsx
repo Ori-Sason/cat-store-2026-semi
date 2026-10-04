@@ -1,8 +1,8 @@
 import type React from 'react'
 import { Link } from 'react-router'
 import type { Cat } from '@cat-store/shared'
-import { utilService } from '../../services/util.service'
-import { CatImg } from './cat-img'
+import { utilService } from '../../../services/util.service'
+import { CatImg } from '../cat-img'
 import { CatLabels } from './cat-labels'
 
 interface CatPreviewProps {

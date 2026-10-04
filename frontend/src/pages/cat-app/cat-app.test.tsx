@@ -3,11 +3,11 @@ import userEvent from '@testing-library/user-event'
 import { DEFAULT_CAT_FILTER, type Cat } from '@cat-store/shared'
 import { createMemoryRouter, RouterProvider } from 'react-router'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { catService } from '../services/cat.service'
+import { catService } from '../../services/cat.service'
 import { CatApp } from './cat-app'
 import { catAppLoader } from './cat-app.loader'
 
-vi.mock('../services/cat.service')
+vi.mock('../../services/cat.service')
 
 const _CATS = [
   {

@@ -1,8 +1,8 @@
 import type React from 'react'
 import { useLoaderData, useLocation, useNavigation, useSearchParams } from 'react-router'
 import { catFilterService, type CatFilter } from '@cat-store/shared'
-import { CatFilterBar } from '../cmps/cat/cat-filter-bar'
-import { CatList } from '../cmps/cat/cat-list'
+import { CatFilterBar } from '../../cmps/cat/cat-app/cat-filter-bar'
+import { CatList } from '../../cmps/cat/cat-app/cat-list'
 import type { catAppLoader } from './cat-app.loader'
 
 export const CatApp: React.FC = () => {

@@ -5,14 +5,14 @@
 @use './basic/layout';
 
 /* PAGES */
-@use './pages/cat-app';
+@use './pages/cat-app/cat-app';
 
 /* COMPONENTS */
-@use './cmps/cat/cat-filter-bar';
+@use './cmps/cat/cat-app/cat-filter-bar';
+@use './cmps/cat/cat-app/cat-labels';
+@use './cmps/cat/cat-app/cat-list';
+@use './cmps/cat/cat-app/cat-preview';
 @use './cmps/cat/cat-img';
-@use './cmps/cat/cat-labels';
-@use './cmps/cat/cat-list';
-@use './cmps/cat/cat-preview';
 @use './cmps/cat/label-chip';
 @use './cmps/layout/app-header';
 @use './cmps/util/route-error';

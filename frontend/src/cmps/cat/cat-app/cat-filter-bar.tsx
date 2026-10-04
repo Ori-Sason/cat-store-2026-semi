@@ -9,7 +9,7 @@ import {
   type CatSortField,
   type SortByDirection,
 } from '@cat-store/shared'
-import { LABEL_COLORS } from '../../models/label'
+import { LABEL_COLORS } from '../../../models/label'
 
 interface SortOption {
   txt: string

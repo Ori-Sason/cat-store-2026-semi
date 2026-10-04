@@ -1,7 +1,7 @@
 import type React from 'react'
 import type { CatLabel } from '@cat-store/shared'
-import { useFitCount } from '../../hooks/use-fit-count'
-import { LabelChip } from './label-chip'
+import { useFitCount } from '../../../hooks/use-fit-count'
+import { LabelChip } from '../label-chip'
 
 interface CatLabelsProps {
   labels: CatLabel[]

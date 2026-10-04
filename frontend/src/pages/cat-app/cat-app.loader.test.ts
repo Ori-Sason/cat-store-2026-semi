@@ -1,10 +1,10 @@
 import { DEFAULT_CAT_FILTER, type Cat } from '@cat-store/shared'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { ApiError } from '../models/api-error'
-import { catService } from '../services/cat.service'
+import { ApiError } from '../../models/api-error'
+import { catService } from '../../services/cat.service'
 import { catAppLoader } from './cat-app.loader'
 
-vi.mock('../services/cat.service')
+vi.mock('../../services/cat.service')
 
 const _CATS = [{ _id: 'cat-1', name: 'Mitzi' }] as Cat[]
 
