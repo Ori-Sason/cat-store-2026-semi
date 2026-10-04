@@ -28,8 +28,8 @@ function getById(catId: string): Promise<Cat> {
 }
 
 // A whole Cat is fine on PUT - the BE strips _id, createdAt and updatedAt
-function save(cat: CatInput | Cat): Promise<Cat> {
-  if ('_id' in cat) return httpService.put<Cat>(`${BASE_PATH}/${cat._id}`, cat)
+function save(cat: CatInput & Partial<Pick<Cat, '_id'>>): Promise<Cat> {
+  if (cat._id) return httpService.put<Cat>(`${BASE_PATH}/${cat._id}`, cat)
   return httpService.post<Cat>(BASE_PATH, cat)
 }
 

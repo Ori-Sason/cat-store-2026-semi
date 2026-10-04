@@ -1,3 +1,8 @@
+import { data } from 'react-router'
+import { ApiError } from '../models/api-error'
+import { useUserMsgStore } from '../store/user-msg.store'
+import { errorService } from './error.service'
+
 const _priceFormatter = new Intl.NumberFormat('en-US', {
   style: 'currency',
   currency: 'USD',
@@ -26,8 +31,17 @@ function getFitCount(itemWidths: number[], rowWidth: number, gap: number, moreWi
   return itemWidths.length
 }
 
+// A failed route action: show the error, stay on the page.
+// An error status skips the loader reload, so a failing server can't swap the page for RouteError
+function toActionError(err: unknown) {
+  useUserMsgStore.getState().showErrorMsg(errorService.getErrorMsg(err))
+  const status = err instanceof ApiError && err.status >= 400 ? err.status : 500
+  return data(null, { status })
+}
+
 export const utilService = {
   formatPrice,
   formatDate,
   getFitCount,
+  toActionError,
 }

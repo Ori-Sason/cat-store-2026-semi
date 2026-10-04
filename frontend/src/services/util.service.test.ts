@@ -1,4 +1,6 @@
-import { describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
+import { ApiError } from '../models/api-error'
+import { useUserMsgStore } from '../store/user-msg.store'
 import { utilService } from './util.service'
 
 describe('utilService.formatPrice', () => {
@@ -52,5 +54,27 @@ describe('utilService.formatDate', () => {
   it('shows a short month, the day and the year', () => {
     // midday UTC, so any test machine's timezone lands on the same date
     expect(utilService.formatDate(Date.UTC(2026, 9, 4, 12))).toBe('Oct 4, 2026')
+  })
+})
+
+describe('utilService.toActionError', () => {
+  beforeEach(() => {
+    useUserMsgStore.setState({ msg: null })
+  })
+
+  it('shows the error and passes an API error status through', () => {
+    const result = utilService.toActionError(new ApiError(404, 'CAT_NOT_FOUND', 'Cat not found'))
+
+    expect(result).toMatchObject({ data: null, init: { status: 404 } })
+    expect(useUserMsgStore.getState().msg).toMatchObject({
+      txt: "Cat doesn't exist (anymore).",
+      type: 'error',
+    })
+  })
+
+  it('returns a 500 when there is no response status', () => {
+    const result = utilService.toActionError(new ApiError(0, 'NETWORK_ERROR', 'Network Error'))
+
+    expect(result).toMatchObject({ data: null, init: { status: 500 } })
   })
 })
