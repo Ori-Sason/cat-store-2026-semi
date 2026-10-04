@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { DEFAULT_CAT_FILTER } from '../models/cat.ts'
+import { DEFAULT_CAT_FILTER, type CatFilter } from '../models/cat.ts'
 import type { QueryParamsReader } from '../models/util.ts'
 import { catFilterService } from './cat-filter.service.ts'
 
@@ -11,7 +11,15 @@ function _params(...pairs: [string, string][]): QueryParamsReader {
   }
 }
 
-const { paramsToFilter } = catFilterService
+const { paramsToFilter, filterToParams } = catFilterService
+
+const _FULL_FILTER: CatFilter = {
+  txt: 'tom',
+  isInStock: true,
+  labels: ['Kitten', 'Calm'],
+  sortBy: 'price',
+  sortDir: 'asc',
+}
 
 describe('catFilterService.paramsToFilter', () => {
   it('returns the default filter for empty params', () => {
@@ -64,5 +72,44 @@ describe('catFilterService.paramsToFilter', () => {
       ),
     )
     expect(filter).toEqual(DEFAULT_CAT_FILTER)
+  })
+})
+
+describe('catFilterService.filterToParams', () => {
+  it('returns no params for the default filter', () => {
+    expect(filterToParams(DEFAULT_CAT_FILTER)).toEqual([])
+  })
+
+  it('writes every field, with labels as repeated keys', () => {
+    expect(filterToParams(_FULL_FILTER)).toEqual([
+      ['txt', 'tom'],
+      ['isInStock', 'true'],
+      ['labels', 'Kitten'],
+      ['labels', 'Calm'],
+      ['sortBy', 'price'],
+      ['sortDir', 'asc'],
+    ])
+  })
+
+  it('keeps isInStock=false, not as missing', () => {
+    expect(filterToParams({ ...DEFAULT_CAT_FILTER, isInStock: false })).toEqual([
+      ['isInStock', 'false'],
+    ])
+  })
+
+  it('trims txt and drops a whitespace-only one', () => {
+    expect(filterToParams({ ...DEFAULT_CAT_FILTER, txt: '  tom  ' })).toEqual([['txt', 'tom']])
+    expect(filterToParams({ ...DEFAULT_CAT_FILTER, txt: '   ' })).toEqual([])
+  })
+
+  it('drops sortBy and sortDir one by one when they match the default', () => {
+    expect(filterToParams({ ...DEFAULT_CAT_FILTER, sortDir: 'asc' })).toEqual([['sortDir', 'asc']])
+  })
+
+  it.each([
+    ['the default filter', DEFAULT_CAT_FILTER],
+    ['a full filter', _FULL_FILTER],
+  ])('round-trips %s through paramsToFilter', (_name, filter) => {
+    expect(paramsToFilter(_params(...filterToParams(filter)))).toEqual(filter)
   })
 })

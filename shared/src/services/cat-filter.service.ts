@@ -22,6 +22,21 @@ function paramsToFilter(params: QueryParamsReader): CatFilter {
   }
 }
 
+// CatFilter → query string, the inverse of paramsToFilter. Returns [key, value] pairs,
+// since shared has no URLSearchParams - `new URLSearchParams(pairs)` takes them as is.
+// Labels go out as repeated keys (labels=Kitten&labels=Calm), the shape the BE reads.
+// Values equal to DEFAULT_CAT_FILTER are left out, so the default filter is an empty query
+function filterToParams(filter: CatFilter): [string, string][] {
+  const pairs: [string, string][] = []
+  const txt = filter.txt.trim()
+  if (txt) pairs.push(['txt', txt])
+  if (filter.isInStock !== null) pairs.push(['isInStock', String(filter.isInStock)])
+  for (const label of filter.labels) pairs.push(['labels', label])
+  if (filter.sortBy !== DEFAULT_CAT_FILTER.sortBy) pairs.push(['sortBy', filter.sortBy])
+  if (filter.sortDir !== DEFAULT_CAT_FILTER.sortDir) pairs.push(['sortDir', filter.sortDir])
+  return pairs
+}
+
 function _parseBoolean(value: string | null): boolean | null {
   if (value === 'true') return true
   if (value === 'false') return false
@@ -39,4 +54,5 @@ function _pickOne<T extends string>(value: string | null, allowed: readonly T[])
 
 export const catFilterService = {
   paramsToFilter,
+  filterToParams,
 }

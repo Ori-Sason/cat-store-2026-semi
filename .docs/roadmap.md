@@ -43,6 +43,9 @@ The order of BE and FE can go either way, as long as the DB comes first.
 
 - SCSS from the start: nesting, variables, mixins, functions.
 - Responsive on desktop, tablet and mobile as each feature is built.
+- No Figma. Before Part 1 item 8, pick a layout from 2–3 throwaway HTML mockups (kept out of
+   the repo), then add spacing, breakpoint, radius and shadow tokens before the first real component.
+   **The mockup direction is still open.**
 
 ## Testing (ongoing, not a separate stage)
 
@@ -135,6 +138,7 @@ Before the first real deploy. This turns into a `deploy` skill once Part 5 start
 
 Single home for open questions. Once one is decided, record the answer in `architecture.md` → Decisions and remove it here.
 
+- Which layout direction to use for the cat pages (decided from the mockups, before Part 1 item 8).
 - Which chart library to use for the dashboard.
 - Which maps library to use (Google Maps is one option).
 - Deploy: Render build/start steps.
