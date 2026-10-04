@@ -7,12 +7,14 @@
 /* PAGES */
 @use './pages/cat-app/cat-app';
 @use './pages/cat-details/cat-details';
+@use './pages/cat-edit/cat-edit';
 
 /* COMPONENTS */
 @use './cmps/cat/cat-app/cat-filter-bar';
 @use './cmps/cat/cat-app/cat-labels';
 @use './cmps/cat/cat-app/cat-list';
 @use './cmps/cat/cat-app/cat-preview';
+@use './cmps/cat/cat-edit/cat-edit-form';
 @use './cmps/cat/cat-img';
 @use './cmps/cat/label-chip';
 @use './cmps/layout/app-header';

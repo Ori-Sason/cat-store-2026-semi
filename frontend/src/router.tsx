@@ -7,6 +7,9 @@ import { catAppLoader } from './pages/cat-app/cat-app.loader'
 import { CatDetails } from './pages/cat-details/cat-details'
 import { catDetailsAction } from './pages/cat-details/cat-details.action'
 import { catDetailsLoader } from './pages/cat-details/cat-details.loader'
+import { CatEdit } from './pages/cat-edit/cat-edit'
+import { catEditAction } from './pages/cat-edit/cat-edit.action'
+import { catEditLoader } from './pages/cat-edit/cat-edit.loader'
 
 export const router = createBrowserRouter([
   {
@@ -35,6 +38,18 @@ export const router = createBrowserRouter([
                 loader: catDetailsLoader,
                 action: catDetailsAction,
                 element: <CatDetails />,
+              },
+              {
+                path: '/cat/new',
+                loader: catEditLoader,
+                action: catEditAction,
+                element: <CatEdit />,
+              },
+              {
+                path: '/cat/:id/edit',
+                loader: catEditLoader,
+                action: catEditAction,
+                element: <CatEdit />,
               },
               {
                 path: '*',
