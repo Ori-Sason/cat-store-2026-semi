@@ -17,7 +17,8 @@ POST and PUT validate the body with `validateBody(catSchema)`, so server-set fie
 The FE `catService` (`query`, `getById`, `save`, `remove`) is done. `query` sends the filter
 through the shared `catFilterService.filterToParams`, so `labels` go out as repeated keys and
 default values stay out of the URL.
-Next: decide where FE data loads (see Open questions), then the cat pages (item 8).
+FE data flow is decided: loaders and actions for cat data, Zustand only for client state.
+Next: pick the layout direction from the mockups (see Open questions), then the cat pages (item 8).
 
 ## Part 1: DB + backend + frontend skeleton (CRUD over cats)
 
@@ -37,7 +38,8 @@ No localStorage and no JSON-file stage. The app runs on a real DB from day one.
 - [ ] 9. Filter by name, in-stock and several labels at once. Sort by name, price or created.
 - [ ] 10. `cat-details` page (smart, routable). No reviews yet.
 - [ ] 11. `cat-edit` page (smart, routable) for add and edit.
-- [ ] 12. App state lives in a Zustand store.
+- [ ] 12. Client state lives in Zustand (user messages, later the logged-in user). Cat data loads
+  through react-router loaders and actions, with no cat store (`architecture.md` → Decisions).
 - [ ] 13. Hand-rolled form validation: errors come from the Zod schema on every render, plus `touched`/`isSubmitted` state. No form library.
 
 The order of BE and FE can go either way, as long as the DB comes first.
@@ -141,8 +143,6 @@ Before the first real deploy. This turns into a `deploy` skill once Part 5 start
 
 Single home for open questions. Once one is decided, record the answer in `architecture.md` → Decisions and remove it here.
 
-- Where FE data loads: react-router 8 loaders/actions, the Zustand cat store (item 12), or
-  both (a loader for page data, a store for state shared across pages). Decide before item 8.
 - Which layout direction to use for the cat pages (decided from the mockups, before Part 1 item 8).
 - Which chart library to use for the dashboard.
 - Which maps library to use (Google Maps is one option).

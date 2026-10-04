@@ -12,8 +12,8 @@ prod: browser ──▶ Express (static FE + /api + socket.io) ──▶ MongoDB
 ## Components
 - `shared/` (`@cat-store/shared`) — wire contract: types, Zod schemas, constants,
   `catFilterService`. No build step, erasable TS only, no DOM/Node/mongodb imports.
-- `frontend/` — Vite + React SPA. Routes via `react-router`, state in Zustand,
-  HTTP via axios with relative URLs only (`/api/...`).
+- `frontend/` — Vite + React SPA. Routes and data loading via `react-router`, client state
+  in Zustand, HTTP via axios with relative URLs only (`/api/...`).
 - `backend/` — Express 5, route → controller → service layers, native `mongodb`
   driver (no Mongoose). Node runs `.ts` directly (type stripping).
 - Collections: `cats`, `users`, `reviews`. Every doc has server-set `createdAt`/`updatedAt`.
@@ -48,6 +48,9 @@ Env: `node --env-file=.env.local`, no dotenv. Prod needs `JWT_SECRET`, Mongo URL
 - **The query-string → filter parsing lives in shared** (`catFilterService.paramsToFilter`),
   and both the FE loader and the BE `GET /api/cats` controller call it.
   Why: one parser, so the FE and BE can't disagree on what a URL means.
+- **FE server data goes through react-router loaders and actions.** Zustand holds only client
+  state, with no cat store.
+  Why: the router already holds and revalidates the data, and a store copy would go stale.
 - **Server-set timestamps:** every doc (cats, users, reviews) has `createdAt`/`updatedAt`, set
   by the server with `Date.now()`. `updatedAt` changes on every update. Client-sent values are
   stripped by Zod.
@@ -98,3 +101,4 @@ Open questions live in `roadmap.md`. When one is decided, record it here.
 
 ## Change Log
 - 2026-10-01 — Initial architecture.
+- 2026-10-04 — FE data flow: server data via react-router loaders/actions, Zustand for client state only.
