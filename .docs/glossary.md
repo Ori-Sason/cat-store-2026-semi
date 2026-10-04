@@ -25,7 +25,8 @@
 ### Type shapes
 - `Cat` vs `CatInput`
 	- Canonical meaning: `Cat` is a stored cat as the API returns it (with `_id`,
-	  `createdAt`, `updatedAt`, and an `imgUrl` that is always set). `CatInput` is
+	  `createdAt` and `updatedAt`). Its `imgUrl` can be `''`, and the FE then shows the
+	  default image. `CatInput` is
 	  what the client sends (POST / PUT body, edit-form state), inferred from `catSchema`.
 	- Avoid: `CatDto`, `NewCat`, `CatPayload`, `CatToSave`.
 

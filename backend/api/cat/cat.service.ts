@@ -22,6 +22,13 @@ async function getById(catId: string): Promise<CatDoc> {
   return cat
 }
 
+async function remove(catId: string): Promise<void> {
+  const _id = utilService.toObjectId(catId)
+  const collection = await mongoService.getCollection<CatDoc>(CAT_COLLECTION)
+  const result = _id && (await collection.deleteOne({ _id }))
+  if (!result?.deletedCount) throw new HttpError(404, 'CAT_NOT_FOUND', `Cat ${catId} not found`)
+}
+
 function _buildCriteria({ txt, isInStock, labels }: CatFilter): Filter<CatDoc> {
   const criteria: Filter<CatDoc> = {}
   // escaped, so "." or "*" in the search box match literally instead of acting as regex
@@ -34,4 +41,5 @@ function _buildCriteria({ txt, isInStock, labels }: CatFilter): Filter<CatDoc> {
 export const catService = {
   query,
   getById,
+  remove,
 }

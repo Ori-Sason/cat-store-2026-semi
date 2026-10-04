@@ -21,7 +21,7 @@ No localStorage and no JSON-file stage. The app runs on a real DB from day one.
 - [x] 1. Set up MongoDB with a `cats` collection.
 - [x] 2. Cat shape: `{ _id, name, price, labels: [...], isInStock, imgUrl, createdAt, updatedAt }`.
    No `ownerId` yet. It's added in Part 3, when users exist.
-   `imgUrl` is optional in the form, and the user can leave it empty. If it's empty, the backend fills in a default image link before saving. There's no upload. The field is a URL only.
+   `imgUrl` is optional in the form, and the user can leave it empty. If it's empty, it's stored as `''` and the FE shows a default image (`cat-default-bw.png`), also used when an image fails to load. There's no upload. The field is a URL only.
 - [ ] 3. Express backend split into service, controller and route layers.
 - [ ] 4. Build the routes in Postman order: GET list (with filterBy) → GET by id → DELETE → POST → PUT.
 - [x] 5. No CORS. Use the Vite dev proxy (`/api` → `:8000`). The FE calls relative

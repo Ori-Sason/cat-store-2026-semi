@@ -141,3 +141,32 @@ describe('GET /api/cats/:id', () => {
     expect(res.body).toMatchObject({ code: 'CAT_NOT_FOUND' })
   })
 })
+
+describe('DELETE /api/cats/:id', () => {
+  beforeEach(() => {
+    vi.spyOn(console, 'warn').mockImplementation(() => {})
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  it('deletes the cat and returns 204', async () => {
+    const cat = _buildCat({ name: 'Mitzi' })
+    const collection = await mongoService.getCollection<CatDoc>(CAT_COLLECTION)
+    await collection.insertOne(cat)
+
+    const res = await request(app).delete(`/api/cats/${cat._id.toHexString()}`)
+
+    expect(res.status).toBe(204)
+    expect(res.body).toEqual({})
+    expect(await collection.findOne({ _id: cat._id })).toBeNull()
+  })
+
+  it('returns 404 CAT_NOT_FOUND for an id that does not exist', async () => {
+    const res = await request(app).delete(`/api/cats/${new ObjectId().toHexString()}`)
+
+    expect(res.status).toBe(404)
+    expect(res.body).toMatchObject({ code: 'CAT_NOT_FOUND' })
+  })
+})

@@ -15,3 +15,8 @@ export async function getCatById(req: Request<{ id: string }>, res: Response) {
   const cat = await catService.getById(req.params.id)
   res.json(cat)
 }
+
+export async function removeCat(req: Request<{ id: string }>, res: Response) {
+  await catService.remove(req.params.id)
+  res.sendStatus(204) // 204 No Content
+}
