@@ -1,0 +1,19 @@
+@use 'setup' as *;
+
+.route-error {
+  display: grid;
+  justify-items: center;
+  gap: $space-4;
+  padding: $space-6 $space-4;
+  text-align: center;
+
+  h1 {
+    color: $primary-clr-900;
+  }
+
+  p {
+    // getErrorMsg puts the "Ref: <id>" on its own line
+    white-space: pre-line;
+    color: $primary-clr-850;
+  }
+}

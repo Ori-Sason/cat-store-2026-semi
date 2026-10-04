@@ -1,0 +1,50 @@
+@use 'setup' as *;
+
+.app-header {
+  color: $primary-clr-100;
+  background-color: $primary-clr-900;
+
+  .content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: $space-4;
+    padding-block: $space-3;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: $space-2;
+    font-size: 1.15rem;
+    font-weight: 700;
+  }
+
+  .paw {
+    display: grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    font-size: 0.85rem;
+    background-color: $primary-clr-500;
+  }
+
+  nav {
+    display: flex;
+    gap: $space-5;
+
+    a {
+      color: $primary-clr-300;
+
+      &:hover {
+        color: $primary-clr-100;
+      }
+
+      &.active {
+        color: $clr-white;
+        font-weight: 700;
+      }
+    }
+  }
+}

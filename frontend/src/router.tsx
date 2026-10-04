@@ -1,6 +1,7 @@
 import { createBrowserRouter, data } from 'react-router'
 import { LayoutApp } from './cmps/layout/layout-app'
 import { LayoutRoot } from './cmps/layout/layout-root'
+import { RouteError } from './cmps/util/route-error'
 
 export const router = createBrowserRouter([
   {
@@ -12,6 +13,7 @@ export const router = createBrowserRouter([
         children: [
           {
             // Pathless route - errors below render here, so the header and user messages stay on screen
+            errorElement: <RouteError />,
             children: [
               // pages with app-header
               {
