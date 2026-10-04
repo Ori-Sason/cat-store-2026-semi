@@ -5,8 +5,11 @@ import { createMemoryRouter, RouterProvider } from 'react-router'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { RouteError } from '../../cmps/util/route-error'
 import { ApiError } from '../../models/api-error'
+import type { CatListLocationState } from '../../models/util'
 import { catService } from '../../services/cat.service'
 import { useUserMsgStore } from '../../store/user-msg.store'
+import { CatDetails } from '../cat-details/cat-details'
+import { catDetailsLoader } from '../cat-details/cat-details.loader'
 import { CatEdit } from './cat-edit'
 import { catEditAction } from './cat-edit.action'
 import { catEditLoader } from './cat-edit.loader'
@@ -24,11 +27,11 @@ const _CAT = {
   updatedAt: 1,
 } satisfies Cat
 
-function _renderAt(path: string) {
+function _renderAt(path: string, state?: CatListLocationState) {
   const router = createMemoryRouter(
     [
       { path: '/cat', element: <p>Cat list</p> },
-      { path: '/cat/:id', element: <p>Cat details</p> },
+      { path: '/cat/:id', loader: catDetailsLoader, element: <CatDetails /> },
       {
         errorElement: <RouteError />,
         children: [
@@ -42,7 +45,7 @@ function _renderAt(path: string) {
         ],
       },
     ],
-    { initialEntries: [path] },
+    { initialEntries: [{ pathname: path, state }] },
   )
   render(<RouterProvider router={router} />)
   return { router, user: userEvent.setup() }
@@ -71,6 +74,27 @@ describe('CatEdit', () => {
     expect(screen.getByLabelText('Name')).toHaveValue('')
     expect(screen.getByLabelText('Price ($)')).toHaveValue('')
     expect(screen.getByRole('link', { name: 'Cancel' })).toHaveAttribute('href', '/cat')
+  })
+
+  it('keeps the list filter from details through edit and back on Cancel', async () => {
+    const { user } = _renderAt('/cat/cat-1', { listSearch: '?labels=Calm' })
+
+    await user.click(await screen.findByRole('link', { name: 'Edit' }))
+    await user.click(await screen.findByRole('link', { name: 'Cancel' }))
+
+    expect(await screen.findByRole('link', { name: '← Back to cats' })).toHaveAttribute(
+      'href',
+      '/cat?labels=Calm',
+    )
+  })
+
+  it('cancels an add back to the list with its filter', async () => {
+    _renderAt('/cat/new', { listSearch: '?labels=Calm' })
+
+    expect(await screen.findByRole('link', { name: 'Cancel' })).toHaveAttribute(
+      'href',
+      '/cat?labels=Calm',
+    )
   })
 
   it('saves the cat and lands on its details', async () => {

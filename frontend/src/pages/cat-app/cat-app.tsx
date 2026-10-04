@@ -30,7 +30,7 @@ export const CatApp: React.FC = () => {
         <span className="count">
           {cats.length} {cats.length === 1 ? 'cat' : 'cats'}
         </span>
-        <Link to="/cat/new" className="main-btn add-btn">
+        <Link to="/cat/new" state={{ listSearch: location.search }} className="main-btn add-btn">
           + Add cat
         </Link>
       </header>

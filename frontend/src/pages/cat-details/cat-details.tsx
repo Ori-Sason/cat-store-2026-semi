@@ -48,7 +48,7 @@ export const CatDetails: React.FC = () => {
           )}
           <p className="added">Added {utilService.formatDate(cat.createdAt)}</p>
           <div className="actions">
-            <Link to={`/cat/${cat._id}/edit`} className="main-btn">
+            <Link to={`/cat/${cat._id}/edit`} state={{ listSearch }} className="main-btn">
               Edit
             </Link>
             <button

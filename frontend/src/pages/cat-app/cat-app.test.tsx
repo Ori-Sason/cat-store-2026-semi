@@ -30,6 +30,7 @@ function _renderAt(path: string) {
   const router = createMemoryRouter(
     [
       { path: '/cat', loader: catAppLoader, element: <CatApp /> },
+      { path: '/cat/new', element: <LocationStateProbe /> },
       { path: '/cat/:id', element: <LocationStateProbe /> },
     ],
     { initialEntries: [path] },
@@ -52,13 +53,13 @@ describe('CatApp', () => {
     expect(screen.getByRole('button', { name: 'In stock' })).toHaveAttribute('aria-pressed', 'true')
   })
 
-  it('links to the add page', async () => {
-    _renderAt('/cat')
+  it('hands the list filter to the add page', async () => {
+    const router = _renderAt('/cat?labels=Calm')
 
-    expect(await screen.findByRole('link', { name: '+ Add cat' })).toHaveAttribute(
-      'href',
-      '/cat/new',
-    )
+    await userEvent.click(await screen.findByRole('link', { name: '+ Add cat' }))
+
+    await waitFor(() => expect(router.state.location.pathname).toBe('/cat/new'))
+    expect(screen.getByText('{"listSearch":"?labels=Calm"}')).toBeInTheDocument()
   })
 
   it('writes a filter change to the URL and loads again', async () => {

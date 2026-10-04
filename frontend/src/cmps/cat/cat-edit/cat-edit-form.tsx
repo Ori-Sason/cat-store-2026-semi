@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { Link } from 'react-router'
 import { z } from 'zod'
 import { CAT_LABELS, catSchema, type Cat, type CatInput, type CatLabel } from '@cat-store/shared'
+import type { CatListLocationState } from '../../../models/util'
 import { ToggleSwitch } from '../../util/toggle-switch'
 import { CatImg } from '../cat-img'
 import { LabelToggles } from '../label-toggles'
@@ -27,10 +28,17 @@ interface CatEditFormProps {
   cat: Cat | null
   isSaving: boolean
   cancelTo: string
+  cancelState?: CatListLocationState
   onSave: (catInput: CatInput) => void
 }
 
-export const CatEditForm: React.FC<CatEditFormProps> = ({ cat, isSaving, cancelTo, onSave }) => {
+export const CatEditForm: React.FC<CatEditFormProps> = ({
+  cat,
+  isSaving,
+  cancelTo,
+  cancelState,
+  onSave,
+}) => {
   const [form, setForm] = useState(() => _toForm(cat))
   const [touched, setTouched] = useState<Partial<Record<CatTextField, boolean>>>({})
   const [isSubmitted, setIsSubmitted] = useState(false)
@@ -146,7 +154,7 @@ export const CatEditForm: React.FC<CatEditFormProps> = ({ cat, isSaving, cancelT
         <button type="submit" className="main-btn" disabled={isSaving}>
           {isSaving ? 'Saving…' : 'Save'}
         </button>
-        <Link to={cancelTo} className="sub-btn">
+        <Link to={cancelTo} state={cancelState} className="sub-btn">
           Cancel
         </Link>
       </div>
