@@ -18,6 +18,11 @@
       font-size: 0.85rem;
       color: $primary-clr-850;
     }
+
+    .add-btn {
+      margin-inline-start: auto;
+      white-space: nowrap;
+    }
   }
 
   .list-container {

@@ -1,5 +1,5 @@
 import type React from 'react'
-import { useLoaderData, useLocation, useNavigation, useSearchParams } from 'react-router'
+import { Link, useLoaderData, useLocation, useNavigation, useSearchParams } from 'react-router'
 import { catFilterService, type CatFilter } from '@cat-store/shared'
 import { CatFilterBar } from '../../cmps/cat/cat-app/cat-filter-bar'
 import { CatList } from '../../cmps/cat/cat-app/cat-list'
@@ -30,6 +30,9 @@ export const CatApp: React.FC = () => {
         <span className="count">
           {cats.length} {cats.length === 1 ? 'cat' : 'cats'}
         </span>
+        <Link to="/cat/new" className="main-btn add-btn">
+          + Add cat
+        </Link>
       </header>
       <CatFilterBar filterBy={shownFilterBy} onSetFilter={onSetFilter} />
       <div className={`list-container ${pendingLocation ? 'is-loading' : ''}`}>

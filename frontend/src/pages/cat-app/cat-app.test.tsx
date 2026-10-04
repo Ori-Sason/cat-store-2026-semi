@@ -52,6 +52,15 @@ describe('CatApp', () => {
     expect(screen.getByRole('button', { name: 'In stock' })).toHaveAttribute('aria-pressed', 'true')
   })
 
+  it('links to the add page', async () => {
+    _renderAt('/cat')
+
+    expect(await screen.findByRole('link', { name: '+ Add cat' })).toHaveAttribute(
+      'href',
+      '/cat/new',
+    )
+  })
+
   it('writes a filter change to the URL and loads again', async () => {
     const router = _renderAt('/cat')
     await screen.findByRole('heading', { name: 'Mitzi' })

@@ -24,7 +24,14 @@ Cards fit their labels to one line, with "+N" for the rest. The SCSS has spacing
 and breakpoint tokens, and label colors live in `LABEL_COLORS` (`frontend/src/models/label.ts`).
 Cat details (`/cat/:id`) is done. Delete goes through a route action, after a `ConfirmModal`
 (`cmps/util/`, a native `<dialog>`). Back returns to the list with the filter it came from.
-Next: `cat-edit` with form validation (items 11, 13), at `/cat/:id/edit` and `/cat/new` (one page).
+Cat edit is done: one page at `/cat/new` and `/cat/:id/edit` ("+ Add cat" on the list head).
+The form validates with `catSchema` on every render and shows errors after blur or submit. Price
+stays a string until it's parsed. Save goes through a route action to the cat's details, and Cancel
+goes back to details (edit) or the list (add). A failed save stays on the page with the form filled.
+Server field errors aren't shown: the form runs the same schema, so a 400 gets the generic
+message (`utilService.toActionError`). `LabelToggles` and `ToggleSwitch` are shared components.
+Part 1 is done, apart from the open `filter-debounce` and `label-more-tooltip` handoffs. Next:
+Part 2 (dashboard + about). The chart library is still open.
 
 ## Part 1: DB + backend + frontend skeleton (CRUD over cats)
 
@@ -43,10 +50,10 @@ No localStorage and no JSON-file stage. The app runs on a real DB from day one.
 - [x] 8. `cat-app` page (smart, routable), made of `cat-list`, `cat-preview` and `cat-filter-bar`.
 - [x] 9. Filter by name, in-stock and several labels at once. Sort by name, price or created.
 - [x] 10. `cat-details` page (smart, routable). No reviews yet.
-- [ ] 11. `cat-edit` page (smart, routable) for add and edit.
-- [ ] 12. Client state lives in Zustand (user messages, later the logged-in user). Cat data loads
+- [x] 11. `cat-edit` page (smart, routable) for add and edit.
+- [x] 12. Client state lives in Zustand (user messages, later the logged-in user). Cat data loads
   through react-router loaders and actions, with no cat store (`architecture.md` → Decisions).
-- [ ] 13. Hand-rolled form validation: errors come from the Zod schema on every render, plus `touched`/`isSubmitted` state. No form library.
+- [x] 13. Hand-rolled form validation: errors come from the Zod schema on every render, plus `touched`/`isSubmitted` state. No form library.
 
 The order of BE and FE can go either way, as long as the DB comes first.
 
@@ -57,7 +64,8 @@ The order of BE and FE can go either way, as long as the DB comes first.
 - No Figma. Before Part 1 item 8, pick a layout from 2–3 throwaway HTML mockups (kept out of
    the repo), then add spacing, breakpoint, radius and shadow tokens before the first real component.
    **Picked:** the list has a top filter bar (search, stock toggle, sort dropdown, label chips) over a
-   compact card grid. Details and edit use a two-column layout: a small image next to the info or form.
+   compact card grid. Details uses a two-column layout, a small image next to the info. Edit is one
+   column, with the image preview next to the Image URL field.
    Keep the current blue palette. Each label gets its own soft color.
 
 ## Testing (ongoing, not a separate stage)
