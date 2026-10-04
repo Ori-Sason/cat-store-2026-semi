@@ -18,7 +18,7 @@ async function getById(catId: string): Promise<CatDoc> {
   const _id = utilService.toObjectId(catId)
   const collection = await mongoService.getCollection<CatDoc>(CAT_COLLECTION)
   const cat = _id && (await collection.findOne({ _id }))
-  if (!cat) throw new HttpError(404, 'CAT_NOT_FOUND', `Cat ${catId} not found`)
+  if (!cat) throw _catNotFound(catId)
   return cat
 }
 
@@ -41,7 +41,7 @@ async function update(catId: string, input: CatInput): Promise<CatDoc> {
       { $set: { ...input, updatedAt: Date.now() } },
       { returnDocument: 'after' },
     ))
-  if (!cat) throw new HttpError(404, 'CAT_NOT_FOUND', `Cat ${catId} not found`)
+  if (!cat) throw _catNotFound(catId)
   return cat
 }
 
@@ -49,7 +49,7 @@ async function remove(catId: string): Promise<void> {
   const _id = utilService.toObjectId(catId)
   const collection = await mongoService.getCollection<CatDoc>(CAT_COLLECTION)
   const result = _id && (await collection.deleteOne({ _id }))
-  if (!result?.deletedCount) throw new HttpError(404, 'CAT_NOT_FOUND', `Cat ${catId} not found`)
+  if (!result?.deletedCount) throw _catNotFound(catId)
 }
 
 function _buildCriteria({ txt, isInStock, labels }: CatFilter): Filter<CatDoc> {
@@ -59,6 +59,10 @@ function _buildCriteria({ txt, isInStock, labels }: CatFilter): Filter<CatDoc> {
   if (isInStock !== null) criteria.isInStock = isInStock
   if (labels.length) criteria.labels = { $all: labels }
   return criteria
+}
+
+function _catNotFound(catId: string): HttpError {
+  return new HttpError(404, 'CAT_NOT_FOUND', `Cat ${catId} not found`)
 }
 
 export const catService = {
