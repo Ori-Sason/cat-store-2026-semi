@@ -1,7 +1,7 @@
 import { ObjectId } from 'mongodb'
 import request from 'supertest'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import type { Cat } from '@cat-store/shared'
+import type { Cat, CatInput } from '@cat-store/shared'
 import { app } from '../../app.ts'
 import { CAT_COLLECTION, type CatDoc } from '../../models/cat.ts'
 import { mongoService } from '../../services/mongodb.service.ts'
@@ -168,5 +168,75 @@ describe('DELETE /api/cats/:id', () => {
 
     expect(res.status).toBe(404)
     expect(res.body).toMatchObject({ code: 'CAT_NOT_FOUND' })
+  })
+})
+
+describe('POST /api/cats', () => {
+  const NOW = 50_000
+  const INPUT: CatInput = {
+    name: 'Mitzi',
+    price: 120.5,
+    labels: ['Kitten', 'Playful'],
+    isInStock: true,
+    imgUrl: 'https://example.com/mitzi.jpg',
+  }
+
+  beforeEach(() => {
+    // only Date is faked - Supertest and the Mongo driver still need real timers
+    vi.useFakeTimers({ toFake: ['Date'] })
+    vi.setSystemTime(NOW)
+    vi.spyOn(console, 'warn').mockImplementation(() => {})
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+    vi.restoreAllMocks()
+  })
+
+  it('creates the cat and returns 201 with server-set fields', async () => {
+    const res = await request(app).post('/api/cats').send(INPUT)
+
+    expect(res.status).toBe(201)
+    expect(res.body).toEqual({
+      ...INPUT,
+      _id: expect.any(String),
+      createdAt: NOW,
+      updatedAt: NOW,
+    })
+    const collection = await mongoService.getCollection<CatDoc>(CAT_COLLECTION)
+    const saved = await collection.findOne({ _id: new ObjectId(res.body._id as string) })
+    expect(saved).toMatchObject(INPUT)
+  })
+
+  it('ignores a client-sent _id, createdAt and updatedAt', async () => {
+    const clientId = new ObjectId().toHexString()
+    const res = await request(app)
+      .post('/api/cats')
+      .send({ ...INPUT, _id: clientId, createdAt: 1, updatedAt: 1 })
+
+    expect(res.status).toBe(201)
+    expect(res.body._id).not.toBe(clientId)
+    expect(res.body).toMatchObject({ createdAt: NOW, updatedAt: NOW })
+  })
+
+  it("stores an empty imgUrl as ''", async () => {
+    const res = await request(app)
+      .post('/api/cats')
+      .send({ ...INPUT, imgUrl: '' })
+
+    expect(res.status).toBe(201)
+    expect(res.body.imgUrl).toBe('')
+  })
+
+  it('returns 400 VALIDATION_FAILED with fieldErrors and saves nothing', async () => {
+    const res = await request(app)
+      .post('/api/cats')
+      .send({ ...INPUT, name: 'M', price: -1 })
+
+    expect(res.status).toBe(400)
+    expect(res.body.code).toBe('VALIDATION_FAILED')
+    expect(Object.keys(res.body.fieldErrors).sort()).toEqual(['name', 'price'])
+    const collection = await mongoService.getCollection<CatDoc>(CAT_COLLECTION)
+    expect(await collection.countDocuments()).toBe(0)
   })
 })

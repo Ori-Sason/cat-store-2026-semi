@@ -1,8 +1,11 @@
 import { Router } from 'express'
-import { getCatById, getCats, removeCat } from './cat.controller.ts'
+import { catSchema } from '@cat-store/shared'
+import { validateBody } from '../../middlewares/validate.middleware.ts'
+import { addCat, getCatById, getCats, removeCat } from './cat.controller.ts'
 
 export const catRoutes = Router()
 
 catRoutes.get('/', getCats)
 catRoutes.get('/:id', getCatById)
+catRoutes.post('/', validateBody(catSchema), addCat)
 catRoutes.delete('/:id', removeCat)

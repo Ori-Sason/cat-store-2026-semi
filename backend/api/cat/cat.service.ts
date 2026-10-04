@@ -1,5 +1,5 @@
-import type { Filter } from 'mongodb'
-import type { CatFilter } from '@cat-store/shared'
+import { ObjectId, type Filter } from 'mongodb'
+import type { CatFilter, CatInput } from '@cat-store/shared'
 import { CAT_COLLECTION, type CatDoc } from '../../models/cat.ts'
 import { HttpError } from '../../models/http-error.ts'
 import { mongoService } from '../../services/mongodb.service.ts'
@@ -22,6 +22,14 @@ async function getById(catId: string): Promise<CatDoc> {
   return cat
 }
 
+async function add(input: CatInput): Promise<CatDoc> {
+  const now = Date.now()
+  const cat: CatDoc = { _id: new ObjectId(), ...input, createdAt: now, updatedAt: now }
+  const collection = await mongoService.getCollection<CatDoc>(CAT_COLLECTION)
+  await collection.insertOne(cat)
+  return cat
+}
+
 async function remove(catId: string): Promise<void> {
   const _id = utilService.toObjectId(catId)
   const collection = await mongoService.getCollection<CatDoc>(CAT_COLLECTION)
@@ -41,5 +49,6 @@ function _buildCriteria({ txt, isInStock, labels }: CatFilter): Filter<CatDoc> {
 export const catService = {
   query,
   getById,
+  add,
   remove,
 }

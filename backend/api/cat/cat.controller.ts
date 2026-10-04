@@ -1,5 +1,5 @@
 import type { Request, Response } from 'express'
-import { catFilterService } from '@cat-store/shared'
+import { catFilterService, type CatInput } from '@cat-store/shared'
 import { catService } from './cat.service.ts'
 
 export async function getCats(req: Request, res: Response) {
@@ -14,6 +14,12 @@ export async function getCats(req: Request, res: Response) {
 export async function getCatById(req: Request<{ id: string }>, res: Response) {
   const cat = await catService.getById(req.params.id)
   res.json(cat)
+}
+
+// req.body is already parsed by validateBody(catSchema)
+export async function addCat(req: Request<object, unknown, CatInput>, res: Response) {
+  const cat = await catService.add(req.body)
+  res.status(201).json(cat) // 201 Created
 }
 
 export async function removeCat(req: Request<{ id: string }>, res: Response) {
