@@ -15,8 +15,8 @@ An open, candid review of how the user worked in recent sessions. Scope: `$ARGUM
 Runs in a forked subagent. Only the final report returns to the main session.
 
 ## 1. Gather
-- Build the digest: `node .claude/skills/review-me/digest.mjs <scope>`. It keeps user
-  prompts, Claude's replies and one line per tool call. Never read the raw `.jsonl`
+- Build the digest: `node .claude/skills/review-me/scripts/digest.mjs <scope>`. It keeps
+  user prompts, Claude's replies and one line per tool call. Never read the raw `.jsonl`
   transcripts, they're mostly tool output.
 - If the digest prints a `Note:` (e.g. no previous review, so the scope fell back to
   today), put it at the top of the report so the user sees it.
@@ -39,9 +39,9 @@ habits, and how corrections were given.
 Benchmark both sections in this order of weight:
 1. **Against the user's own baseline**: the background and the previous review. What
    grew, what's stuck.
-2. **Against the expected level**: if `.claude/skills/review-me/rubric.md` exists, place
-   the user per axis by its "How to place" rules (junior / mid / senior, or beyond
-   senior where the axis defines it) with evidence and a confidence level.
+2. **Against the expected level**: if `.claude/skills/review-me/references/rubric.md`
+   exists, place the user per axis by its "How to place" rules (junior / mid / senior,
+   or beyond senior where the axis defines it) with evidence and a confidence level.
    Without it, skip placement and say the rubric is missing.
 3. **How to improve**: concrete steps that close the gaps from 1 and 2, tied to this
    project or the user's courses, not generic advice.
