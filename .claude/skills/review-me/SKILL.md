@@ -40,7 +40,8 @@ Benchmark both sections in this order of weight:
 1. **Against the user's own baseline**: the background and the previous review. What
    grew, what's stuck.
 2. **Against the expected level**: if `.claude/skills/review-me/rubric.md` exists, place
-   the user per axis (junior / mid / senior) with evidence and a confidence level.
+   the user per axis by its "How to place" rules (junior / mid / senior, or beyond
+   senior where the axis defines it) with evidence and a confidence level.
    Without it, skip placement and say the rubric is missing.
 3. **How to improve**: concrete steps that close the gaps from 1 and 2, tied to this
    project or the user's courses, not generic advice.
