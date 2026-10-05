@@ -1,0 +1,61 @@
+@use 'setup' as *;
+
+// --min-pct / --max-pct / --median-pct (on .track) and --tick-pct are set from TSX
+.label-price-chart {
+  @include chart-rows;
+
+  .track {
+    // a faint baseline, so a label's line reads against the full axis
+    background: linear-gradient(rgba($primary-clr-900, 0.1), rgba($primary-clr-900, 0.1)) center /
+      100% 1px no-repeat;
+  }
+
+  // min to max: a line with end caps
+  .range {
+    position: absolute;
+    inset-block: 3px;
+    left: var(--min-pct);
+    right: calc(100% - var(--max-pct));
+    border-inline: 2px solid $primary-clr-500;
+    background: linear-gradient($primary-clr-500, $primary-clr-500) center / 100% 2px no-repeat;
+  }
+
+  .median {
+    position: absolute;
+    inset-block: 0;
+    left: var(--median-pct);
+    width: 4px;
+    border-radius: 2px;
+    background-color: $primary-clr-900;
+    translate: -50% 0;
+  }
+
+  .axis {
+    position: relative;
+    height: 1.4em;
+    font-size: 0.75rem;
+    color: $primary-clr-850;
+  }
+
+  // centered on its value, except the ends, which stay inside the chart
+  .axis-label {
+    position: absolute;
+    left: var(--tick-pct);
+    white-space: nowrap;
+    translate: -50% 0;
+
+    &:first-child {
+      translate: 0 0;
+    }
+
+    &:last-child {
+      translate: -100% 0;
+    }
+  }
+
+  @include from($bp-md) {
+    .axis {
+      grid-column: 2;
+    }
+  }
+}

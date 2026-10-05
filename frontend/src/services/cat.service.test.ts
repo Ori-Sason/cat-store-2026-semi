@@ -1,5 +1,5 @@
 import Axios from 'axios'
-import { DEFAULT_CAT_FILTER, type Cat, type CatInput } from '@cat-store/shared'
+import { DEFAULT_CAT_FILTER, type Cat, type CatInput, type CatLabelStats } from '@cat-store/shared'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { ApiError } from '../models/api-error'
 import { catService } from './cat.service'
@@ -86,6 +86,23 @@ describe('catService', () => {
     await catService.remove('cat-1')
 
     expect(httpService.delete).toHaveBeenCalledWith(`${_ENDPOINT}/cat-1`)
+  })
+
+  it('gets the label stats', async () => {
+    const stats: CatLabelStats[] = [
+      {
+        label: 'Kitten',
+        count: 1,
+        inStockCount: 1,
+        medianPrice: 120,
+        minPrice: 120,
+        maxPrice: 120,
+      },
+    ]
+    vi.mocked(httpService.get).mockResolvedValue(stats)
+
+    expect(await catService.getLabelStats()).toEqual(stats)
+    expect(httpService.get).toHaveBeenCalledWith(`${_ENDPOINT}/stats`)
   })
 
   it('passes an ApiError through untouched', async () => {

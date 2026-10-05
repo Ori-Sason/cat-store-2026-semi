@@ -6,3 +6,66 @@
     @content;
   }
 }
+
+// Dashboard chart rows. Mobile: label + stats on one line, the bar full width under them.
+// From $bp-md: one row per label, label | bar | stats, with columns shared through subgrid
+@mixin chart-rows {
+  display: grid;
+  row-gap: $space-2;
+  font-size: 0.85rem;
+
+  .rows {
+    display: grid;
+    row-gap: $space-3;
+  }
+
+  .row {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    grid-template-areas:
+      'label stats'
+      'track track';
+    gap: $space-1 $space-3;
+    align-items: center;
+  }
+
+  .label {
+    grid-area: label;
+    font-weight: 700;
+    color: $primary-clr-900;
+  }
+
+  .stats {
+    grid-area: stats;
+    justify-self: end;
+    text-align: end;
+    font-variant-numeric: tabular-nums;
+    color: $primary-clr-850;
+  }
+
+  .track {
+    grid-area: track;
+    position: relative;
+    height: 16px;
+  }
+
+  @include from($bp-md) {
+    grid-template-columns: max-content minmax(0, 1fr) max-content;
+    column-gap: $space-4;
+
+    .rows,
+    .row {
+      grid-column: 1 / -1;
+      grid-template-columns: subgrid;
+    }
+
+    .row {
+      grid-template-areas: 'label track stats';
+    }
+
+    .stats {
+      justify-self: start;
+      text-align: start;
+    }
+  }
+}

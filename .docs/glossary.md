@@ -38,6 +38,13 @@
 	- Rule: several `labels` match with `$all`, so a cat must have every selected label.
 	- Avoid: `criteria` (that's the Mongo query built from it), `query`, `searchParams` (for the parsed value).
 
+- `CatLabelStats` / label stats
+	- Canonical meaning: one row per label in `CAT_LABELS` order, over the whole catalog
+	  (it ignores `filterBy`): `count`, `inStockCount`, and the `medianPrice` / `minPrice` /
+	  `maxPrice` (`null` when the label has no cats). A cat with several labels counts once
+	  per label. Served by `GET /api/cats/stats`, charted on the dashboard.
+	- Avoid: `stats` alone in type names, `metrics`, `analytics`.
+
 ### Auth
 - `loggedInUser` / `LoggedInUser`
 	- Canonical meaning: the session identity. `_id`, `username`, `fullname`,

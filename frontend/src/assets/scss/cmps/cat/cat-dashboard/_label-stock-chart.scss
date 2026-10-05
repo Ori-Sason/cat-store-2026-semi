@@ -1,0 +1,19 @@
+@use 'setup' as *;
+
+// --in-stock-pct is set from TSX
+.label-stock-chart {
+  @include chart-rows;
+
+  // the grey track is the out-of-stock share
+  .track {
+    overflow: hidden;
+    border-radius: $radius-sm;
+    background-color: $clr-grey;
+  }
+
+  .in-stock {
+    width: var(--in-stock-pct);
+    height: 100%;
+    background-color: $clr-success;
+  }
+}

@@ -1,0 +1,42 @@
+@use 'setup' as *;
+
+.cat-dashboard {
+  display: grid;
+  gap: $space-4;
+
+  h1 {
+    font-size: 1.5rem;
+    color: $primary-clr-900;
+  }
+
+  .panel {
+    display: grid;
+    gap: $space-3;
+    // A grid item defaults to min-width: auto, so the chart's SVG could push the page wider
+    min-width: 0;
+    padding: $space-4;
+    border: 1px solid rgba($primary-clr-900, 0.08);
+    border-radius: $radius-lg;
+    background-color: $clr-white;
+
+    @include from($bp-md) {
+      padding: $space-5;
+    }
+  }
+
+  h2 {
+    font-size: 1.15rem;
+    color: $primary-clr-900;
+  }
+
+  .hint,
+  .disclaimer {
+    font-size: 0.85rem;
+    color: $primary-clr-850;
+  }
+
+  .empty {
+    text-align: center;
+    color: $primary-clr-850;
+  }
+}

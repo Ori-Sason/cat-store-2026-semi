@@ -4,6 +4,7 @@ import {
   type Cat,
   type CatFilter,
   type CatInput,
+  type CatLabelStats,
 } from '@cat-store/shared'
 import { httpService } from './http.service'
 
@@ -14,6 +15,7 @@ export const catService = {
   getById,
   save,
   remove,
+  getLabelStats,
 }
 
 // URLSearchParams, not a plain object: axios sends it as is, so labels go out as
@@ -35,4 +37,9 @@ function save(cat: CatInput & Partial<Pick<Cat, '_id'>>): Promise<Cat> {
 
 function remove(catId: string): Promise<void> {
   return httpService.delete<void>(`${BASE_PATH}/${catId}`)
+}
+
+// One row per label over the whole catalog
+function getLabelStats(): Promise<CatLabelStats[]> {
+  return httpService.get<CatLabelStats[]>(`${BASE_PATH}/stats`)
 }

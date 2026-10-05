@@ -43,7 +43,7 @@ makes every cat structured and searchable, and gives every owner a public track 
 - Site-wide notification when a cat or review is added, edited, or deleted.
 
 **Insights & About**
-- Dashboard: average price and % available, per label.
+- Dashboard: median price (with range) and % available, per label.
 - About page with a map of pickup points.
 
 ## Permissions

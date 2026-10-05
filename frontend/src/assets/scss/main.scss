@@ -6,6 +6,7 @@
 
 /* PAGES */
 @use './pages/cat-app/cat-app';
+@use './pages/cat-dashboard/cat-dashboard';
 @use './pages/cat-details/cat-details';
 @use './pages/cat-edit/cat-edit';
 
@@ -14,6 +15,8 @@
 @use './cmps/cat/cat-app/cat-labels';
 @use './cmps/cat/cat-app/cat-list';
 @use './cmps/cat/cat-app/cat-preview';
+@use './cmps/cat/cat-dashboard/label-price-chart';
+@use './cmps/cat/cat-dashboard/label-stock-chart';
 @use './cmps/cat/cat-edit/cat-edit-form';
 @use './cmps/cat/cat-img';
 @use './cmps/cat/label-toggles';

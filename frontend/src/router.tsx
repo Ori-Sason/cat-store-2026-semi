@@ -4,6 +4,8 @@ import { LayoutRoot } from './cmps/layout/layout-root'
 import { RouteError } from './cmps/util/route-error'
 import { CatApp } from './pages/cat-app/cat-app'
 import { catAppLoader } from './pages/cat-app/cat-app.loader'
+import { CatDashboard } from './pages/cat-dashboard/cat-dashboard'
+import { catDashboardLoader } from './pages/cat-dashboard/cat-dashboard.loader'
 import { CatDetails } from './pages/cat-details/cat-details'
 import { catDetailsAction } from './pages/cat-details/cat-details.action'
 import { catDetailsLoader } from './pages/cat-details/cat-details.loader'
@@ -50,6 +52,11 @@ export const router = createBrowserRouter([
                 loader: catEditLoader,
                 action: catEditAction,
                 element: <CatEdit />,
+              },
+              {
+                path: '/dashboard',
+                loader: catDashboardLoader,
+                element: <CatDashboard />,
               },
               {
                 path: '*',
