@@ -1,4 +1,8 @@
 # Git hooks. Fresh clone: `npm run hooks:install` (.npmrc ignore-scripts skips lefthook's postinstall).
+output:
+  - summary
+  - failure
+
 pre-commit:
   parallel: true
   jobs:
