@@ -1,0 +1,19 @@
+# Git hooks. Fresh clone: `npm run hooks:install` (.npmrc ignore-scripts skips lefthook's postinstall).
+pre-commit:
+  parallel: true
+  jobs:
+    - name: format
+      glob: "*.{ts,tsx,js,mjs}"
+      run: npx oxfmt {staged_files}
+      stage_fixed: true
+    - name: lint
+      glob: "*.{ts,tsx,js,mjs}"
+      run: npx oxlint --deny-warnings {staged_files}
+    - name: typecheck
+      run: npm run typecheck
+
+# Backend tests hit the db-local Mongo container, so it must be up before pushing.
+pre-push:
+  jobs:
+    - name: test
+      run: npm test

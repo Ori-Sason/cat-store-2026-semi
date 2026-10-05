@@ -33,6 +33,9 @@ script. Stack and decisions live in `.docs/architecture.md`.
 npm workspaces: install from the root, run with `npm run <script> -w <pkg>`
 (shortcuts: `npm run dev:fe`, `npm run dev:be`).
 
+Git hooks: lefthook (`lefthook.yml`). Format, lint and typecheck on commit, tests on push.
+A fresh clone needs `npm run hooks:install` once (`.npmrc` has `ignore-scripts`).
+
 ## Rules — always in context
 Claude Code auto-loads `.claude/rules/*.md`, so they're listed here, not `@`-imported.
 Files with `paths:` frontmatter load only when matching files are touched.
