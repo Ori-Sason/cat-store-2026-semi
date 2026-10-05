@@ -1,5 +1,5 @@
 import { ObjectId, type Filter } from 'mongodb'
-import type { CatFilter, CatInput } from '@cat-store/shared'
+import { CAT_LABELS, type CatFilter, type CatInput, type CatLabelStats } from '@cat-store/shared'
 import { CAT_COLLECTION, type CatDoc } from '../../models/cat.ts'
 import { HttpError } from '../../models/http-error.ts'
 import { mongoService } from '../../services/mongodb.service.ts'
@@ -52,6 +52,42 @@ async function remove(catId: string): Promise<void> {
   if (!result?.deletedCount) throw _catNotFound(catId)
 }
 
+// One row per label, over the whole catalog. A cat counts once in each of its labels,
+// and a cat with no labels drops out at $unwind
+async function getLabelStats(): Promise<CatLabelStats[]> {
+  const collection = await mongoService.getCollection<CatDoc>(CAT_COLLECTION)
+  const rows = await collection
+    .aggregate<CatLabelStats>([
+      { $unwind: '$labels' },
+      {
+        $group: {
+          _id: '$labels',
+          count: { $sum: 1 },
+          inStockCount: { $sum: { $cond: ['$isInStock', 1, 0] } },
+          // Mongo 8.0 only accepts 'approximate' (t-digest). On small groups (tested up to
+          // ~2,000 values) it's exact: a real price, the lower middle one on even-sized
+          // groups. On large groups it's an estimate and can be an arbitrary float
+          medianPrice: { $median: { input: '$price', method: 'approximate' } },
+          minPrice: { $min: '$price' },
+          maxPrice: { $max: '$price' },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          label: '$_id',
+          count: 1,
+          inStockCount: 1,
+          medianPrice: 1,
+          minPrice: 1,
+          maxPrice: 1,
+        },
+      },
+    ])
+    .toArray()
+  return _fillAllLabels(rows)
+}
+
 function _buildCriteria({ txt, isInStock, labels }: CatFilter): Filter<CatDoc> {
   const criteria: Filter<CatDoc> = {}
   // escaped, so "." or "*" in the search box match literally instead of acting as regex
@@ -59,6 +95,23 @@ function _buildCriteria({ txt, isInStock, labels }: CatFilter): Filter<CatDoc> {
   if (isInStock !== null) criteria.isInStock = isInStock
   if (labels.length) criteria.labels = { $all: labels }
   return criteria
+}
+
+// $group only returns labels some cat has. Map CAT_LABELS so the order stays fixed and
+// labels with no cats still get a row
+function _fillAllLabels(rows: CatLabelStats[]): CatLabelStats[] {
+  const rowByLabel = new Map(rows.map((row) => [row.label, row]))
+  return CAT_LABELS.map(
+    (label) =>
+      rowByLabel.get(label) ?? {
+        label,
+        count: 0,
+        inStockCount: 0,
+        medianPrice: null,
+        minPrice: null,
+        maxPrice: null,
+      },
+  )
 }
 
 function _catNotFound(catId: string): HttpError {
@@ -71,4 +124,5 @@ export const catService = {
   add,
   update,
   remove,
+  getLabelStats,
 }

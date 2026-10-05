@@ -1,7 +1,13 @@
 import { ObjectId } from 'mongodb'
 import request from 'supertest'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import type { Cat, CatInput } from '@cat-store/shared'
+import {
+  CAT_LABELS,
+  type Cat,
+  type CatInput,
+  type CatLabel,
+  type CatLabelStats,
+} from '@cat-store/shared'
 import { app } from '../../app.ts'
 import { CAT_COLLECTION, type CatDoc } from '../../models/cat.ts'
 import { mongoService } from '../../services/mongodb.service.ts'
@@ -102,6 +108,63 @@ describe('GET /api/cats', () => {
       'bella',
       'tom',
     ])
+  })
+})
+
+describe('GET /api/cats/stats', () => {
+  // Calm has an odd-sized group, so its median is unambiguous
+  const STATS_CATS: CatDoc[] = [
+    _buildCat({ name: 'tom', price: 100, labels: ['Calm', 'Kitten'] }),
+    _buildCat({ name: 'Max', price: 300, labels: ['Calm'], isInStock: false }),
+    _buildCat({ name: 'garfield', price: 500, labels: ['Calm', 'Senior'] }),
+    _buildCat({ name: 'nolabel', price: 50, labels: [] }),
+  ]
+
+  function _emptyRow(label: CatLabel): CatLabelStats {
+    return { label, count: 0, inStockCount: 0, medianPrice: null, minPrice: null, maxPrice: null }
+  }
+
+  it('returns one row per label in CAT_LABELS order: multi-label cats count in each, unlabelled cats in none', async () => {
+    const collection = await mongoService.getCollection<CatDoc>(CAT_COLLECTION)
+    await collection.insertMany(STATS_CATS)
+    const expectedByLabel: Partial<Record<CatLabel, CatLabelStats>> = {
+      Kitten: {
+        label: 'Kitten',
+        count: 1,
+        inStockCount: 1,
+        medianPrice: 100,
+        minPrice: 100,
+        maxPrice: 100,
+      },
+      Senior: {
+        label: 'Senior',
+        count: 1,
+        inStockCount: 1,
+        medianPrice: 500,
+        minPrice: 500,
+        maxPrice: 500,
+      },
+      Calm: {
+        label: 'Calm',
+        count: 3,
+        inStockCount: 2,
+        medianPrice: 300,
+        minPrice: 100,
+        maxPrice: 500,
+      },
+    }
+
+    const res = await request(app).get('/api/cats/stats')
+
+    expect(res.status).toBe(200)
+    expect(res.body).toEqual(CAT_LABELS.map((label) => expectedByLabel[label] ?? _emptyRow(label)))
+  })
+
+  it('returns a zero row for every label when there are no cats, not 404 or []', async () => {
+    const res = await request(app).get('/api/cats/stats')
+
+    expect(res.status).toBe(200)
+    expect(res.body).toEqual(CAT_LABELS.map(_emptyRow))
   })
 })
 

@@ -11,6 +11,11 @@ export async function getCats(req: Request, res: Response) {
   res.json(cats)
 }
 
+export async function getCatLabelStats(_req: Request, res: Response) {
+  const stats = await catService.getLabelStats()
+  res.json(stats)
+}
+
 export async function getCatById(req: Request<{ id: string }>, res: Response) {
   const cat = await catService.getById(req.params.id)
   res.json(cat)
