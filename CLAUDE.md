@@ -21,6 +21,9 @@ script. Stack and decisions live in `.docs/architecture.md`.
 - `.claude/rules/` — always-on constraints, listed below. Short by design.
 - `.claude/skills/` — procedural know-how, loaded on demand by task.
 - `.claude/hooks/` — guardrail hooks, wired by `.claude/settings.json`.
+- `.handoffs/` — session handoffs (`<topic>.md`, open decisions first) and review-me
+  reports. Gitignored and user-managed: never put handoffs in memory, and leave cleanup
+  to the user.
 - `shared/` — `@cat-store/shared`, the wire contract: types, Zod schemas, constants,
   `catFilterService`. No build step.
 - `frontend/` — Vite + React + TS SPA. `react-router` v8, Zustand, axios, SCSS.

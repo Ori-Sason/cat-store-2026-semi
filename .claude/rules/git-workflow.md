@@ -21,6 +21,8 @@
   - `summary`: imperative, lowercase, no period: `feat(fe): add sign-up page`.
 - One intent per commit. Keep commits small so the history shows step-by-step progress.
   Don't bundle unrelated changes.
+- Roadmap status updates for a feature go in that feature's commit, not a separate
+  `docs:` commit. They record that the feature landed, so they're the same intent.
 
 ## The index
 - The index is the user's review marker: staged = reviewed. Don't stage, unstage or reset
