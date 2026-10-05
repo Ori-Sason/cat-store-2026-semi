@@ -3,7 +3,7 @@
 ## Summary & Technical Profile
 
 * **Name:** Ori Sason (CPA, Full-Stack & DevOps Software Engineer)
-* **Background:** Transitioned from a rigorous analytical background as a Certified Public Accountant (CPA) into Full-Stack Software Engineering and Cloud/DevOps Systems Engineering.
+* **Background:** CPA (PwC Israel audit) → in-firm developer at PwC → Coding Academy bootcamp → full-stack developer at AudITech for 3+ years → a gap year (Oct 2025 →) of DevOps, networking, DB and AI study.
 * **Workstation & Dev Environment:** Windows 11 host (AMD Ryzen 7 5800H), WSL2, VirtualBox, Hyper-V, and Multipass managing custom `cloud-init` Ubuntu VMs provisioned with Docker, Python `uv`, TypeScript, and orchestrated via VS Code Remote SSH.
 * **Primary Tech Stack:**
   * **Languages & Web:** Python, Node.js, TypeScript, React, Flask, Express
@@ -15,7 +15,56 @@
 
 ---
 
+## Work Experience
+
+### AudITech — Full-Stack Developer (Aug 2022 – Oct 2025)
+Startup automating ITGC (SOX) audit reports, acquired by Scytale in Jan 2025. Client data was
+fetched daily, normalized, and run through a rule manager. Clients got a UI and an Excel
+output with a full review per ITGC control.
+* **Team:** 2–3 developers plus a part-time DevOps engineer (2 days a week). No team lead,
+  and developers reviewed each other's code. Everyone touched every layer.
+* **Scale:** ~30 enterprise clients and ~60 integrated systems (ERP, HR, ticketing:
+  NetSuite, Priority, HiBob, Jira, GitHub, Active Directory…). Integrations were done through
+  APIs, an agent on the client's system sending daily reports, emailed reports, ODBC and more.
+* **Stack:** Python backend, plus scripts in PowerShell, Java and JS. React frontend
+  (migrated from Vue). PostgreSQL on RDS. AWS serverless: Lambda, Glue ETLs, Cognito,
+  CloudFront, S3. Hands-on with all of it except CloudFormation.
+* **Owned end to end:**
+  * **Authorization:** replaced the admin-only model with org-level admin-write /
+    admin-read plus per-control read / write / owner access. Did the schema, UI design and
+    code.
+  * **Consolidation engine rewrite:** merging the ETL outputs into one report per control
+    (e.g. onboarding = ERP + HR + ticketing). The old version could only match through HR.
+    The new one matches in any direction (ERP↔HR, ERP↔ticket, ticket↔HR) on a configurable
+    field (email, full name, role…). It had to be deterministic, so no AI matching. The
+    user proposed it, designed it, collected peer feedback, then built it. High impact.
+* **Beyond code:** interviewed ~10 candidates, onboarded the third developer, and handed the
+  system over to a Scytale engineer after the acquisition. Took customer calls, usually
+  together with CS or the CEO.
+
+### PwC Israel — In-Firm Developer (Apr 2020 – Jan 2022)
+A role created for the user as the audit department's "technical guru". It had no formal
+title, and there were no other developers, so no code review.
+* **TaxMax:** a VBA-driven Excel workbook (`.xlsm`) for year-end tax filings. Used by
+  almost every audit department. Saved 10,000+ working hours in its first year, from
+  interns up to partners, by the firm's own estimate (the COO put it higher). V2 added
+  rollforward and a generated report for the tax authority filing. Versioned by keeping file
+  copies (pre-Git) and shipped through a download link on the internal site.
+* **C# report generators** (e.g. the audit report), used across audit departments. They
+  replaced copying last year's report by hand.
+* **C# add-ins for Excel and Word**, shipped as MSI installers that IT pushed out
+  automatically.
+* Smaller tools in Google Apps Script.
+
+### PwC Israel — Audit, CPA (Aug 2017 – Mar 2020)
+Two-year internship, then Senior. Background in Excel → Power Query → SQL, and VBA.
+
+---
+
 ## Formal Training & Certifications
+
+### AI Course (Coding Academy — Sep 2026)
+* Short 4-session course.
 
 ### Full-Stack Engineering Bootcamp (Coding Academy — Completed)
 * Completed intensive curriculum covering JS/TS fundamentals, HTTP/HTTPS protocols, responsive HTML/CSS (Grid/Flexbox), React, Redux state management, Node.js/Express REST APIs, WebSockets, MySQL, MongoDB, MVC architecture, Vite build tooling, and PWA mechanics.

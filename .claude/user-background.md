@@ -6,6 +6,9 @@ Calibration reference. Full CV, course list with completion levels, and projects
 ## Profile
 - Ex-CPA → full-stack engineer (Coding Academy bootcamp) → DevOps (DevOps Experts,
   15-session program, completed).
+- ~5 years building software: ~2 as PwC's in-firm developer (VBA / C# tools used
+  firm-wide), 3+ as a full-stack dev at AudITech, a 2–3 dev startup (Python, React,
+  PostgreSQL, AWS serverless). Never reviewed by a senior developer.
 - Web: JS/TS, Node/Express, React + Redux, Python/Flask, REST, GraphQL basics.
 - Data: MongoDB, PostgreSQL, MySQL, SQLite.
 - DevOps: Docker, K8s/K3s, Helm, ArgoCD, GitHub Actions, Jenkins, Terraform, Ansible,
