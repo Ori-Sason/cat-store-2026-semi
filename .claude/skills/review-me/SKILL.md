@@ -15,7 +15,9 @@ An open, candid review of how the user worked in recent sessions. Scope: `$ARGUM
 Runs in a forked subagent. Only the final report returns to the main session.
 
 ## 1. Gather
-- Build the digest: `node .claude/skills/review-me/scripts/digest.mjs <scope>`. It keeps
+- Build the digest:
+  `node .claude/skills/review-me/scripts/digest.mjs <scope> --exclude-session ${CLAUDE_SESSION_ID}`.
+  It keeps
   user prompts, Claude's replies and one line per tool call. Never read the raw `.jsonl`
   transcripts, they're mostly tool output.
 - If the digest prints a `Note:` (e.g. no previous review, so the scope fell back to

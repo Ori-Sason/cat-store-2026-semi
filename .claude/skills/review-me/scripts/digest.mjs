@@ -4,10 +4,12 @@
 // Drops thinking, tool results and system reminders, which are most of the bytes.
 //
 // Usage: node digest.mjs [since-last (default) | today | YYYY-MM-DD | YYYY-MM-DD..YYYY-MM-DD]
+//                        [--exclude-session <id>]
 
 import fs from 'fs'
 import os from 'os'
 import path from 'path'
+import { parseArgs } from 'util'
 
 const MAX_TEXT_CHARS = 1000
 const LARGE_DIGEST_CHARS = 300_000
@@ -151,17 +153,19 @@ const _digestFile = (file, { from, to }) => {
   }
 }
 
-const scope = _parseScope(process.argv[2])
+const { values: options, positionals } = parseArgs({
+  allowPositionals: true,
+  options: { 'exclude-session': { type: 'string' } },
+})
+const scope = _parseScope(positionals[0])
+// The session running the review, so it doesn't digest itself.
+const excludedFile = options['exclude-session'] && `${options['exclude-session']}.jsonl`
 
 const files = fs
   .readdirSync(transcriptDir)
-  .filter((name) => name.endsWith('.jsonl'))
+  .filter((name) => name.endsWith('.jsonl') && name !== excludedFile)
   .map((name) => path.join(transcriptDir, name))
   .map((file) => ({ file, mtimeMs: fs.statSync(file).mtimeMs }))
-  .sort((a, b) => a.mtimeMs - b.mtimeMs)
-
-// The newest transcript is the session running this review.
-files.pop()
 
 const sections = files
   .filter(({ mtimeMs }) => mtimeMs >= scope.from.getTime())
