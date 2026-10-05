@@ -10,7 +10,7 @@ argument-hint: '[since-last | today | YYYY-MM-DD | YYYY-MM-DD..YYYY-MM-DD]'
 # Review Me
 
 An open, candid review of how the user worked in recent sessions. Scope: `$ARGUMENTS`
-(empty means `since-last`: from when the last review was written until now).
+(empty means `since-last`: everything after the last record the previous review covered).
 
 Runs in a forked subagent. Only the final report returns to the main session.
 
@@ -23,7 +23,8 @@ Runs in a forked subagent. Only the final report returns to the main session.
 - If the digest says it's large, read it in chunks (redirect to a scratch file, then
   `Read` with offsets) rather than narrowing the scope on your own.
 - Read `.claude/user-background-full.md` to calibrate: stack, courses, completion levels.
-- Read the newest file in `.handoffs/reviews/`, if any. Its findings are what to follow up.
+- Read the review the digest names under `Previous review:`, if any. Its findings are what
+  to follow up.
 
 ## 2. Review
 Two sections, each grounded in concrete moments from the digest. Quote or paraphrase
@@ -64,4 +65,7 @@ End with:
 - Write the report to `.handoffs/reviews/YYYY-MM-DD.md` (today's date, `mkdir -p` first).
   If the file exists, add `-2`, `-3`.
 - First line of the file: `# Review: <from>..<to>`.
+- Second line: `Last reviewed: <ISO> (session <id>)`, copied verbatim from the digest's
+  `Last record:` line. Never work out the time yourself. The next `since-last` run starts
+  after it. If the digest has no `Last record:`, omit the line.
 - Return the full report as your final message.

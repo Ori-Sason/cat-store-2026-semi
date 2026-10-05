@@ -26,15 +26,21 @@ const _localDate = (date) => {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
 }
 
-// A review file's mtime is when it was written, so since-last resumes from that moment.
-const _lastReviewTime = () => {
+// The max `Last reviewed:` across all reviews, so reviewing an older range later
+// can't move the anchor backwards. File names and mtimes don't matter.
+const _lastReview = () => {
   if (!fs.existsSync(reviewsDir)) return null
-  const times = fs
-    .readdirSync(reviewsDir)
-    .filter((name) => name.endsWith('.md'))
-    .map((name) => fs.statSync(path.join(reviewsDir, name)).mtime)
-    .sort((a, b) => a - b)
-  return times.at(-1) ?? null
+  let last = null
+  for (const name of fs.readdirSync(reviewsDir)) {
+    if (!name.endsWith('.md')) continue
+    const text = fs.readFileSync(path.join(reviewsDir, name), 'utf8')
+    const match = text.match(/^Last reviewed: (\S+)/m)
+    if (!match) continue
+    const time = new Date(match[1])
+    if (Number.isNaN(time.getTime())) continue
+    if (!last || time > last.time) last = { time, file: name }
+  }
+  return last
 }
 
 const _startOfDay = (date) => new Date(`${date}T00:00:00`)
@@ -43,8 +49,8 @@ const _parseScope = (arg = 'since-last') => {
   const today = _localDate(new Date())
   if (arg === 'today') return { from: _startOfDay(today), to: today }
   if (arg === 'since-last') {
-    const lastReview = _lastReviewTime()
-    if (lastReview) return { from: lastReview, to: today }
+    const lastReview = _lastReview()
+    if (lastReview) return { from: lastReview.time, to: today, previousReview: lastReview.file }
     return {
       from: _startOfDay(today),
       to: today,
@@ -97,6 +103,7 @@ const _digestFile = (file, { from, to }) => {
   const lines = []
   let title = path.basename(file, '.jsonl')
   let startedAt = null
+  let lastRecord = null
 
   for (const raw of fs.readFileSync(file, 'utf8').split('\n')) {
     if (!raw.trim()) continue
@@ -111,8 +118,15 @@ const _digestFile = (file, { from, to }) => {
     if (record.isSidechain || record.isMeta || !record.timestamp) continue
 
     const time = new Date(record.timestamp)
-    if (time < from || _localDate(time) > to) continue
+    if (time <= from || _localDate(time) > to) continue
     startedAt ??= time
+    if (!lastRecord || time > lastRecord.time) {
+      lastRecord = {
+        time,
+        timestamp: record.timestamp,
+        sessionId: record.sessionId ?? path.basename(file, '.jsonl'),
+      }
+    }
 
     const { content } = record.message
     if (record.type === 'user') {
@@ -132,6 +146,7 @@ const _digestFile = (file, { from, to }) => {
   if (!lines.length) return null
   return {
     startedAt,
+    lastRecord,
     text: `## Session: ${title} (${_formatTime(startedAt)})\n\n${lines.join('\n\n')}`,
   }
 }
@@ -154,11 +169,24 @@ const sections = files
   .filter(Boolean)
   .sort((a, b) => a.startedAt - b.startedAt)
 
+// Sessions overlap, so the last record is the max across all of them.
+const lastRecord = sections
+  .map((section) => section.lastRecord)
+  .reduce((last, record) => (!last || record.time > last.time ? record : last), null)
+
 const output = sections.map(({ text }) => text).join('\n\n---\n\n')
 console.log(
   `# Session digest: ${_formatTime(scope.from)}..${scope.to} (${sections.length} sessions)\n`,
 )
 if (scope.note) console.log(`_Note: ${scope.note}_\n`)
+if (scope.previousReview) {
+  console.log(
+    `Previous review: ${path.relative(projectDir, path.join(reviewsDir, scope.previousReview))}`,
+  )
+}
+if (lastRecord)
+  console.log(`Last record: ${lastRecord.timestamp} (session ${lastRecord.sessionId})`)
+if (scope.previousReview || lastRecord) console.log('')
 console.log(output || '_No sessions in this scope._')
 console.log(`\n_Digest size: ${output.length} chars._`)
 if (output.length > LARGE_DIGEST_CHARS) {
