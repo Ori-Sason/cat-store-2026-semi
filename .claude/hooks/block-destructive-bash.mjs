@@ -38,6 +38,11 @@ const DENY_PATTERNS = [
   // (--staged / -S). Adding --worktree / -W brings the overwrite back.
   new RegExp(`\\bgit\\s+restore\\b(?!${SAME_CMD}(?:\\s--staged\\b|${shortFlag('S')}))`),
   new RegExp(`\\bgit\\s+restore\\b${SAME_CMD}(?:\\s--worktree\\b|${shortFlag('W')})`),
+  // Skipping the lefthook git hooks. On commit -n means --no-verify; on push it's --dry-run.
+  new RegExp(`\\bgit\\b${SAME_CMD}\\scommit\\b${SAME_CMD}(?:\\s--no-verify\\b|${shortFlag('n')})`),
+  new RegExp(`\\bgit\\b${SAME_CMD}\\spush\\b${SAME_CMD}\\s--no-verify\\b`),
+  /\bLEFTHOOK(?:_EXCLUDE)?=/,
+  /\bcore\.hooksPath\b/,
 
   // --- SQL (kept for Postgres/MySQL projects) ---
   /\bDROP\s+(TABLE|DATABASE|SCHEMA)\b/i,
