@@ -50,6 +50,15 @@ export interface Cat extends CatInput {
   updatedAt: number
 }
 
+export interface CatLabelStats {
+  label: CatLabel
+  count: number
+  inStockCount: number
+  medianPrice: number | null
+  minPrice: number | null
+  maxPrice: number | null
+}
+
 export const CAT_SORT_FIELDS = [
   'name',
   'price',
