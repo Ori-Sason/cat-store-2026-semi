@@ -12,8 +12,8 @@
 // `systemMessage` reaches the user only, not Claude's context - the point is
 // oversight, not steering.
 //
-// Limit: writes through Bash (heredoc, `sed`, `rm`) don't fire Edit/Write hooks,
-// so they skip this notice - same gap as the oxfmt hook.
+// Limit: writes through Bash or PowerShell (heredoc, `sed`, `rm`) don't fire
+// Edit/Write hooks, so they skip this notice - same gap as the oxfmt hook.
 
 import fs from 'node:fs'
 import os from 'node:os'
@@ -38,16 +38,28 @@ function _record(data) {
 
 function _report(data) {
   const file = _recordPath(data.session_id)
+  // Claim the record by renaming it before reading. A background subagent may
+  // still append mid-report: with read-then-delete, that line would be deleted
+  // unseen. After the rename, it starts a fresh record for the next Stop.
+  const claimed = `${file}.${process.pid}`
   let lines
   try {
-    lines = fs.readFileSync(file, 'utf8').trim().split('\n')
+    fs.renameSync(file, claimed)
+    lines = fs.readFileSync(claimed, 'utf8').split('\n').filter(Boolean)
   } catch {
     return // nothing recorded this turn
+  } finally {
+    fs.rmSync(claimed, { force: true })
   }
-  fs.rmSync(file, { force: true })
+  if (lines.length === 0) return
 
-  // A file edited three times in one turn is listed once, with its last verb.
-  const byName = new Map(lines.map((line) => line.split('\t').reverse()))
+  // A file touched several times in one turn is listed once. `wrote` wins over
+  // `edited`, so a memory created and then edited still shows as new.
+  const byName = new Map()
+  for (const line of lines) {
+    const [verb, name] = line.split('\t')
+    if (verb === 'wrote' || !byName.has(name)) byName.set(name, verb)
+  }
   const list = [...byName].map(([name, verb]) => `${verb} ${name}`).join(', ')
 
   // No process.exit() after this: exiting can truncate a pipe mid-write.
