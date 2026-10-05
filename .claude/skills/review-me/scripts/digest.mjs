@@ -130,7 +130,10 @@ const _digestFile = (file, { from, to }) => {
   }
 
   if (!lines.length) return null
-  return `## Session: ${title} (${_formatTime(startedAt)})\n\n${lines.join('\n\n')}`
+  return {
+    startedAt,
+    text: `## Session: ${title} (${_formatTime(startedAt)})\n\n${lines.join('\n\n')}`,
+  }
 }
 
 const scope = _parseScope(process.argv[2])
@@ -149,8 +152,9 @@ const sections = files
   .filter(({ mtimeMs }) => mtimeMs >= scope.from.getTime())
   .map(({ file }) => _digestFile(file, scope))
   .filter(Boolean)
+  .sort((a, b) => a.startedAt - b.startedAt)
 
-const output = sections.join('\n\n---\n\n')
+const output = sections.map(({ text }) => text).join('\n\n---\n\n')
 console.log(
   `# Session digest: ${_formatTime(scope.from)}..${scope.to} (${sections.length} sessions)\n`,
 )
@@ -158,5 +162,5 @@ if (scope.note) console.log(`_Note: ${scope.note}_\n`)
 console.log(output || '_No sessions in this scope._')
 console.log(`\n_Digest size: ${output.length} chars._`)
 if (output.length > LARGE_DIGEST_CHARS) {
-  console.log('_Large digest: narrow the scope or review it in chunks._')
+  console.log('_Large digest: review it in chunks._')
 }

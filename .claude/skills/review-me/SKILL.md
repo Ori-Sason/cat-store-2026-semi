@@ -50,6 +50,8 @@ The user directs Claude more than they write code by hand. The digest shows judg
 (specs, catches, pushback), not hands-on craft, so lower confidence on craft-heavy
 calls and say so.
 
+Evidence outside the scope can be mentioned, but it doesn't count toward placement.
+
 Be open. No forced positives, no forced negatives. If a dimension had nothing worth
 saying, say that in one line.
 
@@ -61,5 +63,5 @@ End with:
 ## 3. Save and return
 - Write the report to `.handoffs/reviews/YYYY-MM-DD.md` (today's date, `mkdir -p` first).
   If the file exists, add `-2`, `-3`.
-- First line of the file: `# Review: <scope> (<from>..<to>)`.
+- First line of the file: `# Review: <from>..<to>`.
 - Return the full report as your final message.
