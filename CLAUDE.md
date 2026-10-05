@@ -48,6 +48,8 @@ Files with `paths:` frontmatter load only when matching files are touched.
 ## Skills — load when the task calls for it
 - `writing-tests` — how to write and run tests: structure, the test DB helper, mocking,
   per-suite commands. Load it before adding or reviewing tests.
+- `review-me` — user-invoked only (`/review-me [scope]`). Reviews recent sessions in a
+  forked subagent and saves the report to `.handoffs/reviews/`.
 
 ## Product and Domain
 - Product definition: `.docs/product-definition.md`.
@@ -59,12 +61,10 @@ Files with `paths:` frontmatter load only when matching files are touched.
   shapes change, or when the plan diverges.
 
 ## Calibration
-Know who you're talking to. The user is a full-stack engineer (JS/TS, React, Express,
-MongoDB, SQL) who recently added DevOps (Docker, K8s, AWS, CI/CD, Terraform). This
-project is also practice, so explanations are welcome. Build on what they already know
-instead of re-teaching from scratch: skip the 101 level, start from the mechanism, and
-go as deep as asked. Courses, completion levels and projects:
-`.claude/user-background.md`. Read it when an explanation needs that context.
+The user is a full-stack engineer who added DevOps, and this project is practice, so
+explanations are welcome. Skip the 101 level and start from the mechanism. What to skip
+and what to explain more: `.claude/user-background.md`. Read it when an explanation
+needs that context. The full CV (`.claude/user-background-full.md`) is for reviews.
 
 ## Library docs
 Use the context7 MCP for fast-moving libraries (react-router 8, Express 5, zod 4,
