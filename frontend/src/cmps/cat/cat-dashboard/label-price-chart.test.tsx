@@ -14,7 +14,7 @@ describe('LabelPriceChart', () => {
     const [kitten, senior] = screen.getAllByRole('listitem')
 
     expect(within(kitten).getByText('Kitten')).toBeInTheDocument()
-    expect(within(kitten).getByText('$100 · $70–$180 · 3 cats')).toBeInTheDocument()
+    expect(within(kitten).getByText('median $100 · $70–$180 · 3 cats')).toBeInTheDocument()
     expect(within(senior).getByText('No cats')).toBeInTheDocument()
   })
 

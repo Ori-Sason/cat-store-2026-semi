@@ -51,14 +51,14 @@ describe('CatDashboard', () => {
     expect(screen.getByRole('heading', { name: 'Price per label' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'In stock per label' })).toBeInTheDocument()
     expect(screen.getByRole('note')).toBeInTheDocument()
-    expect(screen.queryByText('No cats yet')).not.toBeInTheDocument()
+    expect(screen.queryByText('No labelled cats yet')).not.toBeInTheDocument()
   })
 
   it('shows the empty state when no label has cats', async () => {
     vi.mocked(catService.getLabelStats).mockResolvedValue(_ZERO_STATS)
     _render()
 
-    expect(await screen.findByText('No cats yet')).toBeInTheDocument()
+    expect(await screen.findByText('No labelled cats yet')).toBeInTheDocument()
     expect(screen.queryByRole('heading', { name: 'Price per label' })).not.toBeInTheDocument()
   })
 

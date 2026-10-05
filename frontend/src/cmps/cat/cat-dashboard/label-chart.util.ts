@@ -66,14 +66,14 @@ export function toStockChartRows(stats: CatLabelStats[]): StockChartRow[] {
   })
 }
 
-// "$845 · $193–$2,069 · 27 cats"
+// "median $845 · $193–$2,069 · 27 cats"
 export function formatPriceStats(s: CatLabelStats): string {
   if (s.count === 0 || s.medianPrice === null || s.minPrice === null || s.maxPrice === null) {
     return 'No cats'
   }
   const { formatPrice } = utilService
   const range = `${formatPrice(s.minPrice)}–${formatPrice(s.maxPrice)}`
-  return `${formatPrice(s.medianPrice)} · ${range} · ${_formatCatCount(s.count)}`
+  return `median ${formatPrice(s.medianPrice)} · ${range} · ${_formatCatCount(s.count)}`
 }
 
 // "15 / 27 in stock · 56%"

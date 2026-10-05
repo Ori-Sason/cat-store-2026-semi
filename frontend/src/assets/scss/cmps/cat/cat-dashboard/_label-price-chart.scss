@@ -10,12 +10,13 @@
       100% 1px no-repeat;
   }
 
-  // min to max: a line with end caps
+  // min to max: a line with end caps. The 2px caps are centered on min / max, like the
+  // 4px median marker, so a one-price range (min = max) sits right under it
   .range {
     position: absolute;
     inset-block: 3px;
-    left: var(--min-pct);
-    right: calc(100% - var(--max-pct));
+    left: calc(var(--min-pct) - 2px);
+    right: calc(100% - var(--max-pct) - 2px);
     border-inline: 2px solid $primary-clr-500;
     background: linear-gradient($primary-clr-500, $primary-clr-500) center / 100% 2px no-repeat;
   }

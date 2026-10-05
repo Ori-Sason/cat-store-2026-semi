@@ -108,14 +108,14 @@ describe('toStockChartRows', () => {
 describe('formatPriceStats', () => {
   it('shows the median, the range and the count', () => {
     expect(formatPriceStats(_stats({ minPrice: 70, maxPrice: 1250.5 }))).toBe(
-      '$100 · $70–$1,250.50 · 3 cats',
+      'median $100 · $70–$1,250.50 · 3 cats',
     )
   })
 
   it('says "cat" for a single cat', () => {
     const one = _stats({ count: 1, medianPrice: 50, minPrice: 50, maxPrice: 50 })
 
-    expect(formatPriceStats(one)).toBe('$50 · $50–$50 · 1 cat')
+    expect(formatPriceStats(one)).toBe('median $50 · $50–$50 · 1 cat')
   })
 
   it('says "No cats" for an empty label', () => {

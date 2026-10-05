@@ -14,7 +14,7 @@ export const CatDashboard: React.FC = () => {
       <h1>Dashboard</h1>
 
       {isEmpty ? (
-        <p className="panel empty">No cats yet</p>
+        <p className="panel empty">No labelled cats yet</p>
       ) : (
         <>
           <section className="panel">

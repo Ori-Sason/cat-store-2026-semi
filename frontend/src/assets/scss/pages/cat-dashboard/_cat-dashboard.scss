@@ -12,7 +12,7 @@
   .panel {
     display: grid;
     gap: $space-3;
-    // A grid item defaults to min-width: auto, so the chart's SVG could push the page wider
+    // A grid item defaults to min-width: auto, so the chart rows' max-content columns could push the page wider
     min-width: 0;
     padding: $space-4;
     border: 1px solid rgba($primary-clr-900, 0.08);
