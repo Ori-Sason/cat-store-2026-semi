@@ -26,7 +26,8 @@ prod: browser ──▶ Express (static FE + /api + socket.io) ──▶ MongoDB
 ## Stack
 Main libraries only. Exact versions and `@types/*` live in each `package.json`.
 - shared: zod. Its schemas are the validation for both FE and BE.
-- frontend: React, TypeScript, react-router 8, Zustand, axios, Vite, Sass.
+- frontend: React, TypeScript, react-router 8, Zustand, axios, Vite, Sass, OpenLayers (`ol`,
+  about-page map).
 - backend: Express 5, native `mongodb` driver. No Mongoose, no `ts-node`/`tsx`.
 - auth: jsonwebtoken, bcrypt, cookie-parser. Installed already, used from Part 3.
 - testing: Vitest everywhere, React Testing Library + jsdom (FE), Supertest (BE).

@@ -1,6 +1,8 @@
 import '@testing-library/jest-dom/vitest'
 import { cleanup } from '@testing-library/react'
 import { afterEach } from 'vitest'
+// jsdom has no canvas - OpenLayers (about-page map) draws tiles and markers to one
+import 'vitest-canvas-mock'
 
 // RTL auto-cleanup only hooks in with `globals: true`; we run with globals off
 afterEach(() => {
