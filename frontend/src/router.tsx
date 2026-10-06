@@ -59,6 +59,13 @@ export const router = createBrowserRouter([
                 element: <CatDashboard />,
               },
               {
+                path: '/about',
+                // Lazy: OpenLayers (~88 KB gz) loads only when someone opens /about
+                lazy: {
+                  Component: async () => (await import('./pages/about/about')).About,
+                },
+              },
+              {
                 path: '*',
                 loader: () => {
                   throw data(null, { status: 404 })

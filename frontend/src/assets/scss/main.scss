@@ -5,6 +5,7 @@
 @use './basic/layout';
 
 /* PAGES */
+@use './pages/about/about';
 @use './pages/cat-app/cat-app';
 @use './pages/cat-dashboard/cat-dashboard';
 @use './pages/cat-details/cat-details';
@@ -22,6 +23,9 @@
 @use './cmps/cat/label-toggles';
 @use './cmps/cat/label-chip';
 @use './cmps/layout/app-header';
+@use './cmps/pickup-point/about/marker-info-box';
+@use './cmps/pickup-point/about/pickup-point-list';
+@use './cmps/pickup-point/about/pickup-point-map';
 @use './cmps/util/confirm-modal';
 @use './cmps/util/route-error';
 @use './cmps/util/toggle-switch';

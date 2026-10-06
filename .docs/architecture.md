@@ -90,6 +90,10 @@ Env: `node --env-file=.env.local`, no dotenv. Prod needs `JWT_SECRET`, Mongo URL
 - **E2E with the Playwright CLI, from Part 3.** Headless Chromium on the VM, no browser-driving MCP.
   Why: before auth there's no full flow worth covering end to end. The CLI only reports
   pass/fail, while driving a browser step by step costs many tokens.
+- **About-page map: OpenLayers + OSM raster tiles, no React wrapper.**
+  Why: no API key or billing (Google Maps needs both). Compared with MapLibre, it's a
+  ~3–5x smaller bundle, has no Vite worker workaround, has a clean security record with rare
+  majors, and its tests run real map code in jsdom.
 
 Open questions live in `roadmap.md`. When one is decided, record it here.
 

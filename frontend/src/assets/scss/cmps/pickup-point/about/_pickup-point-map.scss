@@ -1,0 +1,18 @@
+@use 'setup' as *;
+
+// OL renders into this box at its size - without an explicit height it collapses to 0px
+.pickup-point-map {
+  // Read by pickup-point-map.tsx: OL draws the markers on a canvas, so CSS can't style them
+  --marker-clr: #{$primary-clr-600};
+  --marker-selected-clr: #{$primary-clr-900};
+  --marker-border-clr: #{$clr-white};
+
+  height: 360px;
+  min-width: 0;
+  border-radius: $radius-md;
+  overflow: hidden;
+
+  @include from($bp-md) {
+    height: 480px;
+  }
+}

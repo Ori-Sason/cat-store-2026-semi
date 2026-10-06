@@ -1,0 +1,42 @@
+@use 'setup' as *;
+
+.marker-info-box {
+  position: relative;
+  display: grid;
+  gap: $space-1;
+  min-width: 200px;
+  max-width: 260px;
+  padding: $space-3 $space-6 $space-3 $space-3;
+  border-radius: $radius-md;
+  background-color: $clr-white;
+  box-shadow: $shadow-md;
+
+  h3 {
+    font-size: 1rem;
+    color: $primary-clr-900;
+  }
+
+  .address,
+  .hours {
+    font-size: 0.8rem;
+    color: $primary-clr-850;
+  }
+
+  .close-btn {
+    position: absolute;
+    top: $space-1;
+    right: $space-1;
+    width: 24px;
+    height: 24px;
+    font-size: 1.1rem;
+    line-height: 1;
+    color: $primary-clr-850;
+    border-radius: $radius-sm;
+    background: none;
+    cursor: pointer;
+
+    &:hover {
+      background-color: $primary-clr-100;
+    }
+  }
+}

@@ -1,0 +1,77 @@
+@use 'setup' as *;
+
+.about {
+  display: grid;
+  gap: $space-4;
+
+  h1 {
+    font-size: 1.5rem;
+    color: $primary-clr-900;
+  }
+
+  .intro-header {
+    display: grid;
+    grid-template-columns: 1fr 96px;
+    column-gap: $space-6;
+
+    @include from($bp-md) {
+      grid-template-columns: 1fr 180px;
+      column-gap: $space-6;
+    }
+  }
+
+  .intro-text {
+    display: grid;
+    gap: $space-3;
+  }
+
+  .intro-img {
+    position: relative;
+    min-height: 96px;
+
+    img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      object-position: left bottom;
+      transform: rotateY(180deg);
+    }
+  }
+
+  .intro {
+    max-width: 65ch;
+    line-height: 1.5;
+    color: $primary-clr-850;
+  }
+
+  .panel {
+    display: grid;
+    gap: $space-3;
+    min-width: 0;
+    padding: $space-4;
+    border: 1px solid rgba($primary-clr-900, 0.08);
+    border-radius: $radius-lg;
+    background-color: $clr-white;
+
+    @include from($bp-md) {
+      padding: $space-5;
+    }
+  }
+
+  h2 {
+    font-size: 1.15rem;
+    color: $primary-clr-900;
+  }
+
+  .locator {
+    display: grid;
+    gap: $space-4;
+
+    @include from($bp-lg) {
+      grid-template-columns: 280px 1fr;
+      align-items: start;
+    }
+  }
+}

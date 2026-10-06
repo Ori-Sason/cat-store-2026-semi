@@ -1,0 +1,39 @@
+@use 'setup' as *;
+
+.pickup-point-list {
+  display: grid;
+  gap: $space-2;
+
+  button {
+    display: grid;
+    gap: $space-1;
+    width: 100%;
+    padding: $space-3;
+    text-align: start;
+    border: 1px solid rgba($primary-clr-900, 0.12);
+    border-radius: $radius-md;
+    background-color: $clr-white;
+    cursor: pointer;
+
+    &:hover {
+      background-color: $primary-clr-100;
+    }
+
+    &.selected {
+      border-color: $primary-clr-600;
+      background-color: $primary-clr-100;
+      box-shadow: inset 3px 0 0 $primary-clr-600;
+    }
+  }
+
+  .name {
+    font-weight: 700;
+    color: $primary-clr-900;
+  }
+
+  .address,
+  .hours {
+    font-size: 0.85rem;
+    color: $primary-clr-850;
+  }
+}

@@ -21,6 +21,12 @@
 	- Values: `Kitten`, `Adult`, `Senior`, `Playful`, `Calm`, `Affectionate`,
 	  `Long-hair`, `Short-hair`, `Indoor`, `Good with kids`.
 	- Avoid: `traits`, `tags`, `categories`, `type`.
+- pickup point (`PickupPoint`, `PICKUP_POINTS`)
+	- Canonical meaning: a fixed place where a buyer collects a cat. Shown on the
+	  About page map with its address and hours.
+	- Rule: FE-only static data (`frontend/src/models/pickup-point.ts`), not a
+	  collection and not on the wire.
+	- Avoid: `store` (clashes with the app and Zustand stores), `branch`, `location`, `shop`.
 
 ### Type shapes
 - `Cat` vs `CatInput`

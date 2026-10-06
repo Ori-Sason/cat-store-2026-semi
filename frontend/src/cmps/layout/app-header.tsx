@@ -11,10 +11,11 @@ export const AppHeader: React.FC = () => {
           </span>
           cat-store
         </Link>
-        {/* About joins in Part 2, Login in Part 3 */}
+        {/* Login joins in Part 3 */}
         <nav>
           <NavLink to="/cat">Cats</NavLink>
           <NavLink to="/dashboard">Dashboard</NavLink>
+          <NavLink to="/about">About</NavLink>
         </nav>
       </div>
     </header>
