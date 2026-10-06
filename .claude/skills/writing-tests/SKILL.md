@@ -40,6 +40,7 @@ How to write tests. When to write them lives in `.claude/rules/testing.md`.
   `import { describe, expect, it } from 'vitest'`.
 - Frontend: `src/test-setup.ts` registers the jest-dom matchers (`toBeInTheDocument()`,
   `toHaveValue()`, ...) and runs RTL `cleanup` after each test. Don't repeat either in a test file.
+  It also imports `vitest-canvas-mock` globally, so canvas code (the OpenLayers map) runs in jsdom.
 - Backend: Supertest calls the Express app in memory, with no open port. Tests use a separate
   database (`MONGODB_DATABASE` in `backend/.env.test`) in the same `db-local` container, and
   wipe it freely. Never point tests at the dev database.

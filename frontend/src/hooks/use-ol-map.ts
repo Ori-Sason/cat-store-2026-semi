@@ -22,6 +22,7 @@ interface UseOlMapOptions {
   targetRef: RefObject<HTMLDivElement | null>
   pickupPoints: PickupPoint[]
   selectedId: string | null
+  isMarkerInfoBoxOpen: boolean
   onSelect: (id: string | null) => void
   createMarkerStyles: (target: HTMLElement) => MarkerStyles
 }
@@ -30,6 +31,7 @@ const _INITIAL_CENTER_LNG_LAT = [34.95, 31.4]
 const _INITIAL_ZOOM = 7
 const _SELECTED_ZOOM = 17
 const _PAN_DURATION_MS = 500
+const _AUTO_PAN_DURATION_MS = 250
 
 // React glue for an OpenLayers map with one marker per pickup point and an info-box overlay.
 // OL is imperative: the map lives in refs, React only drives it through effects
@@ -37,6 +39,7 @@ export function useOlMap({
   targetRef,
   pickupPoints,
   selectedId,
+  isMarkerInfoBoxOpen,
   onSelect,
   createMarkerStyles,
 }: UseOlMapOptions) {
@@ -44,7 +47,7 @@ export function useOlMap({
   const overlayRef = useRef<Overlay | null>(null)
   const sourceRef = useRef<VectorSource | null>(null)
   const markerStylesRef = useRef<MarkerStyles | null>(null)
-  const hadSelectionRef = useRef(false)
+  const hasPrevSelectionRef = useRef(false)
 
   // OL moves the overlay element into its own container, so React must not own it.
   // Callers portal the info-box content into it instead
@@ -74,8 +77,8 @@ export function useOlMap({
       element: infoBoxEl,
       positioning: 'bottom-center',
       offset: [0, -16],
-      // Pans the map so an info box near the edge isn't cut off
-      autoPan: { animation: { duration: 250 } },
+      // Each time a position is set, pans the map so the info box isn't cut off at an edge
+      autoPan: { animation: { duration: _AUTO_PAN_DURATION_MS } },
     })
 
     const map = new OlMap({
@@ -103,8 +106,9 @@ export function useOlMap({
     markerStylesRef.current = markerStyles
 
     return () => {
-      // Detach so StrictMode's mount → unmount → mount doesn't leave two maps in the target
-      map.setTarget(undefined)
+      // Detaches from the target (so StrictMode's mount → unmount → mount doesn't leave two maps)
+      // and releases controls, interactions, overlays and the resize observer
+      map.dispose()
       mapRef.current = null
       overlayRef.current = null
       sourceRef.current = null
@@ -114,10 +118,9 @@ export function useOlMap({
 
   useEffect(() => {
     const map = mapRef.current
-    const overlay = overlayRef.current
     const source = sourceRef.current
     const markerStyles = markerStylesRef.current
-    if (!map || !overlay || !source || !markerStyles) return
+    if (!map || !source || !markerStyles) return
 
     for (const feature of source.getFeatures()) {
       feature.setStyle(feature.getId() === selectedId ? markerStyles.selected : markerStyles.normal)
@@ -125,24 +128,38 @@ export function useOlMap({
 
     const point = pickupPoints.find((p) => p.id === selectedId)
     if (!point) {
-      overlay.setPosition(undefined)
       // Deselect → back to the whole country. Skipped on mount: the view already starts there
-      if (hadSelectionRef.current) {
+      if (hasPrevSelectionRef.current) {
         map.getView().animate({
           center: fromLonLat(_INITIAL_CENTER_LNG_LAT),
           zoom: _INITIAL_ZOOM,
           duration: _PAN_DURATION_MS,
         })
       }
-      hadSelectionRef.current = false
+      hasPrevSelectionRef.current = false
       return
     }
 
-    const center = fromLonLat([point.lng, point.lat])
-    map.getView().animate({ center, zoom: _SELECTED_ZOOM, duration: _PAN_DURATION_MS })
-    overlay.setPosition(center)
-    hadSelectionRef.current = true
+    map.getView().animate({
+      center: fromLonLat([point.lng, point.lat]),
+      zoom: _SELECTED_ZOOM,
+      duration: _PAN_DURATION_MS,
+    })
+    hasPrevSelectionRef.current = true
   }, [selectedId, pickupPoints])
+
+  // The info box's position follows its open state:
+  // - Select → pin it to the marker
+  // - Close → unpin it. The map doesn't move
+  // - Re-select the same marker with a closed box → pin it again and brings it into view
+  // - Deselect → unpin it
+  useEffect(() => {
+    const overlay = overlayRef.current
+    if (!overlay) return
+
+    const point = isMarkerInfoBoxOpen ? pickupPoints.find((p) => p.id === selectedId) : undefined
+    overlay.setPosition(point ? fromLonLat([point.lng, point.lat]) : undefined)
+  }, [selectedId, isMarkerInfoBoxOpen, pickupPoints])
 
   return { infoBoxEl }
 }

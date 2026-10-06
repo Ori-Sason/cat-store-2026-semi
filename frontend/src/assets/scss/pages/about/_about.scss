@@ -16,7 +16,6 @@
 
     @include from($bp-md) {
       grid-template-columns: 1fr 180px;
-      column-gap: $space-6;
     }
   }
 

@@ -31,7 +31,7 @@ export const About: React.FC = () => {
           </p>
         </div>
         <div className="intro-img">
-          <img src={catImg} alt="Cat" />
+          <img src={catImg} alt="" />
         </div>
       </header>
 

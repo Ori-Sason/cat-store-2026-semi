@@ -11,21 +11,21 @@ import { MarkerInfoBox } from './marker-info-box'
 // _pickup-point-map.scss exposes them as custom properties, read here once the map mounts
 function _createMarkerStyles(target: HTMLElement): MarkerStyles {
   const css = getComputedStyle(target)
-  const _cssVar = (name: string) => css.getPropertyValue(name).trim()
-  const borderClr = _cssVar('--marker-border-clr')
+  const cssVar = (name: string) => css.getPropertyValue(name).trim()
+  const borderClr = cssVar('--marker-border-clr')
 
   return {
     normal: new Style({
       image: new Circle({
         radius: 8,
-        fill: new Fill({ color: _cssVar('--marker-clr') }),
+        fill: new Fill({ color: cssVar('--marker-clr') }),
         stroke: new Stroke({ color: borderClr, width: 2 }),
       }),
     }),
     selected: new Style({
       image: new Circle({
         radius: 11,
-        fill: new Fill({ color: _cssVar('--marker-selected-clr') }),
+        fill: new Fill({ color: cssVar('--marker-selected-clr') }),
         stroke: new Stroke({ color: borderClr, width: 3 }),
       }),
       // Draw the selected marker above its neighbors
@@ -54,6 +54,7 @@ export const PickupPointMap: React.FC<PickupPointMapProps> = ({
     targetRef,
     pickupPoints,
     selectedId,
+    isMarkerInfoBoxOpen,
     onSelect,
     createMarkerStyles: _createMarkerStyles,
   })
