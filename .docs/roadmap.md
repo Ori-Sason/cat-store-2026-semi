@@ -90,6 +90,9 @@ The order of BE and FE can go either way, as long as the DB comes first.
    | Edit / delete   | ❌    | Own cats only   | ✅    |
 
 - [ ] 7. Backend middleware enforces these rules. The FE hides buttons and pages the user can't use.
+- [ ] 8. Close Part 3 with E2E coverage of every auth flow: sign up → log in, the cat rules for
+   guest / user / admin, admin cat CRUD. Rename `guest-browse.spec.ts` to `guest.spec.ts` and add
+   the guest rules to it (no Add / Edit / Delete).
 
 ## Part 4: Reviews + user page
 
