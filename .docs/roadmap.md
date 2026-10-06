@@ -6,10 +6,9 @@ The roadmap gives the shape of the project, not a literal script.
 This file covers **what** gets built, **in what order**, and how far along it is.
 Stack, dependencies and the **why** behind decisions live in `architecture.md`.
 
-**Current:** Part 1 is done: the cat API, the FE list, details and edit pages (over loaders and
-actions), and Vitest in every package. `npm run seed -w backend` re-seeds the `cats` collection.
-Part 2.1 is done: `/dashboard` charts the median price + range and the in-stock share per
-label as HTML/CSS bars with the stats shown (over `GET /api/cats/stats`). Next: Part 2.2 (about page).
+**Current:** Parts 1 and 2 are done: cat CRUD (API + FE list, details and edit pages), the
+`/dashboard` label charts and the `/about` pickup-point map. `npm run seed -w backend` re-seeds
+the `cats` collection. Next: Part 3 (users + auth), starting with Playwright.
 
 ## Part 1: DB + backend + frontend skeleton (CRUD over cats)
 
@@ -61,7 +60,7 @@ The order of BE and FE can go either way, as long as the DB comes first.
 ## Part 2: Dashboard + About page
 
 - [x] 1. Dashboard with charts: median price + range per label, in-stock % per label.
-- [ ] 2. About page with a pickup-point locator: one marker per pickup point, click a pickup point to center the map on it. Google Maps is one option.
+- [x] 2. About page with a pickup-point locator: one marker per pickup point, click a pickup point to center the map on it. OpenLayers + OSM tiles.
 
 ## Part 3: Users + auth
 
@@ -144,7 +143,6 @@ Before the first real deploy. This turns into a `deploy` skill once Part 5 start
 
 Single home for open questions. Once one is decided, record the answer in `architecture.md` → Decisions and remove it here.
 
-- Which maps library to use (Google Maps is one option).
 - Deploy: Render build/start steps.
 
 ## Update Triggers
