@@ -16,8 +16,13 @@ pre-commit:
     - name: typecheck
       run: npm run typecheck
 
-# Backend tests hit the db-local Mongo container, so it must be up before pushing.
+# Backend tests and E2E hit the db-local Mongo container, so it must be up before pushing.
+# Piped: one job at a time, stop on the first failure. Both suites wipe catsTest, so they
+# must not overlap, and E2E is skipped when the unit tests already failed.
 pre-push:
+  piped: true
   jobs:
     - name: test
       run: npm test
+    - name: e2e
+      run: npm run test:e2e
