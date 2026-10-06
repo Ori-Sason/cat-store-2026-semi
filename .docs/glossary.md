@@ -9,6 +9,9 @@
 	- Canonical meaning: one cat offered on the store by its owner. The core entity:
 	  it has a name, price, labels, stock flag and photo, plus reviews and a chat room.
 	- Avoid: `listing`, `item`, `product`, `pet`.
+- user (`users`, `User`, `UserDoc`)
+	- Canonical meaning: an account that can log in. A user with `isAdmin` is an admin.
+	- Avoid: `account`, `member`, `customer`.
 - owner (`ownerId`)
 	- Canonical meaning: the user who created a cat. Only the owner (or an admin) can
 	  edit or delete it. Set by the server, never by the client.
@@ -35,6 +38,13 @@
 	  default image. `CatInput` is
 	  what the client sends (POST / PUT body, edit-form state), inferred from `catSchema`.
 	- Avoid: `CatDto`, `NewCat`, `CatPayload`, `CatToSave`.
+
+- `User` vs `UserInput` vs `UserDoc`
+	- Canonical meaning: `User` is a stored user as the API returns it, with no password.
+	  `UserInput` is what signup sends (`fullname`, `username`, `password`), inferred from
+	  `userSchema`. `UserDoc` is the backend-only DB shape, with `password` as the bcrypt hash.
+	- Rule: `isAdmin` is never client-set. `userSchema` leaves it out, so Zod strips it.
+	- Avoid: `UserDto`, `NewUser`, `Credentials` (for the signup body).
 
 - `CatFilter` / `filterBy` / `catFilterService`
 	- Canonical meaning: `CatFilter` is the type for how the cat list is filtered and

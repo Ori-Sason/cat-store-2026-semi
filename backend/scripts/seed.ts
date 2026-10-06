@@ -1,16 +1,28 @@
 import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
-import { config } from '../config/index.ts'
+import { config, requireEnv } from '../config/index.ts'
 import { CAT_COLLECTION, type CatDoc } from '../models/cat.ts'
 import { mongoService } from '../services/mongodb.service.ts'
 import { buildSeedCat, type RawCat } from './cat-seed.ts'
+import { SEED_USERS, seedUsers } from './user-seed.ts'
 
 const CATS_FILE_PATH = join(import.meta.dirname, 'data', 'cats.json')
 
-// Wipes the cats collection and re-inserts every cat from the JSON file.
-// Re-running is safe: you always end up with the same set of cats (fresh ids and labels)
+// Users: creates the seed users that are missing, keeps the existing ones.
+// Cats: wipes the collection and re-inserts every cat from the JSON file.
+// Re-running is safe: you always end up with the same users (same ids) and the same set of
+// cats (fresh ids and labels)
 async function seed() {
   try {
+    // Read here, not in config: only the seed needs it, the server never does
+    const seedPassword = requireEnv('SEED_USERS_PASSWORD')
+    // Users first: a password mismatch throws before the cat wipe, so a failed seed changes nothing
+    const createdUsers = await seedUsers(seedPassword)
+    const existingCount = SEED_USERS.length - createdUsers.length
+    console.log(
+      `Users: created ${createdUsers.join(', ') || 'none'}, ${existingCount} already existed`,
+    )
+
     const rawCats: RawCat[] = JSON.parse(await readFile(CATS_FILE_PATH, 'utf8'))
     const cats = rawCats.map((raw) => buildSeedCat(raw))
 

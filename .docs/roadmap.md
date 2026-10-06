@@ -9,7 +9,7 @@ Stack, dependencies and the **why** behind decisions live in `architecture.md`.
 **Current:** Parts 1 and 2 are done: cat CRUD (API + FE list, details and edit pages), the
 `/dashboard` label charts and the `/about` pickup-point map. `npm run seed -w backend` re-seeds
 the `cats` collection. Part 3 has started: Playwright E2E is set up (`npm run test:e2e`) with a guest
-smoke flow. Next: the `users` collection.
+smoke flow, and the `users` collection exists, with a seeded `user` and `admin`. Next: login and signup pages.
 
 ## Part 1: DB + backend + frontend skeleton (CRUD over cats)
 
@@ -73,8 +73,9 @@ The order of BE and FE can go either way, as long as the DB comes first.
    - Then add an E2E test with each auth piece as it lands: sign up → log in, the cat rules,
      admin cat CRUD. Auth is where mocks hide the most (cookies, the proxy, BE guards).
    - After Part 3, add E2E only when asked, or when a part adds a new end-to-end flow.
-- [ ] 2. `users` collection: `{ _id, fullname, username, password, isAdmin, createdAt, updatedAt }`, with one seeded admin.
-   `password` is a bcrypt hash, never the plain text.
+- [x] 2. `users` collection: `{ _id, fullname, username, password, isAdmin, createdAt, updatedAt }`, with a seeded
+   `user` and `admin` (password from `SEED_USERS_PASSWORD`), created if missing.
+   `password` is a bcrypt hash, never the plain text. `username` is lowercased and unique.
 - [ ] 3. Login and signup pages.
 - [ ] 4. Auth uses a JWT stored in a cookie.
 - [ ] 5. Add `ownerId` to cats:

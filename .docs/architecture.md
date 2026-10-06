@@ -95,6 +95,9 @@ Env: `node --env-file=.env.local`, no dotenv. Prod needs `JWT_SECRET`, Mongo URL
   the `/api` proxy pointed at :8001 via `API_PROXY_TARGET`. Specs run one at a time.
   Why: a running `npm run dev` and the dev DB stay untouched, and no third Mongo user is needed.
   The cost: E2E and the backend Vitest suite share `catsTest`, so don't run them at the same time.
+- **Seeded users are created if missing, never overwritten.** A password mismatch with
+  `SEED_USERS_PASSWORD` fails the seed.
+  Why: dev accounts survive re-seeds, and a drifted password fails loudly, not at login.
 - **About-page map: OpenLayers + OSM raster tiles, no React wrapper.**
   Why: no API key or billing (Google Maps needs both). Compared with MapLibre, it's a
   ~3–5x smaller bundle, has no Vite worker workaround, has a clean security record with rare

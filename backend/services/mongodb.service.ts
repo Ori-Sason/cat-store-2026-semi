@@ -1,6 +1,7 @@
 import type { Db, Document, Collection, IndexSpecification, CreateIndexesOptions } from 'mongodb'
 import { MongoClient } from 'mongodb'
 import { config } from '../config/index.ts'
+import { USER_COLLECTION } from '../models/user.ts'
 
 interface IndexDef {
   collection: string
@@ -8,7 +9,10 @@ interface IndexDef {
   options?: CreateIndexesOptions
 }
 
-const INDEXES: IndexDef[] = []
+const INDEXES: IndexDef[] = [
+  // userSchema lowercases usernames, so a plain unique index is enough for case-insensitive uniqueness
+  { collection: USER_COLLECTION, key: { username: 1 }, options: { unique: true } },
+]
 
 let client: MongoClient | null = null
 // Cache the promise, not the resolved Db - it's assigned synchronously,
