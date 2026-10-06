@@ -47,7 +47,7 @@ export function useOlMap({
   const overlayRef = useRef<Overlay | null>(null)
   const sourceRef = useRef<VectorSource | null>(null)
   const markerStylesRef = useRef<MarkerStyles | null>(null)
-  const hasPrevSelectionRef = useRef(false)
+  const isPrevSelectedRef = useRef(false)
 
   // OL moves the overlay element into its own container, so React must not own it.
   // Callers portal the info-box content into it instead
@@ -129,14 +129,14 @@ export function useOlMap({
     const point = pickupPoints.find((p) => p.id === selectedId)
     if (!point) {
       // Deselect → back to the whole country. Skipped on mount: the view already starts there
-      if (hasPrevSelectionRef.current) {
+      if (isPrevSelectedRef.current) {
         map.getView().animate({
           center: fromLonLat(_INITIAL_CENTER_LNG_LAT),
           zoom: _INITIAL_ZOOM,
           duration: _PAN_DURATION_MS,
         })
       }
-      hasPrevSelectionRef.current = false
+      isPrevSelectedRef.current = false
       return
     }
 
@@ -145,7 +145,7 @@ export function useOlMap({
       zoom: _SELECTED_ZOOM,
       duration: _PAN_DURATION_MS,
     })
-    hasPrevSelectionRef.current = true
+    isPrevSelectedRef.current = true
   }, [selectedId, pickupPoints])
 
   // The info box's position follows its open state:

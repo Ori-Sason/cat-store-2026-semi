@@ -43,10 +43,10 @@ export function getPriceAxis(stats: CatLabelStats[]): PriceAxis {
 export function toPriceChartRows(stats: CatLabelStats[], axisMax: number): PriceChartRow[] {
   return stats.map((stat) => {
     const { medianPrice, minPrice, maxPrice } = stat
-    const hasPrices = medianPrice !== null && minPrice !== null && maxPrice !== null
+    const isHasPrices = medianPrice !== null && minPrice !== null && maxPrice !== null
     return {
       ...stat,
-      pricePcts: hasPrices
+      pricePcts: isHasPrices
         ? {
             median: _toPct(medianPrice, axisMax),
             min: _toPct(minPrice, axisMax),

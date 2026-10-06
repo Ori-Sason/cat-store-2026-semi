@@ -15,7 +15,7 @@
 ## Code
 - Types, interfaces and React components: `PascalCase`. Variables and functions:
   `camelCase`. Constants: `SCREAMING_SNAKE`.
-- Booleans take an `is` / `has` prefix: `isAdmin`, `hasStock`.
+- Booleans take an `is` prefix, never `has`: `isAdmin`, `isInStock`.
 - Numeric constants with a unit carry it in the name: `SESSION_TTL_MS`.
 - Module-private helpers take a `_` prefix and are not exported: `_toErrorResponse`.
 - Entity names in code are singular: `User`, `userService`.
