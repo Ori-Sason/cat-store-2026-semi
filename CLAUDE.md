@@ -34,7 +34,7 @@ script. Stack and decisions live in `.docs/architecture.md`.
 - `learning-notes/` — the user's study notes. Edit only when asked.
 
 npm workspaces: install from the root, run with `npm run <script> -w <pkg>`
-(shortcuts: `npm run dev:fe`, `npm run dev:be`).
+(shortcuts: `npm run dev:fe`, `npm run dev:be`, `npm run test:e2e`).
 
 Git hooks: lefthook (`lefthook.yml`). Format, lint and typecheck on commit, tests on push.
 A fresh clone needs `npm run hooks:install` once (`.npmrc` has `ignore-scripts`).

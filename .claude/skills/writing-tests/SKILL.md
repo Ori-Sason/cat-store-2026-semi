@@ -33,7 +33,7 @@ How to write tests. When to write them lives in `.claude/rules/testing.md`.
 | Shared | `shared/src/**/*.test.ts` | `npm test -w shared` (Vitest, node) |
 | Frontend | `frontend/src/**/*.test.{ts,tsx}` | `npm test -w frontend` (Vitest + RTL, jsdom) |
 | Backend | `backend/**/*.test.ts` | `npm test -w backend` (Vitest + Supertest, node) |
-| E2E | `frontend/e2e/` | Not set up yet. Playwright arrives in Part 3. |
+| E2E | `frontend/e2e/*.spec.ts` | `npm run test:e2e` (Playwright, headless Chromium) |
 
 - Unit tests sit next to the file they test: `cat.service.ts` → `cat.service.test.ts`.
 - Vitest runs with `globals: false`, so import explicitly:
@@ -49,4 +49,8 @@ How to write tests. When to write them lives in `.claude/rules/testing.md`.
   each test, and closes the client after the file. Files that don't touch the DB skip it.
 - Tooling is installed and configured. Don't reinstall or reconfigure it without a plan that
   calls for it.
+- E2E: Playwright starts its own backend (:8001, `catsTest`, re-seeded each run) and Vite
+  (:5174), so `npm run dev` can stay up. Specs start from the seed data in
+  `backend/scripts/data/cats.json`. Seed labels are random, so don't assert on them. Don't run
+  E2E and the backend Vitest suite at the same time, since both use `catsTest`.
 - Keep output short when running suites, e.g. `npm test -- --reporter=dot`.

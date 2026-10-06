@@ -30,9 +30,9 @@ Main libraries only. Exact versions and `@types/*` live in each `package.json`.
   about-page map).
 - backend: Express 5, native `mongodb` driver. No Mongoose, no `ts-node`/`tsx`.
 - auth: jsonwebtoken, bcrypt, cookie-parser. Installed already, used from Part 3.
-- testing: Vitest everywhere, React Testing Library + jsdom (FE), Supertest (BE).
+- testing: Vitest everywhere, React Testing Library + jsdom (FE), Supertest (BE), Playwright (E2E).
 - tooling: oxlint, oxfmt.
-- planned: Playwright (Part 3), socket.io + socket.io-client (Part 5).
+- planned: socket.io + socket.io-client (Part 5).
 
 External services: MongoDB (local in dev, Atlas in prod), Render (hosting).
 Env: `node --env-file=.env.local`, no dotenv. Prod needs `JWT_SECRET`, Mongo URL,
@@ -90,6 +90,11 @@ Env: `node --env-file=.env.local`, no dotenv. Prod needs `JWT_SECRET`, Mongo URL
 - **E2E with the Playwright CLI, from Part 3.** Headless Chromium on the VM, no browser-driving MCP.
   Why: before auth there's no full flow worth covering end to end. The CLI only reports
   pass/fail, while driving a browser step by step costs many tokens.
+- **E2E runs its own servers against `catsTest`.** `frontend/playwright.config.ts` starts the
+  backend on :8001 with `backend/.env.test` (re-seeding `catsTest` first) and Vite on :5174, with
+  the `/api` proxy pointed at :8001 via `API_PROXY_TARGET`. Specs run one at a time.
+  Why: a running `npm run dev` and the dev DB stay untouched, and no third Mongo user is needed.
+  The cost: E2E and the backend Vitest suite share `catsTest`, so don't run them at the same time.
 - **About-page map: OpenLayers + OSM raster tiles, no React wrapper.**
   Why: no API key or billing (Google Maps needs both). Compared with MapLibre, it's a
   ~3–5x smaller bundle, has no Vite worker workaround, has a clean security record with rare

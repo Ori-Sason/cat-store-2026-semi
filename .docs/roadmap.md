@@ -8,7 +8,8 @@ Stack, dependencies and the **why** behind decisions live in `architecture.md`.
 
 **Current:** Parts 1 and 2 are done: cat CRUD (API + FE list, details and edit pages), the
 `/dashboard` label charts and the `/about` pickup-point map. `npm run seed -w backend` re-seeds
-the `cats` collection. Next: Part 3 (users + auth), starting with Playwright.
+the `cats` collection. Part 3 has started: Playwright E2E is set up (`npm run test:e2e`) with a guest
+smoke flow. Next: the `users` collection.
 
 ## Part 1: DB + backend + frontend skeleton (CRUD over cats)
 
@@ -64,7 +65,7 @@ The order of BE and FE can go either way, as long as the DB comes first.
 
 ## Part 3: Users + auth
 
-- [ ] 1. Set up Playwright E2E first, before any auth code.
+- [x] 1. Set up Playwright E2E first, before any auth code.
    - Install the test runner with headless Chromium only (`npx playwright install --with-deps chromium`).
      It runs on the VM from the CLI. No browser-driving MCP.
    - Specs live in `frontend/e2e/`, excluded from Vitest's `include`.

@@ -14,6 +14,7 @@ export default defineConfig({
   server: {
     host: true,
     strictPort: true,
-    proxy: { '/api': 'http://localhost:8000' },
+    // E2E points this at its own backend (playwright.config.ts), so a running dev server isn't touched
+    proxy: { '/api': process.env.API_PROXY_TARGET ?? 'http://localhost:8000' },
   },
 })
