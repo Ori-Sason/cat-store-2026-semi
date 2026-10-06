@@ -1,8 +1,8 @@
 import { render, screen } from '@testing-library/react'
 import { createMemoryRouter, data, RouterProvider } from 'react-router'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { ApiError } from '../../models/api-error'
-import { errorService } from '../../services/error.service'
+import { ApiError } from '../../../models/api-error'
+import { errorService } from '../../../services/error.service'
 import { RouteError } from './route-error'
 
 // The same shape as router.tsx: a pathless route whose errorElement catches its children's loaders

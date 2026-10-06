@@ -1,7 +1,7 @@
 import type React from 'react'
 import type { CatInput } from '@cat-store/shared'
 import { useLoaderData, useLocation, useNavigation, useSubmit } from 'react-router'
-import { CatEditForm } from '../../cmps/cat/cat-edit/cat-edit-form'
+import { CatEditForm } from '../../cmps/cat-edit/cat-edit-form'
 import type { CatListLocationState } from '../../models/util'
 import type { catEditLoader } from './cat-edit.loader'
 

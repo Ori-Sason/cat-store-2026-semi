@@ -3,8 +3,8 @@ import { useRef } from 'react'
 import { createPortal } from 'react-dom'
 import 'ol/ol.css'
 import { Circle, Fill, Stroke, Style } from 'ol/style'
-import { useOlMap, type MarkerStyles } from '../../../hooks/use-ol-map'
-import type { PickupPoint } from '../../../models/pickup-point'
+import { useOlMap, type MarkerStyles } from '../../hooks/use-ol-map'
+import type { PickupPoint } from '../../models/pickup-point'
 import { MarkerInfoBox } from './marker-info-box'
 
 // OL draws markers on a canvas, out of CSS's reach. The colors still come from the SCSS tokens:

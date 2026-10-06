@@ -1,7 +1,7 @@
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import { createMemoryRouter, RouterProvider } from 'react-router'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { useUserMsgStore } from '../../store/user-msg.store'
+import { useUserMsgStore } from '../../../store/user-msg.store'
 import { CLOSE_ANIM_MS, DISPLAY_ANIM_MS, UserMessage } from './user-message'
 
 const store = () => useUserMsgStore.getState()

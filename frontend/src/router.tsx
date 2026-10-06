@@ -1,7 +1,7 @@
 import { createBrowserRouter, data, redirect } from 'react-router'
 import { LayoutApp } from './cmps/layout/layout-app'
 import { LayoutRoot } from './cmps/layout/layout-root'
-import { RouteError } from './cmps/util/route-error'
+import { RouteError } from './cmps/common/util/route-error'
 import { CatApp } from './pages/cat-app/cat-app'
 import { catAppLoader } from './pages/cat-app/cat-app.loader'
 import { CatDashboard } from './pages/cat-dashboard/cat-dashboard'

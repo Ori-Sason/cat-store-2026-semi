@@ -1,7 +1,7 @@
 import type React from 'react'
 import { useLoaderData } from 'react-router'
-import { LabelPriceChart } from '../../cmps/cat/cat-dashboard/label-price-chart'
-import { LabelStockChart } from '../../cmps/cat/cat-dashboard/label-stock-chart'
+import { LabelPriceChart } from '../../cmps/cat-dashboard/label-price-chart'
+import { LabelStockChart } from '../../cmps/cat-dashboard/label-stock-chart'
 import type { catDashboardLoader } from './cat-dashboard.loader'
 
 export const CatDashboard: React.FC = () => {

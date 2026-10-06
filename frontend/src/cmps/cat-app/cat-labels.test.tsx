@@ -1,10 +1,10 @@
 import { fireEvent, render, screen } from '@testing-library/react'
 import type { CatLabel } from '@cat-store/shared'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { useFitCount } from '../../../hooks/use-fit-count'
+import { useFitCount } from '../../hooks/use-fit-count'
 import { CatLabels } from './cat-labels'
 
-vi.mock('../../../hooks/use-fit-count')
+vi.mock('../../hooks/use-fit-count')
 
 const _LABELS: CatLabel[] = ['Kitten', 'Calm', 'Senior', 'Playful']
 

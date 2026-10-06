@@ -1,5 +1,5 @@
 import type { CatLabelStats } from '@cat-store/shared'
-import { utilService } from '../../../services/util.service'
+import { utilService } from '../../services/util.service'
 
 // Aim for about this many steps on the price axis. The exact count follows from the nice step size
 const _PRICE_AXIS_STEP_COUNT = 5

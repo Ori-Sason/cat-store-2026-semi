@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react'
 import type { Cat } from '@cat-store/shared'
 import { describe, expect, it } from 'vitest'
-import defaultImg from '../../assets/img/cat-default-bw.png'
+import defaultImg from '../../../assets/img/cat-default-bw.png'
 import { CatImg } from './cat-img'
 
 const _URL = 'https://robohash.org/mitzi?set=set4'

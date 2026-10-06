@@ -1,6 +1,6 @@
 import type React from 'react'
 import { useEffect, useRef, useState } from 'react'
-import { useUserMsgStore } from '../../store/user-msg.store'
+import { useUserMsgStore } from '../../../store/user-msg.store'
 import { useNavigation } from 'react-router'
 
 export const CLOSE_ANIM_MS = 700

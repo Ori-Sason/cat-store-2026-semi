@@ -1,8 +1,8 @@
 import type React from 'react'
 import { useState } from 'react'
 import catImg from '../../assets/img/cat-default-color.png'
-import { PickupPointList } from '../../cmps/pickup-point/about/pickup-point-list'
-import { PickupPointMap } from '../../cmps/pickup-point/about/pickup-point-map'
+import { PickupPointList } from '../../cmps/about/pickup-point-list'
+import { PickupPointMap } from '../../cmps/about/pickup-point-map'
 import { PICKUP_POINTS } from '../../models/pickup-point'
 
 export const About: React.FC = () => {

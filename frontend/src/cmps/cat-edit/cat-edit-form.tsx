@@ -3,10 +3,10 @@ import { useState } from 'react'
 import { Link } from 'react-router'
 import { z } from 'zod'
 import { CAT_LABELS, catSchema, type Cat, type CatInput, type CatLabel } from '@cat-store/shared'
-import type { CatListLocationState } from '../../../models/util'
-import { ToggleSwitch } from '../../util/toggle-switch'
-import { CatImg } from '../cat-img'
-import { LabelToggles } from '../label-toggles'
+import type { CatListLocationState } from '../../models/util'
+import { ToggleSwitch } from '../common/util/toggle-switch'
+import { CatImg } from '../common/cat/cat-img'
+import { LabelToggles } from '../common/cat/label-toggles'
 
 // Price stays a string while typing, so an empty field shows empty instead of 0
 type CatForm = Omit<CatInput, 'price'> & { price: string }

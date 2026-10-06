@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
-import { PICKUP_POINTS } from '../../../models/pickup-point'
+import { PICKUP_POINTS } from '../../models/pickup-point'
 import { PickupPointList } from './pickup-point-list'
 
 function _render(selectedId: string | null) {

@@ -1,6 +1,6 @@
 import type React from 'react'
 import { isRouteErrorResponse, Link, useRouteError } from 'react-router'
-import { errorService } from '../../services/error.service'
+import { errorService } from '../../../services/error.service'
 
 // The errorElement of the pathless route under the header - a thrown loader error
 // (ApiError, or a 404 response for an unknown path) renders here

@@ -1,6 +1,6 @@
 import type { CatLabelStats } from '@cat-store/shared'
 import type React from 'react'
-import { utilService } from '../../../services/util.service'
+import { utilService } from '../../services/util.service'
 import { formatPriceStats, getPriceAxis, toPriceChartRows } from './label-chart.util'
 
 interface Props {

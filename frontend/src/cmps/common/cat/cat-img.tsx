@@ -1,8 +1,8 @@
 import type React from 'react'
 import { useState } from 'react'
 import type { Cat } from '@cat-store/shared'
-import defaultImg from '../../assets/img/cat-default-bw.png'
-import soldOutImg from '../../assets/img/sold-out.png'
+import defaultImg from '../../../assets/img/cat-default-bw.png'
+import soldOutImg from '../../../assets/img/sold-out.png'
 
 interface CatImgProps {
   cat: Pick<Cat, 'name' | 'imgUrl' | 'isInStock'>

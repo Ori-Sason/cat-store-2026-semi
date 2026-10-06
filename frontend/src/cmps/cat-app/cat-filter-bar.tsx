@@ -7,7 +7,7 @@ import {
   type CatSortField,
   type SortByDirection,
 } from '@cat-store/shared'
-import { LabelToggles } from '../label-toggles'
+import { LabelToggles } from '../common/cat/label-toggles'
 
 interface SortOption {
   txt: string

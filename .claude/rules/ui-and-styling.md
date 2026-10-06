@@ -13,7 +13,7 @@ paths:
 - Entry point: `frontend/src/assets/scss/main.scss`. Register every new partial there,
   under `/* PAGES */` or `/* COMPONENTS */`.
 - One partial per component, mirroring the component tree:
-  `cmps/util/user-message.tsx` → `scss/cmps/util/_user-message.scss`.
+  `cmps/common/util/user-message.tsx` → `scss/cmps/common/util/_user-message.scss`.
 - Use `@use` / `@forward` only, never `@import`.
 - Pull in tokens and mixins with `@use 'setup' as *;` (resolved via Vite `loadPaths`,
   same line at any depth).

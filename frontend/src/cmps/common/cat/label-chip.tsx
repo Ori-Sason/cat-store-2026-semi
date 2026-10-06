@@ -1,6 +1,6 @@
 import type React from 'react'
 import type { CatLabel } from '@cat-store/shared'
-import { LABEL_COLORS } from '../../models/label'
+import { LABEL_COLORS } from '../../../models/label'
 
 interface LabelChipProps {
   label: CatLabel
