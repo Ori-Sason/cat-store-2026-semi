@@ -1,10 +1,15 @@
 import { signupSchema } from '@cat-store/shared'
 import { z } from 'zod'
 
-// Confirm password is a client-side check only, and is dropped before submit
+// Confirm password is a client-side check only. The transform drops it, so the
+// parsed output is a plain SignupInput, ready to submit.
 export const signupFormSchema = signupSchema
   .extend({ confirmPassword: z.string() })
   .refine((form) => form.password === form.confirmPassword, {
     error: "Passwords don't match",
     path: ['confirmPassword'],
+  })
+  .transform((form) => {
+    const { confirmPassword: _, ...signupInput } = form
+    return signupInput
   })

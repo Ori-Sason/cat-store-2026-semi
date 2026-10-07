@@ -69,13 +69,7 @@ export const LoginSignupForm: React.FC<LoginSignupFormProps> = ({
   function onSubmitForm(ev: React.SubmitEvent<HTMLFormElement>) {
     ev.preventDefault()
     formValidation.markSubmitted()
-    if (!formParseResult.success) return
-    if ('confirmPassword' in formParseResult.data) {
-      const { confirmPassword: _, ...signupInput } = formParseResult.data
-      onSubmit(signupInput)
-    } else {
-      onSubmit(formParseResult.data)
-    }
+    if (formParseResult.success) onSubmit(formParseResult.data)
   }
 
   return (
