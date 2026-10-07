@@ -1,9 +1,10 @@
 import type React from 'react'
 import { useState } from 'react'
 import { Link } from 'react-router'
-import { z } from 'zod'
 import { CAT_LABELS, catSchema, type Cat, type CatInput, type CatLabel } from '@cat-store/shared'
 import type { CatListLocationState } from '../../models/util'
+import { useFormValidation } from '../../hooks/use-form-validation'
+import { FieldError } from '../common/util/field-error'
 import { ToggleSwitch } from '../common/util/toggle-switch'
 import { CatImg } from '../common/cat/cat-img'
 import { LabelToggles } from '../common/cat/label-toggles'
@@ -40,37 +41,24 @@ export const CatEditForm: React.FC<CatEditFormProps> = ({
   onSave,
 }) => {
   const [form, setForm] = useState(() => _toForm(cat))
-  const [touched, setTouched] = useState<Partial<Record<CatTextField, boolean>>>({})
-  const [isSubmitted, setIsSubmitted] = useState(false)
-
-  const result = catSchema.safeParse(_toCatInput(form))
-  const fieldErrors = result.success ? {} : z.flattenError(result.error).fieldErrors
-
-  function getError(field: CatTextField) {
-    return touched[field] || isSubmitted ? fieldErrors[field]?.[0] : undefined
-  }
+  const formValidation = useFormValidation(catSchema, _toCatInput(form), 'cat')
+  const { formParseResult } = formValidation
 
   function getTextFieldProps(field: CatTextField, hintId?: string) {
-    const error = getError(field)
-    const describedBy = [hintId, error && `cat-${field}-error`].filter(Boolean).join(' ')
     return {
-      id: `cat-${field}`,
       value: form[field],
       onChange: (ev: React.ChangeEvent<HTMLInputElement>) =>
         setForm((prev) => ({ ...prev, [field]: ev.target.value })),
-      onBlur: () => setTouched((prev) => ({ ...prev, [field]: true })),
-      'aria-invalid': !!error,
-      'aria-describedby': describedBy || undefined,
+      ...formValidation.getFieldProps(field, hintId),
     }
   }
 
   function renderError(field: CatTextField) {
-    const error = getError(field)
-    if (!error) return null
     return (
-      <p id={`cat-${field}-error`} className="field-error">
-        {error}
-      </p>
+      <FieldError
+        errorId={formValidation.getErrorId(field)}
+        errorTxt={formValidation.getError(field)}
+      />
     )
   }
 
@@ -80,8 +68,8 @@ export const CatEditForm: React.FC<CatEditFormProps> = ({
 
   function onSubmit(ev: React.SubmitEvent<HTMLFormElement>) {
     ev.preventDefault()
-    setIsSubmitted(true)
-    if (result.success) onSave(result.data)
+    formValidation.markSubmitted()
+    if (formParseResult.success) onSave(formParseResult.data)
   }
 
   return (

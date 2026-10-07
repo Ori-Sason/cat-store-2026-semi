@@ -1,9 +1,10 @@
 import type React from 'react'
 import { useState } from 'react'
 import { Link } from 'react-router'
-import { z } from 'zod'
 import { loginSchema, type LoginInput, type SignupInput } from '@cat-store/shared'
 import { signupFormSchema } from '../../models/user'
+import { useFormValidation } from '../../hooks/use-form-validation'
+import { FieldError } from '../common/util/field-error'
 
 export type LoginSignupMode = 'login' | 'signup'
 
@@ -38,51 +39,42 @@ export const LoginSignupForm: React.FC<LoginSignupFormProps> = ({
   onSubmit,
 }) => {
   const [form, setForm] = useState(_EMPTY_FORM)
-  const [touched, setTouched] = useState<Partial<Record<TextField, boolean>>>({})
-  const [isSubmitted, setIsSubmitted] = useState(false)
   const isSignup = mode === 'signup'
 
-  const result = isSignup ? signupFormSchema.safeParse(form) : loginSchema.safeParse(form)
-  const fieldErrors: Partial<Record<TextField, string[]>> = result.success
-    ? {}
-    : z.flattenError(result.error).fieldErrors
-
-  function getError(field: TextField) {
-    return touched[field] || isSubmitted ? fieldErrors[field]?.[0] : undefined
-  }
+  const formValidation = useFormValidation<typeof loginSchema | typeof signupFormSchema>(
+    isSignup ? signupFormSchema : loginSchema,
+    form,
+    'login-signup',
+  )
+  const { formParseResult } = formValidation
 
   function getTextFieldProps(field: TextField) {
-    const error = getError(field)
     return {
-      id: `login-signup-${field}`,
       value: form[field],
       onChange: (ev: React.ChangeEvent<HTMLInputElement>) =>
         setForm((prev) => ({ ...prev, [field]: ev.target.value })),
-      onBlur: () => setTouched((prev) => ({ ...prev, [field]: true })),
-      'aria-invalid': !!error,
-      'aria-describedby': error ? `login-signup-${field}-error` : undefined,
+      ...formValidation.getFieldProps(field),
     }
   }
 
   function renderError(field: TextField) {
-    const error = getError(field)
-    if (!error) return null
     return (
-      <p id={`login-signup-${field}-error`} className="field-error">
-        {error}
-      </p>
+      <FieldError
+        errorId={formValidation.getErrorId(field)}
+        errorTxt={formValidation.getError(field)}
+      />
     )
   }
 
   function onSubmitForm(ev: React.SubmitEvent<HTMLFormElement>) {
     ev.preventDefault()
-    setIsSubmitted(true)
-    if (!result.success) return
-    if ('confirmPassword' in result.data) {
-      const { confirmPassword: _, ...signupInput } = result.data
+    formValidation.markSubmitted()
+    if (!formParseResult.success) return
+    if ('confirmPassword' in formParseResult.data) {
+      const { confirmPassword: _, ...signupInput } = formParseResult.data
       onSubmit(signupInput)
     } else {
-      onSubmit(result.data)
+      onSubmit(formParseResult.data)
     }
   }
 
