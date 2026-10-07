@@ -13,4 +13,5 @@ const mongoDbConfig = {
 
 export const config: Config = {
   mongoDbConfig,
+  jwtSecret: requireEnv('JWT_SECRET'),
 }

@@ -3,10 +3,12 @@ import cookieParser from 'cookie-parser'
 import path from 'node:path'
 
 import { setupAsyncLocalStorage } from './middlewares/setup-als.middleware.ts'
+import { attachLoggedInUser } from './middlewares/attach-logged-in-user.middleware.ts'
 
 import { HttpError } from './models/http-error.ts'
 import { errorHandler } from './middlewares/error.middleware.ts'
 
+import { authRoutes } from './api/auth/auth.routes.ts'
 import { catRoutes } from './api/cat/cat.routes.ts'
 
 // The Express app alone - no DB connect, no listen. server.ts boots it,
@@ -23,8 +25,10 @@ if (process.env.NODE_ENV === 'production') {
 
 app.use(express.json())
 app.use(cookieParser())
+app.use(attachLoggedInUser)
 
 /* ROUTES */
+app.use('/api/auth', authRoutes)
 app.use('/api/cats', catRoutes)
 
 app.use('/api', (req) => {

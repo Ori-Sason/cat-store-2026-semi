@@ -41,10 +41,16 @@
 
 - `User` vs `UserInput` vs `UserDoc`
 	- Canonical meaning: `User` is a stored user as the API returns it, with no password.
-	  `UserInput` is what signup sends (`fullname`, `username`, `password`), inferred from
-	  `userSchema`. `UserDoc` is the backend-only DB shape, with `password` as the bcrypt hash.
+	  `UserInput` is the user fields a client may set (`fullname`, `username`, `password`),
+	  inferred from `userSchema`. `UserDoc` is the backend-only DB shape, with `password` as the bcrypt hash.
 	- Rule: `isAdmin` is never client-set. `userSchema` leaves it out, so Zod strips it.
 	- Avoid: `UserDto`, `NewUser`, `Credentials` (for the signup body).
+
+- `SignupInput` / `LoginInput`
+	- Canonical meaning: the request bodies of `POST /api/auth/signup` and `/login`.
+	  `SignupInput` is `UserInput` plus `isRemembered`. `LoginInput` is `username`,
+	  `password` and `isRemembered`, with no signup rules. Inferred from `signupSchema` / `loginSchema`.
+	- Avoid: `Credentials`, `LoginDto`, `AuthPayload`.
 
 - `CatFilter` / `filterBy` / `catFilterService`
 	- Canonical meaning: `CatFilter` is the type for how the cat list is filtered and
@@ -70,6 +76,10 @@
 - `loginToken`
 	- Canonical meaning: the signed JWT, and the name of the cookie that holds it.
 	- Avoid: `token`, `jwt`, `accessToken`, `session`.
+- `isRemembered`
+	- Canonical meaning: the "remember me" choice sent with login and signup. `true` → a
+	  7-day `loginToken` cookie. `false` → a session cookie. Not stored on the user.
+	- Avoid: `rememberMe`, `isPersistent`, `stayLoggedIn`.
 - `isAdmin`
 	- Canonical meaning: admin flag on a user.
 	- Avoid: `role`, `admin`.

@@ -5,4 +5,5 @@ interface MongoDbConfig {
 
 export interface Config {
   mongoDbConfig: MongoDbConfig
+  jwtSecret: string
 }

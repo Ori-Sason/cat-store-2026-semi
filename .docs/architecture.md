@@ -19,8 +19,12 @@ prod: browser ──▶ Express (static FE + /api + socket.io) ──▶ MongoDB
 - Collections: `cats`, `users`, `reviews`. Every doc has server-set `createdAt`/`updatedAt`.
 
 ## Auth Boundary
-- JWT in an httpOnly cookie (`loginToken`). Backend middleware enforces
-  guest / owner / admin rules on cats and reviews. The FE only hides UI.
+- JWT in an httpOnly cookie (`loginToken`): `sameSite: 'strict'`, `secure` in production.
+  "Remember me" (`isRemembered`) → cookie and token last 7 days. Without it → a session cookie
+  (no `maxAge`) and a 1-day token.
+- `attachLoggedInUser` reads the token into the ALS store on every request, without the DB and
+  without blocking. `GET /api/auth/me` re-reads the user from the DB.
+- Backend middleware enforces guest / owner / admin rules on cats and reviews. The FE only hides UI.
 - `ownerId` / `userId` are set by the server, never accepted from the client.
 
 ## Stack
@@ -103,6 +107,16 @@ Env: `node --env-file=.env.local`, no dotenv. Prod needs `JWT_SECRET`, Mongo URL
   ~3–5x smaller bundle, has no Vite worker workaround, has a clean security record with rare
   majors, and its tests run real map code in jsdom.
 
+- **`GET /api/auth/me` returns `200 null` for a guest**, not 401.
+  Why: the FE calls it on every app load, and a guest isn't an error. A 401 would also trip the
+  FE's "session expired" handling for someone who never logged in.
+- **Login failures look the same.** An unknown username and a wrong password both get
+  `401 INVALID_CREDENTIALS`, and an unknown username still runs `bcrypt.compare` against a dummy hash.
+  Why: otherwise the message or the response time tells an attacker which usernames exist.
+- **A session cookie still has a token expiry** (1 day).
+  Why: "until the browser closes" can mean weeks for a browser that stays open, or one with
+  session restore. The JWT `exp` caps it.
+
 Open questions live in `roadmap.md`. When one is decided, record it here.
 
 ## Update Triggers
@@ -115,3 +129,4 @@ Open questions live in `roadmap.md`. When one is decided, record it here.
 ## Change Log
 - 2026-10-01 — Initial architecture.
 - 2026-10-04 — FE data flow: server data via react-router loaders/actions, Zustand for client state only.
+- 2026-10-06 — Auth boundary: `/api/auth/*` routes, the `loginToken` cookie and `attachLoggedInUser`.
