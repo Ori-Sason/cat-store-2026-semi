@@ -29,13 +29,24 @@ export const HeaderMenu: React.FC<HeaderMenuProps> = ({
 }) => {
   const rootRef = useRef<HTMLDivElement>(null)
   const menuBtnRef = useRef<HTMLButtonElement>(null)
-  const cardId = useId()
+  const menuId = useId()
 
   useDismiss(rootRef, isOpen, (ev) => {
     onClose()
-    // Escape returns focus to the menu button. A click outside moves focus on its own
-    if (ev.type === 'keydown') menuBtnRef.current?.focus()
+    // Pressing Escape key returns focus to the menu button, but only when focus was in the menu (or nowhere).
+    // An Escape meant for something else on the page shouldn't pull focus up to the header.
+    // A click outside or a Tab out moves focus on its own
+    const focusedEl = document.activeElement
+    const isFocusInMenu = focusedEl === document.body || rootRef.current?.contains(focusedEl)
+    if (ev.type === 'keydown' && isFocusInMenu) menuBtnRef.current?.focus()
   })
+
+  function onLogoutClick() {
+    // Logout closes the menu, which unmounts this focused button. Move focus first,
+    // so it isn't dropped to <body> (it matters when the logout fails and the user stays)
+    menuBtnRef.current?.focus()
+    onLogout()
+  }
 
   return (
     <div className={`header-menu ${user ? '' : 'guest'}`} ref={rootRef}>
@@ -45,14 +56,14 @@ export const HeaderMenu: React.FC<HeaderMenuProps> = ({
         className="menu-btn"
         aria-label="Menu"
         aria-expanded={isOpen}
-        aria-controls={cardId}
+        aria-controls={isOpen ? menuId : undefined}
         onClick={onToggle}
       >
         {user && <UserAvatar fullname={user.fullname} />}
         <span className="hamburger" aria-hidden="true" />
       </button>
       {isOpen && (
-        <div id={cardId} className="menu-card">
+        <div id={menuId} className="menu">
           {user && (
             <div className="who">
               <UserAvatar fullname={user.fullname} size="lg" />
@@ -74,7 +85,7 @@ export const HeaderMenu: React.FC<HeaderMenuProps> = ({
           </nav>
           {user && <hr />}
           {user ? (
-            <button type="button" className="action-btn" onClick={onLogout}>
+            <button type="button" className="action-btn" onClick={onLogoutClick}>
               Logout
             </button>
           ) : (

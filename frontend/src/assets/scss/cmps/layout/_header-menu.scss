@@ -1,9 +1,9 @@
 @use 'setup' as *;
 
-// Mobile-first: below $bp-md a hamburger opens a full-width card under the header.
-// From $bp-md up the avatar opens a 260px card anchored under it
+// Mobile-first: below $bp-md a hamburger opens a full-width menu under the header.
+// From $bp-md up the avatar opens a 260px menu anchored under it
 .header-menu {
-  // Below $bp-md the card anchors to .app-header instead, so it spans the header's width
+  // Below $bp-md the menu anchors to .app-header instead, so it spans the header's width
   @include from($bp-md) {
     position: relative;
   }
@@ -102,7 +102,7 @@
     }
   }
 
-  .menu-card {
+  .menu {
     position: absolute;
     top: 100%;
     right: 0;
@@ -129,7 +129,7 @@
     }
   }
 
-  // A row on the phone's full-width card, a centered column on the desktop card
+  // A row in the phone's full-width menu, a centered column in the desktop menu
   .who {
     display: flex;
     align-items: center;

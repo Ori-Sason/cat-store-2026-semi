@@ -1,4 +1,4 @@
-import { act, render, screen, within } from '@testing-library/react'
+import { act, fireEvent, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { LoggedInUser } from '@cat-store/shared'
 import { createMemoryRouter, Outlet, RouterProvider } from 'react-router'
@@ -31,7 +31,15 @@ function _renderAt(path: string) {
         ),
         children: [
           { path: '/', element: <p>Home</p> },
-          { path: '/cat', element: <p>Cats page</p> },
+          {
+            path: '/cat',
+            element: (
+              <>
+                <p>Cats page</p>
+                <input aria-label="Search" />
+              </>
+            ),
+          },
           { path: '/about', element: <p>About page</p> },
         ],
       },
@@ -46,11 +54,11 @@ function _getMenuBtn() {
   return screen.getByRole('button', { name: 'Menu' })
 }
 
-// jsdom ignores the media queries, so the bar's nav and the card's page rows both render.
-// Scope to the card through the button's aria-controls
-function _getCard() {
-  const cardId = _getMenuBtn().getAttribute('aria-controls')!
-  return within(document.getElementById(cardId)!)
+// jsdom ignores the media queries, so the bar's nav and the menu's page rows both render.
+// Scope to the menu through the button's aria-controls
+function _getMenu() {
+  const menuId = _getMenuBtn().getAttribute('aria-controls')!
+  return within(document.getElementById(menuId)!)
 }
 
 async function _openMenu(user: ReturnType<typeof userEvent.setup>) {
@@ -58,14 +66,24 @@ async function _openMenu(user: ReturnType<typeof userEvent.setup>) {
   expect(_getMenuBtn()).toHaveAttribute('aria-expanded', 'true')
 }
 
+// jsdom loads no SCSS. This stands in for _app-header.scss's --bp-md, with a value of its own
+// so the matchMedia test proves the query comes from the custom property
+const _BP_STYLE = '.app-header { --bp-md: 640px; }'
+
 describe('AppHeader', () => {
+  let bpStyleEl: HTMLStyleElement
+
   beforeEach(() => {
+    bpStyleEl = document.createElement('style')
+    bpStyleEl.textContent = _BP_STYLE
+    document.head.append(bpStyleEl)
     vi.resetAllMocks()
     useLoggedInUserStore.setState({ loggedInUser: null })
     useUserMsgStore.setState({ msg: null, navigationMsg: null })
   })
 
   afterEach(() => {
+    if (bpStyleEl.isConnected) document.head.removeChild(bpStyleEl)
     vi.restoreAllMocks()
   })
 
@@ -85,15 +103,15 @@ describe('AppHeader', () => {
     expect(_getMenuBtn().textContent).toBe('')
     await _openMenu(user)
 
-    const card = _getCard()
-    expect(card.getByRole('link', { name: 'Cats' })).toBeInTheDocument()
-    expect(card.getByRole('link', { name: 'Dashboard' })).toBeInTheDocument()
-    expect(card.getByRole('link', { name: 'About' })).toBeInTheDocument()
-    expect(card.getByRole('link', { name: 'Login' })).toHaveAttribute(
+    const menu = _getMenu()
+    expect(menu.getByRole('link', { name: 'Cats' })).toBeInTheDocument()
+    expect(menu.getByRole('link', { name: 'Dashboard' })).toBeInTheDocument()
+    expect(menu.getByRole('link', { name: 'About' })).toBeInTheDocument()
+    expect(menu.getByRole('link', { name: 'Login' })).toHaveAttribute(
       'href',
       `/login?redirectTo=${encodeURIComponent('/cat?txt=Mitzi')}`,
     )
-    expect(card.queryByRole('button', { name: 'Logout' })).not.toBeInTheDocument()
+    expect(menu.queryByRole('button', { name: 'Logout' })).not.toBeInTheDocument()
   })
 
   it('shows a logged-in user a Menu button with their initial, closed', () => {
@@ -102,26 +120,28 @@ describe('AppHeader', () => {
 
     expect(_getMenuBtn()).toHaveTextContent('O')
     expect(_getMenuBtn()).toHaveAttribute('aria-expanded', 'false')
+    // The menu isn't in the DOM, so there's nothing to point at
+    expect(_getMenuBtn()).not.toHaveAttribute('aria-controls')
     expect(screen.queryByText('Hi, Ori!')).not.toBeInTheDocument()
     expect(screen.queryByRole('link', { name: 'Login' })).not.toBeInTheDocument()
   })
 
-  it('opens the card with the greeting, full name, username, pages and Logout', async () => {
+  it('opens the menu with the greeting, full name, username, pages and Logout', async () => {
     useLoggedInUserStore.setState({ loggedInUser: _USER })
     const { user } = _renderAt('/cat')
 
     await _openMenu(user)
 
-    const card = _getCard()
-    expect(card.getByText('Hi, Ori!')).toBeInTheDocument()
-    expect(card.getByText('Ori Sason · @ori')).toBeInTheDocument()
-    expect(card.getByRole('link', { name: 'About' })).toBeInTheDocument()
-    expect(card.getByRole('button', { name: 'Logout' })).toBeInTheDocument()
-    expect(card.queryByRole('link', { name: 'Login' })).not.toBeInTheDocument()
-    expect(card.queryByText('Admin')).not.toBeInTheDocument()
+    const menu = _getMenu()
+    expect(menu.getByText('Hi, Ori!')).toBeInTheDocument()
+    expect(menu.getByText('Ori Sason · @ori')).toBeInTheDocument()
+    expect(menu.getByRole('link', { name: 'About' })).toBeInTheDocument()
+    expect(menu.getByRole('button', { name: 'Logout' })).toBeInTheDocument()
+    expect(menu.queryByRole('link', { name: 'Login' })).not.toBeInTheDocument()
+    expect(menu.queryByText('Admin')).not.toBeInTheDocument()
   })
 
-  it('marks an admin in the account card', async () => {
+  it('marks an admin in the menu', async () => {
     useLoggedInUserStore.setState({ loggedInUser: { ..._USER, isAdmin: true } })
     const { user } = _renderAt('/cat')
 
@@ -130,7 +150,7 @@ describe('AppHeader', () => {
     expect(screen.getByText('Admin')).toBeInTheDocument()
   })
 
-  it('closes the card on a second Menu click', async () => {
+  it('closes the menu on a second Menu click', async () => {
     useLoggedInUserStore.setState({ loggedInUser: _USER })
     const { user } = _renderAt('/cat')
     await _openMenu(user)
@@ -141,7 +161,7 @@ describe('AppHeader', () => {
     expect(screen.queryByText('Hi, Ori!')).not.toBeInTheDocument()
   })
 
-  it('closes the card on Escape and puts focus back on the Menu button', async () => {
+  it('closes the menu on Escape and puts focus back on the Menu button', async () => {
     useLoggedInUserStore.setState({ loggedInUser: _USER })
     const { user } = _renderAt('/cat')
     await _openMenu(user)
@@ -152,28 +172,54 @@ describe('AppHeader', () => {
     expect(_getMenuBtn()).toHaveFocus()
   })
 
-  it('navigates and closes the card on a page click', async () => {
+  it('navigates and closes the menu on a page click', async () => {
     useLoggedInUserStore.setState({ loggedInUser: _USER })
     const { router, user } = _renderAt('/cat')
     await _openMenu(user)
 
-    await user.click(_getCard().getByRole('link', { name: 'About' }))
+    await user.click(_getMenu().getByRole('link', { name: 'About' }))
 
     expect(router.state.location.pathname).toBe('/about')
     expect(screen.queryByText('Hi, Ori!')).not.toBeInTheDocument()
   })
 
-  it('closes the card on a click on the current page, with no route change', async () => {
+  it('closes the menu on a click on the current page, with no route change', async () => {
     useLoggedInUserStore.setState({ loggedInUser: _USER })
     const { user } = _renderAt('/cat')
     await _openMenu(user)
 
-    await user.click(_getCard().getByRole('link', { name: 'Cats' }))
+    await user.click(_getMenu().getByRole('link', { name: 'Cats' }))
 
     expect(screen.queryByText('Hi, Ori!')).not.toBeInTheDocument()
   })
 
-  it('closes the card on a click outside it', async () => {
+  it('closes the menu on Escape outside it, and leaves focus where it was', async () => {
+    useLoggedInUserStore.setState({ loggedInUser: _USER })
+    const { user } = _renderAt('/cat')
+    const search = screen.getByRole('textbox', { name: 'Search' })
+    search.focus()
+    // fireEvent, not user.click: like Safari, where clicking a button doesn't focus it
+    fireEvent.click(_getMenuBtn())
+    expect(_getMenuBtn()).toHaveAttribute('aria-expanded', 'true')
+
+    await user.keyboard('{Escape}')
+
+    expect(screen.queryByText('Hi, Ori!')).not.toBeInTheDocument()
+    expect(search).toHaveFocus()
+  })
+
+  it('closes the menu when focus Tabs out of it', async () => {
+    useLoggedInUserStore.setState({ loggedInUser: _USER })
+    const { user } = _renderAt('/cat')
+    await _openMenu(user)
+
+    // From the Menu button back to the bar's last nav link
+    await user.tab({ shift: true })
+
+    expect(screen.queryByText('Hi, Ori!')).not.toBeInTheDocument()
+  })
+
+  it('closes the menu on a click outside it', async () => {
     useLoggedInUserStore.setState({ loggedInUser: _USER })
     const { user } = _renderAt('/cat')
     await _openMenu(user)
@@ -183,7 +229,7 @@ describe('AppHeader', () => {
     expect(screen.queryByText('Hi, Ori!')).not.toBeInTheDocument()
   })
 
-  it('closes the card on a route change', async () => {
+  it('closes the menu on a route change', async () => {
     useLoggedInUserStore.setState({ loggedInUser: _USER })
     const { router, user } = _renderAt('/cat')
     await _openMenu(user)
@@ -194,9 +240,9 @@ describe('AppHeader', () => {
     expect(screen.queryByText('Hi, Ori!')).not.toBeInTheDocument()
   })
 
-  it('closes the card when the screen crosses the breakpoint', async () => {
+  it('closes the menu when the screen crosses the breakpoint', async () => {
     let onBreakpointChange = () => {}
-    vi.spyOn(window, 'matchMedia').mockReturnValue({
+    const matchMediaSpy = vi.spyOn(window, 'matchMedia').mockReturnValue({
       addEventListener: (_type: string, listener: () => void) => {
         onBreakpointChange = listener
       },
@@ -208,10 +254,20 @@ describe('AppHeader', () => {
 
     act(() => onBreakpointChange())
 
+    expect(matchMediaSpy).toHaveBeenCalledWith('(min-width: 640px)')
     expect(screen.queryByText('Hi, Ori!')).not.toBeInTheDocument()
   })
 
-  it('logs out from the card, clears the user and goes home', async () => {
+  it('warns when --bp-md is missing, since the breakpoint close would stop silently', () => {
+    document.head.removeChild(bpStyleEl)
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+
+    _renderAt('/cat')
+
+    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('--bp-md'))
+  })
+
+  it('logs out from the menu, clears the user and goes home', async () => {
     useLoggedInUserStore.setState({ loggedInUser: _USER })
     const { router, user } = _renderAt('/cat')
     await _openMenu(user)
@@ -242,6 +298,7 @@ describe('AppHeader', () => {
       type: 'error',
     })
     expect(router.state.location.pathname).toBe('/cat')
-    expect(_getMenuBtn()).toBeInTheDocument()
+    // The menu closed under the focused Logout button. Focus moved to Menu, not to <body>
+    expect(_getMenuBtn()).toHaveFocus()
   })
 })

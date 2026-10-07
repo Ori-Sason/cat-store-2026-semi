@@ -32,7 +32,7 @@ test('sign up, log out and log in again, with and without remember me', async ({
 
   // Logout goes to / , which redirects to /cat until the home page exists
   await page.getByRole('button', { name: 'Menu', exact: true }).click()
-  await expect(page.locator('.menu-card')).toContainText('Hi, E2e!')
+  await expect(page.locator('.header-menu .menu')).toContainText('Hi, E2e!')
   await page.getByRole('button', { name: 'Logout' }).click()
   await expect(page).toHaveURL(/\/cat$/)
   await expect(page.getByRole('link', { name: 'Login' })).toBeVisible()

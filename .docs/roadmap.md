@@ -139,7 +139,7 @@ independent of the rest of Part 3.
 
 - [ ] 5. `user-details` page with two sub-pages: the user's cats and the user's reviews.
    Anyone can open any user's profile. For example, user1 can see the cats and reviews user2 created.
-   Show the Profile item in the header's account menu, linking to the logged-in user's page.
+   Show the Profile item in the header menu, linking to the logged-in user's page.
 - [ ] 6. Reviews show up in exactly two places: per cat on `cat-details`, and per user on the user's reviews sub-page. There's no system-wide reviews page.
 
 ## Part 5: Deploy + realtime

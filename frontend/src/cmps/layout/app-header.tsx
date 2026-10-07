@@ -19,17 +19,23 @@ export const AppHeader: React.FC = () => {
   // Directed back to this page after logging in
   const loginTo = `/login?redirectTo=${encodeURIComponent(pathname + search)}`
 
-  // A route change closes the menu (Alt+← or Mouse back button). Adjusted during render,
-  // not in an effect, so the old page's menu never paints over the new page
+  // A path change closes the menu (Alt+← or Mouse back button). A query-only change (a filter)
+  // keeps it open, but those come from clicks outside the menu, which close it.
+  // Adjusted during render, not in an effect, so the old page's menu never paints over the new page
   if (pathname !== prevPathname) {
     setPrevPathname(pathname)
     setIsMenuOpen(false)
   }
 
   // Crossing the media query breakpoint swaps the menu's trigger and layout.
-  // Close it, so the focused trigger isn't hidden and the card doesn't jump between layouts
+  // Close it, so the focused trigger isn't hidden and the menu doesn't jump between layouts
   useEffect(() => {
     const bpMd = getComputedStyle(headerRef.current!).getPropertyValue('--bp-md').trim()
+    // Empty means _app-header.scss lost --bp-md. The query would then never match or fire,
+    // and the close would stop working silently
+    if (!bpMd && import.meta.env.DEV) {
+      console.warn('app-header: --bp-md is not set, the menu will not close on resize')
+    }
     const mediaQuery = window.matchMedia(`(min-width: ${bpMd})`)
     const onChange = () => setIsMenuOpen(false)
     mediaQuery.addEventListener('change', onChange)

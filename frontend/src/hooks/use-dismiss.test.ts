@@ -52,14 +52,37 @@ describe('useDismiss', () => {
     expect(onDismiss).not.toHaveBeenCalled()
   })
 
+  it('dismisses when focus moves outside the popup (a Tab out)', () => {
+    const { popup, onDismiss } = _render(true)
+    const outside = document.createElement('button')
+    document.body.append(outside)
+
+    fireEvent.focusOut(popup, { relatedTarget: outside })
+
+    expect(onDismiss).toHaveBeenCalledOnce()
+    expect(onDismiss.mock.calls[0][0].type).toBe('focusout')
+  })
+
+  it('ignores focus moving inside the popup, or to nowhere (a window switch)', () => {
+    const { popup, onDismiss } = _render(true)
+    const item = document.createElement('button')
+    popup.append(item)
+
+    fireEvent.focusOut(popup, { relatedTarget: item })
+    fireEvent.focusOut(popup, { relatedTarget: null })
+
+    expect(onDismiss).not.toHaveBeenCalled()
+  })
+
   it('does nothing while closed, and stops listening once closed', () => {
-    const { onDismiss, rerender } = _render(false)
+    const { popup, onDismiss, rerender } = _render(false)
     fireEvent.keyDown(document, { key: 'Escape' })
 
     rerender({ isOpen: true })
     rerender({ isOpen: false })
     fireEvent.keyDown(document, { key: 'Escape' })
     fireEvent.pointerDown(document.body)
+    fireEvent.focusOut(popup, { relatedTarget: document.body })
 
     expect(onDismiss).not.toHaveBeenCalled()
   })

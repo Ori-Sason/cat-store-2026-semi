@@ -4,7 +4,7 @@
   // Read by app-header.tsx for its matchMedia query, so $bp-md stays the single source
   --bp-md: #{$bp-md};
 
-  // The containing block for the menu's full-width card below $bp-md
+  // The containing block for the full-width menu below $bp-md
   position: relative;
   color: $primary-clr-100;
   background-color: $primary-clr-900;
@@ -54,7 +54,7 @@
     display: none;
   }
 
-  // `.end > nav`, not `nav`: the menu card's page rows sit inside .end too
+  // `.end > nav`, not `nav`: the menu's page rows sit inside .end too
   .end > nav {
     gap: $space-1;
 
