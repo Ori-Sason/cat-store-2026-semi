@@ -11,7 +11,8 @@ Stack, dependencies and the **why** behind decisions live in `architecture.md`.
 the `cats` collection. Part 3 has started: Playwright E2E is set up (`npm run test:e2e`) with a guest
 smoke flow, the `users` collection exists with a seeded `user` and `admin`, and the auth API is in
 (`/api/auth/*`, JWT in the `loginToken` cookie), with login and signup pages at `/login` and
-`/signup` and a header that shows Login or "Hi, {name}" + Logout. Next: `ownerId` on cats.
+`/signup` and a header that shows Login or "Hi, {name}" + Logout. Part 3 is paused
+after item 4 to build the App header section. Then it resumes with item 5, `ownerId` on cats.
 
 ## Part 1: DB + backend + frontend skeleton (CRUD over cats)
 
@@ -105,6 +106,21 @@ The order of BE and FE can go either way, as long as the DB comes first.
 - [ ] 9. Home page at `/`, replacing today's `/` → `/cat` redirect. Logout already navigates to `/`,
    so it lands here once it exists. It links to the cats list and to login / signup. Content TBD.
 
+## App header
+
+Needs Part 3 items 3–4 (auth API, login page). After that, it can be built at any point,
+independent of the rest of Part 3.
+
+- [x] 1. Header redesign: one mockup round for the whole header (brand, nav, active link,
+   spacing, the account area), then restyle `app-header`. The account area is designed here
+   too, so items 2–3 don't rework the layout.
+- [ ] 2. Desktop account menu: a round avatar button with the user's initial opens an account
+   card (greeting, full name + username, Profile, Logout). Guests keep the Login button.
+   Profile stays hidden until the `user-details` page exists (Part 4 item 5).
+- [ ] 3. Mobile nav: below `$bp-md`, a hamburger opens one panel with the pages and the
+   account area, for guests and logged-in users alike. Guests need it too, or they can't
+   reach the pages.
+
 ## Part 4: Reviews + user page
 
 - [ ] 1. `reviews` collection: `{ _id, userId, catId, content, createdAt, updatedAt }`.
@@ -120,6 +136,7 @@ The order of BE and FE can go either way, as long as the DB comes first.
 
 - [ ] 5. `user-details` page with two sub-pages: the user's cats and the user's reviews.
    Anyone can open any user's profile. For example, user1 can see the cats and reviews user2 created.
+   Show the Profile item in the header's account menu, linking to the logged-in user's page.
 - [ ] 6. Reviews show up in exactly two places: per cat on `cat-details`, and per user on the user's reviews sub-page. There's no system-wide reviews page.
 
 ## Part 5: Deploy + realtime
