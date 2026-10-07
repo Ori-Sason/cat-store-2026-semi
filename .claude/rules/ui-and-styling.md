@@ -21,7 +21,10 @@ paths:
 ## Tokens
 - Colors and other shared values are SASS variables in `setup/_vars.scss`. Reuse them,
   don't hardcode new colors.
-- Use CSS custom properties (`--name`) only for values set at runtime from TSX.
+- Use CSS custom properties (`--name`) only for values set at runtime from TSX, plus one
+  rare exception: TSX reading a token. SCSS exposes it as `--name: #{$token}`, and TSX reads
+  it with `getComputedStyle`. That's only for when TS needs a token's value and SCSS must stay
+  the single source of truth, like a breakpoint for `matchMedia`. Ask the user before adding one.
 
 ## Class names
 - A component's root class is its file name: `user-message.tsx` → `.user-message`.
