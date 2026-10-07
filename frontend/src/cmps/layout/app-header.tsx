@@ -1,5 +1,7 @@
 import type React from 'react'
 import { Link, NavLink, useLocation, useNavigate } from 'react-router'
+import catImg from '../../assets/img/cat-default-color.png'
+import { NAV_LINKS } from '../../models/nav-link'
 import { authService } from '../../services/auth.service'
 import { errorService } from '../../services/error.service'
 import { useLoggedInUserStore } from '../../store/logged-in-user.store'
@@ -26,16 +28,16 @@ export const AppHeader: React.FC = () => {
     <header className="app-header">
       <div className="main-layout content">
         <Link to="/cat" className="logo">
-          <span className="paw" aria-hidden="true">
-            🐾
-          </span>
+          <img src={catImg} alt="" />
           cat-store
         </Link>
         <div className="end">
           <nav>
-            <NavLink to="/cat">Cats</NavLink>
-            <NavLink to="/dashboard">Dashboard</NavLink>
-            <NavLink to="/about">About</NavLink>
+            {NAV_LINKS.map(({ to, label }) => (
+              <NavLink key={to} to={to}>
+                {label}
+              </NavLink>
+            ))}
           </nav>
           <span className="divider" aria-hidden="true" />
           <div className="user-area">
