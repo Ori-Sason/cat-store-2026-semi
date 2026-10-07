@@ -16,6 +16,10 @@ script. Stack and decisions live in `.docs/architecture.md`.
   conflicts with a hook, the hook wins.
 
 ## Repository Layout
+Everything goes in the folder for its kind, even when only one file uses it. A consistent
+layout is easier to manage as the project grows than colocating by use. Only small helpers
+for one file's own logic stay in it, as `_` functions. Each package's rule lists its folders.
+
 - `.docs/` — hand-written product and architecture docs, plus `roadmap.md` (parts
   with status, open questions). Never create a `docs/` directory.
 - `.claude/rules/` — always-on constraints, listed below. Short by design.
