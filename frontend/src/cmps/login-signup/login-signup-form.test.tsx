@@ -65,7 +65,7 @@ describe('LoginSignupForm', () => {
     expect(onSubmit).not.toHaveBeenCalled()
   })
 
-  it('shows the signup password rules', async () => {
+  it('shows a field error after leaving the field', async () => {
     const { user } = _render('signup')
 
     await user.type(screen.getByLabelText('Password'), 'short')

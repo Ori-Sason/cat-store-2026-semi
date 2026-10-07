@@ -27,23 +27,15 @@ function _render(cat: Cat | null = null) {
 }
 
 describe('CatEditForm', () => {
-  it('shows no errors before the user does anything', () => {
-    _render()
-
-    expect(screen.queryByText('Name must be at least 2 characters')).not.toBeInTheDocument()
-    expect(screen.getByLabelText('Name')).toHaveAttribute('aria-invalid', 'false')
-  })
-
+  // When errors show (touch, submit) is covered by the hook's tests. These check the wiring.
   it('shows a field error after leaving the field', async () => {
     const { user } = _render()
 
     await user.type(screen.getByLabelText('Name'), 'M')
-    expect(screen.queryByText('Name must be at least 2 characters')).not.toBeInTheDocument()
     await user.tab()
 
     expect(screen.getByText('Name must be at least 2 characters')).toBeInTheDocument()
     expect(screen.getByLabelText('Name')).toHaveAttribute('aria-invalid', 'true')
-    expect(screen.queryByText('Price must be a number')).not.toBeInTheDocument()
   })
 
   it('shows every error on submit and does not save an invalid cat', async () => {
@@ -55,6 +47,10 @@ describe('CatEditForm', () => {
     expect(screen.getByText('Name must be at least 2 characters')).toBeInTheDocument()
     expect(screen.getByText('Price must be a number')).toBeInTheDocument()
     expect(screen.getByText('Image must be a valid URL')).toBeInTheDocument()
+    // Resolves the describedby ids to real elements: the hint, then the error
+    expect(screen.getByLabelText('Image URL')).toHaveAccessibleDescription(
+      'Leave empty to use the default cat image Image must be a valid URL',
+    )
     expect(onSave).not.toHaveBeenCalled()
   })
 
