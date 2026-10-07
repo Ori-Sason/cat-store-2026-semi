@@ -1,7 +1,7 @@
 import Axios from 'axios'
 import { ERROR_CODES, type ApiErrorBody } from '@cat-store/shared'
 import { ApiError } from '../models/api-error'
-// import { useLoggedInUserStore } from '../store/logged-in-user.store'
+import { useLoggedInUserStore } from '../store/logged-in-user.store'
 
 const BASE_URL = '/api'
 
@@ -40,7 +40,7 @@ const _ajax = async <T>(endpoint: string, method = 'GET', data: unknown = null):
     )
     console.dir(err)
     if (Axios.isAxiosError(err) && err.response?.status === 401) {
-      // useLoggedInUserStore.getState().clearUser()
+      useLoggedInUserStore.getState().clearLoggedInUser()
     }
     throw _toApiError(err)
   }

@@ -1,0 +1,64 @@
+@use 'setup' as *;
+
+.login-signup-form {
+  display: grid;
+  gap: $space-4;
+
+  // minmax(0, 1fr), not the implicit auto column: an auto track can't shrink below an
+  // input's built-in min width (size="20"), so the input overflows on phones
+  .field {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: $space-1;
+    min-width: 0;
+  }
+
+  .field label {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: $primary-clr-900;
+  }
+
+  .field-error {
+    font-size: 0.8rem;
+  }
+
+  .remember-me {
+    display: flex;
+    align-items: center;
+    gap: $space-2;
+    font-size: 0.9rem;
+    cursor: pointer;
+
+    input {
+      width: 16px;
+      height: 16px;
+      accent-color: $primary-clr-500;
+    }
+  }
+
+  .main-btn {
+    width: 100%;
+    padding-block: 0.65em;
+    font-weight: 600;
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: default;
+    }
+  }
+
+  .switch-mode {
+    font-size: 0.9rem;
+    text-align: center;
+
+    a {
+      font-weight: 700;
+      color: $primary-clr-600;
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+  }
+}

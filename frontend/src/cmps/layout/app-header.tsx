@@ -1,7 +1,27 @@
 import type React from 'react'
-import { Link, NavLink } from 'react-router'
+import { Link, NavLink, useLocation, useNavigate } from 'react-router'
+import { authService } from '../../services/auth.service'
+import { errorService } from '../../services/error.service'
+import { useLoggedInUserStore } from '../../store/logged-in-user.store'
+import { useUserMsgStore } from '../../store/user-msg.store'
 
 export const AppHeader: React.FC = () => {
+  const loggedInUser = useLoggedInUserStore((state) => state.loggedInUser)
+  const { pathname, search } = useLocation()
+  const navigate = useNavigate()
+
+  async function onLogout() {
+    try {
+      await authService.logout()
+      useLoggedInUserStore.getState().clearLoggedInUser()
+      useUserMsgStore.getState().showSuccessMsg('Logged out')
+      // The homepage, like most sites. Staying put would need this page to re-check auth
+      void navigate('/')
+    } catch (err) {
+      useUserMsgStore.getState().showErrorMsg(errorService.getErrorMsg(err))
+    }
+  }
+
   return (
     <header className="app-header">
       <div className="main-layout content">
@@ -11,12 +31,33 @@ export const AppHeader: React.FC = () => {
           </span>
           cat-store
         </Link>
-        {/* Login joins in Part 3 */}
-        <nav>
-          <NavLink to="/cat">Cats</NavLink>
-          <NavLink to="/dashboard">Dashboard</NavLink>
-          <NavLink to="/about">About</NavLink>
-        </nav>
+        <div className="end">
+          <nav>
+            <NavLink to="/cat">Cats</NavLink>
+            <NavLink to="/dashboard">Dashboard</NavLink>
+            <NavLink to="/about">About</NavLink>
+          </nav>
+          <span className="divider" aria-hidden="true" />
+          <div className="user-area">
+            {loggedInUser ? (
+              <>
+                {/* First word only - keeps the header short */}
+                <span className="greeting">Hi, {loggedInUser.fullname.split(' ')[0]}</span>
+                <button type="button" className="logout-btn" onClick={onLogout}>
+                  Logout
+                </button>
+              </>
+            ) : (
+              // Come back to this page after logging in
+              <Link
+                to={`/login?redirectTo=${encodeURIComponent(pathname + search)}`}
+                className="login-btn"
+              >
+                Login
+              </Link>
+            )}
+          </div>
+        </div>
       </div>
     </header>
   )

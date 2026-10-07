@@ -4,11 +4,13 @@
   color: $primary-clr-100;
   background-color: $primary-clr-900;
 
+  // No hamburger yet (a follow-up): on narrow screens the nav + user area wrap under the logo
   .content {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
-    gap: $space-4;
+    gap: $space-3 $space-4;
     padding-block: $space-3;
   }
 
@@ -30,6 +32,13 @@
     background-color: $primary-clr-500;
   }
 
+  .end {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: $space-3 $space-5;
+  }
+
   nav {
     display: flex;
     gap: $space-5;
@@ -45,6 +54,49 @@
         color: $clr-white;
         font-weight: 700;
       }
+    }
+  }
+
+  .divider {
+    width: 1px;
+    height: 22px;
+    background-color: $primary-clr-850;
+  }
+
+  .user-area {
+    display: flex;
+    align-items: center;
+    gap: $space-3;
+  }
+
+  .greeting {
+    color: $primary-clr-200;
+  }
+
+  .login-btn,
+  .logout-btn {
+    padding: 5px 14px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    border-radius: $radius-sm;
+  }
+
+  .login-btn {
+    color: $clr-white;
+    border: 1px solid $primary-clr-500;
+    background-color: $primary-clr-500;
+
+    &:hover {
+      background-color: $primary-clr-600;
+    }
+  }
+
+  .logout-btn {
+    color: $primary-clr-100;
+    border: 1px solid $primary-clr-300;
+
+    &:hover {
+      background-color: $primary-clr-850;
     }
   }
 }

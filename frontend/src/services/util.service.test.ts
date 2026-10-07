@@ -78,3 +78,22 @@ describe('utilService.toActionError', () => {
     expect(result).toMatchObject({ data: null, init: { status: 500 } })
   })
 })
+
+describe('utilService.getSafeRedirectTo', () => {
+  const { getSafeRedirectTo } = utilService
+
+  it('returns a same-site path with its search', () => {
+    expect(getSafeRedirectTo('/cat/1?txt=Mitzi')).toBe('/cat/1?txt=Mitzi')
+  })
+
+  it('defaults to /cat without a redirectTo', () => {
+    expect(getSafeRedirectTo(null)).toBe('/cat')
+  })
+
+  it.each(['//evil.com', '/\\evil.com', 'https://evil.com', 'cat', ''])(
+    'ignores %j, which is not a same-site path',
+    (redirectTo) => {
+      expect(getSafeRedirectTo(redirectTo)).toBe('/cat')
+    },
+  )
+})

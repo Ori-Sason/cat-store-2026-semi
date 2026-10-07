@@ -39,9 +39,26 @@ function toActionError(err: unknown) {
   return data(null, { status })
 }
 
+// Where to go after login / signup, given the ?redirectTo= value. Only same-site paths pass:
+// '/cat/1' is fine, but '//evil.com' (protocol-relative) and 'https://evil.com' would
+// leave the site - an open redirect a phishing link could abuse.
+// Resolving against a placeholder origin, not just checking for '//', also catches
+// '/\evil.com', which browsers read as '//evil.com'. If the origin changed, it left the site
+function getSafeRedirectTo(redirectTo: string | null) {
+  const DEFAULT_REDIRECT_TO = '/cat'
+  const PLACEHOLDER_ORIGIN = 'http://placeholder.local'
+
+  if (!redirectTo?.startsWith('/')) return DEFAULT_REDIRECT_TO
+
+  const target = new URL(redirectTo, PLACEHOLDER_ORIGIN)
+  if (target.origin !== PLACEHOLDER_ORIGIN) return DEFAULT_REDIRECT_TO
+  return target.pathname + target.search + target.hash
+}
+
 export const utilService = {
   formatPrice,
   formatDate,
   getFitCount,
   toActionError,
+  getSafeRedirectTo,
 }

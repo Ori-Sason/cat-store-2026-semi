@@ -1,6 +1,7 @@
 import { AxiosError, type AxiosResponse } from 'axios'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { ApiError } from '../models/api-error'
+import { useLoggedInUserStore } from '../store/logged-in-user.store'
 import { httpService } from './http.service'
 
 // The service calls the instance from Axios.create() - swap it for a mock,
@@ -104,5 +105,17 @@ describe('httpService', () => {
 
     await expect(promise).rejects.toBeInstanceOf(ApiError)
     await expect(promise).rejects.toMatchObject({ status: 0, code: 'UNKNOWN' })
+  })
+
+  it('logs the user out on a 401', async () => {
+    useLoggedInUserStore
+      .getState()
+      .setLoggedInUser({ _id: 'user-1', username: 'ori', fullname: 'Ori Sason', isAdmin: false })
+    mockRequest.mockRejectedValue(
+      _axiosError({ status: 401, data: { code: 'UNAUTHORIZED', message: 'Not logged in' } }),
+    )
+
+    await expect(httpService.post('cats', {})).rejects.toMatchObject({ status: 401 })
+    expect(useLoggedInUserStore.getState().loggedInUser).toBeNull()
   })
 })

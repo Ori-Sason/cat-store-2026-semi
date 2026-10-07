@@ -10,7 +10,8 @@ Stack, dependencies and the **why** behind decisions live in `architecture.md`.
 `/dashboard` label charts and the `/about` pickup-point map. `npm run seed -w backend` re-seeds
 the `cats` collection. Part 3 has started: Playwright E2E is set up (`npm run test:e2e`) with a guest
 smoke flow, the `users` collection exists with a seeded `user` and `admin`, and the auth API is in
-(`/api/auth/*`, JWT in the `loginToken` cookie). Next: the login and signup pages.
+(`/api/auth/*`, JWT in the `loginToken` cookie), with login and signup pages at `/login` and
+`/signup` and a header that shows Login or "Hi, {name}" + Logout. Next: `ownerId` on cats.
 
 ## Part 1: DB + backend + frontend skeleton (CRUD over cats)
 
@@ -81,10 +82,10 @@ The order of BE and FE can go either way, as long as the DB comes first.
    `POST /api/auth/signup`, `/login`, `/logout` and `GET /api/auth/me`. The `loginToken` cookie
    is httpOnly. "Remember me" → a 7-day cookie. Without it → a session cookie, gone when the
    browser closes (not when a tab closes).
-- [ ] 4. Login and signup pages: one page at `/login` and `/signup`, the path picks the mode.
+- [x] 4. Login and signup pages: one page at `/login` and `/signup`, the path picks the mode.
    Login: username + password. Signup: full name, username, password and confirm password
    (client-side check only, not sent). "Remember me" on both. The header shows Login, or the
-   user's name + Logout.
+   user's name + Logout. The login and signup pages themselves have no header.
 - [ ] 5. Add `ownerId` to cats:
    - New cats get `ownerId` = the logged-in user's `_id`, set by the server.
    - `ownerId` is not in `catSchema`, so the client can't send or change it.
@@ -101,6 +102,8 @@ The order of BE and FE can go either way, as long as the DB comes first.
 - [ ] 8. Close Part 3 with E2E coverage of every auth flow: sign up → log in, the cat rules for
    guest / user / admin, admin cat CRUD. Rename `guest-browse.spec.ts` to `guest.spec.ts` and add
    the guest rules to it (no Add / Edit / Delete).
+- [ ] 9. Home page at `/`, replacing today's `/` → `/cat` redirect. Logout already navigates to `/`,
+   so it lands here once it exists. It links to the cats list and to login / signup. Content TBD.
 
 ## Part 4: Reviews + user page
 

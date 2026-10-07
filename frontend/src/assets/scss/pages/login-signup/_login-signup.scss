@@ -1,0 +1,46 @@
+@use 'setup' as *;
+
+// No app header on this page - a narrow card centered on the full viewport
+.login-signup {
+  display: grid;
+  place-items: center;
+  min-height: 100dvh;
+  padding: $space-5 $space-4;
+
+  .content {
+    display: grid;
+    gap: $space-3;
+    width: 100%;
+    max-width: 400px;
+  }
+
+  .back-link {
+    justify-self: start;
+    font-weight: 700;
+    color: $primary-clr-600;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  .card {
+    display: grid;
+    gap: $space-4;
+    padding: $space-5 $space-4;
+    border: 1px solid rgba($primary-clr-900, 0.08);
+    border-radius: $radius-lg;
+    box-shadow: $shadow-md;
+    background-color: $clr-white;
+
+    @include from($bp-md) {
+      padding: $space-6;
+    }
+  }
+
+  h1 {
+    font-size: 1.5rem;
+    text-align: center;
+    color: $primary-clr-900;
+  }
+}

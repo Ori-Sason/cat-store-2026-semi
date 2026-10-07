@@ -10,6 +10,7 @@
 @use './pages/cat-dashboard/cat-dashboard';
 @use './pages/cat-details/cat-details';
 @use './pages/cat-edit/cat-edit';
+@use './pages/login-signup/login-signup';
 
 /* COMPONENTS */
 @use './cmps/about/marker-info-box';
@@ -30,3 +31,4 @@
 @use './cmps/common/util/toggle-switch';
 @use './cmps/common/util/user-message';
 @use './cmps/layout/app-header';
+@use './cmps/login-signup/login-signup-form';

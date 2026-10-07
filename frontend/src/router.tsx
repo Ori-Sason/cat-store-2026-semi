@@ -12,12 +12,30 @@ import { catDetailsLoader } from './pages/cat-details/cat-details.loader'
 import { CatEdit } from './pages/cat-edit/cat-edit'
 import { catEditAction } from './pages/cat-edit/cat-edit.action'
 import { catEditLoader } from './pages/cat-edit/cat-edit.loader'
+import { LoginSignup } from './pages/login-signup/login-signup'
+import { loginSignupAction } from './pages/login-signup/login-signup.action'
 
 export const router = createBrowserRouter([
   {
     element: <LayoutRoot />,
     children: [
       // pages without app-header
+      {
+        errorElement: <RouteError />,
+        children: [
+          // One page and one action for both - the route decides the mode
+          {
+            path: '/login',
+            action: (args) => loginSignupAction(args, 'login'),
+            element: <LoginSignup mode="login" />,
+          },
+          {
+            path: '/signup',
+            action: (args) => loginSignupAction(args, 'signup'),
+            element: <LoginSignup mode="signup" />,
+          },
+        ],
+      },
       {
         element: <LayoutApp />,
         children: [
