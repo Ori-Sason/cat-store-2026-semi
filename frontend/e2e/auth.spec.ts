@@ -26,11 +26,13 @@ test('sign up, log out and log in again, with and without remember me', async ({
   await page.getByRole('button', { name: 'Sign up' }).click()
 
   await expect(page).toHaveURL(/\/cat$/)
-  await expect(page.locator('.app-header')).toContainText('Hi, E2e')
+  await expect(page.getByRole('button', { name: 'Menu', exact: true })).toHaveText('E')
   // No remember me → a session cookie (Playwright reports it as expires -1)
   expect((await _getLoginTokenCookie(context))?.expires).toBe(-1)
 
   // Logout goes to / , which redirects to /cat until the home page exists
+  await page.getByRole('button', { name: 'Menu', exact: true }).click()
+  await expect(page.locator('.account-card')).toContainText('Hi, E2e!')
   await page.getByRole('button', { name: 'Logout' }).click()
   await expect(page).toHaveURL(/\/cat$/)
   await expect(page.getByRole('link', { name: 'Login' })).toBeVisible()
@@ -44,7 +46,7 @@ test('sign up, log out and log in again, with and without remember me', async ({
   await page.getByRole('button', { name: 'Log in' }).click()
 
   await expect(page).toHaveURL(/\/cat$/)
-  await expect(page.locator('.app-header')).toContainText('Hi, E2e')
+  await expect(page.getByRole('button', { name: 'Menu', exact: true })).toHaveText('E')
   // Remember me → a cookie that lasts about 7 days
   const expires = (await _getLoginTokenCookie(context))?.expires ?? 0
   const nowS = Date.now() / 1000
@@ -53,5 +55,5 @@ test('sign up, log out and log in again, with and without remember me', async ({
 
   // The session survives a reload: main.tsx re-reads it from /api/auth/me
   await page.reload()
-  await expect(page.locator('.app-header')).toContainText('Hi, E2e')
+  await expect(page.getByRole('button', { name: 'Menu', exact: true })).toHaveText('E')
 })

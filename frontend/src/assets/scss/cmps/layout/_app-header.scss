@@ -1,6 +1,9 @@
 @use 'setup' as *;
 
 .app-header {
+  // Read by app-header.tsx for its matchMedia query, so $bp-md stays the single source
+  --bp-md: #{$bp-md};
+
   color: $primary-clr-100;
   background-color: $primary-clr-900;
 
@@ -79,34 +82,17 @@
     gap: $space-3;
   }
 
-  .greeting {
-    color: $primary-clr-200;
-  }
-
-  .login-btn,
-  .logout-btn {
+  .login-btn {
     padding: 5px 14px;
     font-size: 0.85rem;
     font-weight: 600;
-    border-radius: $radius-sm;
-  }
-
-  .login-btn {
     color: $clr-white;
     border: 1px solid $primary-clr-500;
+    border-radius: $radius-sm;
     background-color: $primary-clr-500;
 
     &:hover {
       background-color: $primary-clr-600;
-    }
-  }
-
-  .logout-btn {
-    color: $primary-clr-100;
-    border: 1px solid $primary-clr-300;
-
-    &:hover {
-      background-color: $primary-clr-850;
     }
   }
 }

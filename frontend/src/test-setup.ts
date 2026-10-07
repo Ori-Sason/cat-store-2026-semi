@@ -16,6 +16,20 @@ globalThis.ResizeObserver ??= class {
   disconnect() {}
 }
 
+// jsdom has no matchMedia - a query that never matches or changes keeps media-query effects
+// (AppHeader's breakpoint listener) mountable. A test that needs a change spies on it
+window.matchMedia ??= (query: string) =>
+  ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addEventListener() {},
+    removeEventListener() {},
+    addListener() {},
+    removeListener() {},
+    dispatchEvent: () => false,
+  }) satisfies MediaQueryList
+
 // jsdom has <dialog> but no showModal/close - stub the parts ConfirmModal relies on
 HTMLDialogElement.prototype.showModal ??= function (this: HTMLDialogElement) {
   this.open = true

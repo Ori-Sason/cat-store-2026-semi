@@ -31,6 +31,15 @@ function getFitCount(itemWidths: number[], rowWidth: number, gap: number, moreWi
   return itemWidths.length
 }
 
+// The first word of a full name, for short greetings: 'Ori Sason' → 'Ori'
+function getFirstName(fullname: string) {
+  return fullname.trim().split(/\s+/)[0]
+}
+
+function getFirstLetter(str: string) {
+  return str.trim().charAt(0).toUpperCase()
+}
+
 // A failed route action: show the error, stay on the page.
 // An error status skips the loader reload, so a failing server can't swap the page for RouteError
 function toActionError(err: unknown) {
@@ -59,6 +68,8 @@ export const utilService = {
   formatPrice,
   formatDate,
   getFitCount,
+  getFirstName,
+  getFirstLetter,
   toActionError,
   getSafeRedirectTo,
 }

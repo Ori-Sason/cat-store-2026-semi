@@ -1,0 +1,95 @@
+@use 'setup' as *;
+
+.header-menu {
+  position: relative;
+
+  .avatar-btn {
+    display: grid;
+    border-radius: 50%;
+
+    &[aria-expanded='true'] {
+      box-shadow: 0 0 0 3px $primary-clr-300;
+    }
+
+    &:focus-visible {
+      outline: 2px solid $primary-clr-300;
+      outline-offset: 2px;
+    }
+  }
+
+  // Anchored under the avatar, right edges aligned, so it never runs off the screen's right side
+  .account-card {
+    position: absolute;
+    top: calc(100% + $space-3);
+    right: 0;
+    z-index: 10;
+    display: grid;
+    gap: $space-3;
+    width: 260px;
+    padding: 18px 14px 14px;
+    color: $clr-black;
+    border-radius: $radius-lg;
+    background-color: $clr-white;
+    box-shadow: $shadow-md;
+
+    @media (prefers-reduced-motion: no-preference) {
+      animation: header-menu-drop 140ms ease-out;
+    }
+  }
+
+  .who {
+    display: grid;
+    justify-items: center;
+    gap: $space-1;
+    text-align: center;
+
+    strong {
+      font-size: 1.05rem;
+    }
+  }
+
+  .names {
+    font-size: 0.82rem;
+    color: $primary-clr-850;
+    overflow-wrap: anywhere;
+  }
+
+  .admin-chip {
+    padding: 1px 8px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: $primary-clr-800;
+    border-radius: 99px;
+    background-color: $primary-clr-200;
+  }
+
+  hr {
+    width: 100%;
+    margin: 0;
+    border: 0;
+    border-top: 1px solid $primary-clr-200;
+  }
+
+  .logout-btn {
+    width: 100%;
+    padding: $space-2;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: $primary-clr-800;
+    border: 1px solid $primary-clr-200;
+    border-radius: $radius-sm;
+
+    &:hover {
+      background-color: $primary-clr-100;
+    }
+  }
+}
+
+@keyframes header-menu-drop {
+  from {
+    opacity: 0.4;
+    transform: translateY(-4px);
+  }
+}

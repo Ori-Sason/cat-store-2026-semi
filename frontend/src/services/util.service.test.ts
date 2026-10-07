@@ -79,6 +79,30 @@ describe('utilService.toActionError', () => {
   })
 })
 
+describe('utilService.getFirstName', () => {
+  it('returns the first word', () => {
+    expect(utilService.getFirstName('Ori Sason')).toBe('Ori')
+  })
+
+  it('returns a one-word name as is', () => {
+    expect(utilService.getFirstName('Ori')).toBe('Ori')
+  })
+
+  it('skips leading spaces and splits on any whitespace', () => {
+    expect(utilService.getFirstName('  Ori\tSason')).toBe('Ori')
+  })
+})
+
+describe('utilService.getFirstLetter', () => {
+  it('returns the first letter, uppercased', () => {
+    expect(utilService.getFirstLetter('ori sason')).toBe('O')
+  })
+
+  it('skips leading spaces', () => {
+    expect(utilService.getFirstLetter('  ori')).toBe('O')
+  })
+})
+
 describe('utilService.getSafeRedirectTo', () => {
   const { getSafeRedirectTo } = utilService
 

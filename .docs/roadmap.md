@@ -114,12 +114,14 @@ independent of the rest of Part 3.
 - [x] 1. Header redesign: one mockup round for the whole header (brand, nav, active link,
    spacing, the account area), then restyle `app-header`. The account area is designed here
    too, so items 2–3 don't rework the layout.
-- [ ] 2. Desktop account menu: a round avatar button with the user's initial opens an account
-   card (greeting, full name + username, Profile, Logout). Guests keep the Login button.
-   Profile stays hidden until the `user-details` page exists (Part 4 item 5).
-- [ ] 3. Mobile nav: below `$bp-md`, a hamburger opens one panel with the pages and the
-   account area, for guests and logged-in users alike. Guests need it too, or they can't
-   reach the pages.
+- [x] 2. Header menu, desktop: a round avatar button with the user's initial opens the header
+   menu, a card with the greeting, full name + username, Profile and Logout. Guests keep the
+   Login button and get no menu. Profile stays hidden until the `user-details` page exists
+   (Part 4 item 5). It's one menu for every screen size, so item 3 extends it instead of
+   adding a second one.
+- [ ] 3. Header menu, mobile: below `$bp-md`, a hamburger opens the same header menu in place
+   of the avatar, as a full-width drop-down under the header, and the menu adds the pages.
+   Guests get the hamburger too (pages + Login), or they can't reach the pages.
 
 ## Part 4: Reviews + user page
 

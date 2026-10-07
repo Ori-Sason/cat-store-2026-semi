@@ -1,0 +1,23 @@
+@use 'setup' as *;
+
+.user-avatar {
+  display: grid;
+  place-items: center;
+  flex: none;
+  border-radius: 50%;
+  font-weight: 700;
+  color: $clr-white;
+  background-color: $primary-clr-500;
+
+  &.md {
+    width: 36px;
+    height: 36px;
+    font-size: 0.95rem;
+  }
+
+  &.lg {
+    width: 56px;
+    height: 56px;
+    font-size: 1.4rem;
+  }
+}

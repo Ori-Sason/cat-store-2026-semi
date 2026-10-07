@@ -31,4 +31,6 @@
 @use './cmps/common/util/toggle-switch';
 @use './cmps/common/util/user-message';
 @use './cmps/layout/app-header';
+@use './cmps/layout/header-menu';
+@use './cmps/layout/user-avatar';
 @use './cmps/login-signup/login-signup-form';
