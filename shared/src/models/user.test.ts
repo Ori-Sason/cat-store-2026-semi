@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { userSchema, type UserInput } from './user.ts'
+import { loginSchema, signupSchema, userSchema, type LoginInput, type UserInput } from './user.ts'
 
 const validUser: UserInput = {
   fullname: 'Regular User',
@@ -81,5 +81,56 @@ describe('userSchema', () => {
     ])('rejects a password that is %s', (_, password, message) => {
       expect(_issueMessages({ ...validUser, password })).toEqual([`password: ${message}`])
     })
+  })
+})
+
+describe('signupSchema', () => {
+  it('defaults isRemembered to false', () => {
+    expect(signupSchema.parse(validUser)).toEqual({ ...validUser, isRemembered: false })
+  })
+
+  it('keeps isRemembered when sent', () => {
+    expect(signupSchema.parse({ ...validUser, isRemembered: true }).isRemembered).toBe(true)
+  })
+
+  it('still enforces the password rules', () => {
+    expect(signupSchema.safeParse({ ...validUser, password: 'weak' }).success).toBe(false)
+  })
+
+  it('rejects a non-boolean isRemembered', () => {
+    expect(signupSchema.safeParse({ ...validUser, isRemembered: 'yes' }).success).toBe(false)
+  })
+})
+
+describe('loginSchema', () => {
+  const validLogin: LoginInput = { username: 'user', password: 'Secret-pass1', isRemembered: false }
+
+  it('trims and lowercases the username, and defaults isRemembered to false', () => {
+    expect(loginSchema.parse({ username: '  Admin ', password: 'x' })).toEqual({
+      username: 'admin',
+      password: 'x',
+      isRemembered: false,
+    })
+  })
+
+  it('accepts a password that breaks the signup rules', () => {
+    expect(loginSchema.parse({ ...validLogin, password: 'weak' }).password).toBe('weak')
+  })
+
+  it('strips unknown keys', () => {
+    expect(loginSchema.parse({ ...validLogin, fullname: 'Regular User', isAdmin: true })).toEqual(
+      validLogin,
+    )
+  })
+
+  it.each([
+    ['username', { ...validLogin, username: '   ' }],
+    ['username', { password: 'x' }],
+    ['password', { ...validLogin, password: '' }],
+    ['password', { username: 'user' }],
+  ])('rejects a missing or empty %s', (field, input) => {
+    const result = loginSchema.safeParse(input)
+    expect(result.success).toBe(false)
+    expect(result.error?.issues.map((issue) => issue.path.join('.'))).toEqual([field])
   })
 })

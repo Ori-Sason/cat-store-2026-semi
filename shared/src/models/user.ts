@@ -52,6 +52,28 @@ export const userSchema = z.object({
 
 export type UserInput = z.infer<typeof userSchema>
 
+// Remember me: the server keeps the login for days instead of until the browser closes
+const isRememberedSchema = z.boolean({ error: 'Remember me must be true or false' }).default(false)
+
+// What signup sends. Confirm password is a client-side check only, so it's not here
+export const signupSchema = userSchema.extend({ isRemembered: isRememberedSchema })
+
+export type SignupInput = z.infer<typeof signupSchema>
+
+// What login sends. Presence only, no signup rules: login checks the stored user and hash,
+// not the policy, and the policy could change after a user signed up
+export const loginSchema = z.object({
+  username: z
+    .string({ error: 'Username is required' })
+    .trim()
+    .toLowerCase()
+    .min(1, { error: 'Username is required' }),
+  password: z.string({ error: 'Password is required' }).min(1, { error: 'Password is required' }),
+  isRemembered: isRememberedSchema,
+})
+
+export type LoginInput = z.infer<typeof loginSchema>
+
 export interface User extends Omit<UserInput, 'password'> {
   _id: string
   isAdmin: boolean
