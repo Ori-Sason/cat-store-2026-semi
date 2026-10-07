@@ -1,50 +1,158 @@
 @use 'setup' as *;
 
+// Mobile-first: below $bp-md a hamburger opens a full-width card under the header.
+// From $bp-md up the avatar opens a 260px card anchored under it
 .header-menu {
-  position: relative;
+  // Below $bp-md the card anchors to .app-header instead, so it spans the header's width
+  @include from($bp-md) {
+    position: relative;
+  }
 
-  .avatar-btn {
-    display: grid;
-    border-radius: 50%;
-
-    &[aria-expanded='true'] {
-      box-shadow: 0 0 0 3px $primary-clr-300;
+  // On desktop a guest has the bar's Login link, so there's no menu
+  &.guest {
+    @include from($bp-md) {
+      display: none;
     }
+  }
+
+  .menu-btn {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    color: $clr-white;
+    border-radius: $radius-sm;
 
     &:focus-visible {
       outline: 2px solid $primary-clr-300;
       outline-offset: 2px;
     }
+
+    .user-avatar {
+      display: none;
+    }
+
+    @include from($bp-md) {
+      width: auto;
+      height: auto;
+      border-radius: 50%;
+
+      &[aria-expanded='true'] {
+        box-shadow: 0 0 0 3px $primary-clr-300;
+      }
+
+      .user-avatar {
+        display: grid;
+      }
+
+      .hamburger {
+        display: none;
+      }
+    }
   }
 
-  // Anchored under the avatar, right edges aligned, so it never runs off the screen's right side
-  .account-card {
+  // Three bars: the span is the middle one, ::before and ::after the outer two.
+  // Open, the middle one fades and the outer two cross into an ✕
+  .hamburger,
+  .hamburger::before,
+  .hamburger::after {
+    display: block;
+    width: 22px;
+    height: 2px;
+    border-radius: 1px;
+    background-color: currentColor;
+  }
+
+  .hamburger {
+    position: relative;
+
+    &::before,
+    &::after {
+      content: '';
+      position: absolute;
+      left: 0;
+    }
+
+    &::before {
+      top: -7px;
+    }
+
+    &::after {
+      top: 7px;
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+      &,
+      &::before,
+      &::after {
+        transition: transform 140ms ease-out, background-color 140ms ease-out;
+      }
+    }
+  }
+
+  .menu-btn[aria-expanded='true'] .hamburger {
+    background-color: transparent;
+
+    &::before {
+      transform: translateY(7px) rotate(45deg);
+    }
+
+    &::after {
+      transform: translateY(-7px) rotate(-45deg);
+    }
+  }
+
+  .menu-card {
     position: absolute;
-    top: calc(100% + $space-3);
+    top: 100%;
     right: 0;
+    left: 0;
     z-index: 10;
     display: grid;
     gap: $space-3;
-    width: 260px;
-    padding: 18px 14px 14px;
+    padding: $space-4;
     color: $clr-black;
-    border-radius: $radius-lg;
     background-color: $clr-white;
     box-shadow: $shadow-md;
 
     @media (prefers-reduced-motion: no-preference) {
       animation: header-menu-drop 140ms ease-out;
     }
+
+    // Anchored under the avatar, right edges aligned, so it never runs off the screen's right side
+    @include from($bp-md) {
+      top: calc(100% + $space-3);
+      left: auto;
+      width: 260px;
+      padding: 18px 14px 14px;
+      border-radius: $radius-lg;
+    }
   }
 
+  // A row on the phone's full-width card, a centered column on the desktop card
   .who {
+    display: flex;
+    align-items: center;
+    gap: $space-3;
+
+    @include from($bp-md) {
+      flex-direction: column;
+      gap: $space-1;
+      text-align: center;
+    }
+  }
+
+  .who-txt {
     display: grid;
-    justify-items: center;
+    justify-items: start;
     gap: $space-1;
-    text-align: center;
 
     strong {
       font-size: 1.05rem;
+    }
+
+    @include from($bp-md) {
+      justify-items: center;
     }
   }
 
@@ -65,6 +173,31 @@
     background-color: $primary-clr-200;
   }
 
+  // Below $bp-md only. From $bp-md up the bar's nav shows the pages
+  .page-rows {
+    display: grid;
+    gap: $space-1;
+
+    a {
+      padding: $space-2 $space-3;
+      color: $primary-clr-800;
+      border-radius: $radius-sm;
+
+      &:hover {
+        background-color: rgba($primary-clr-100, 0.6);
+      }
+
+      &.active {
+        font-weight: 700;
+        background-color: $primary-clr-100;
+      }
+    }
+
+    @include from($bp-md) {
+      display: none;
+    }
+  }
+
   hr {
     width: 100%;
     margin: 0;
@@ -72,11 +205,14 @@
     border-top: 1px solid $primary-clr-200;
   }
 
-  .logout-btn {
+  // Logout for a user, Login for a guest
+  .action-btn {
+    display: block;
     width: 100%;
     padding: $space-2;
     font-size: 0.85rem;
     font-weight: 600;
+    text-align: center;
     color: $primary-clr-800;
     border: 1px solid $primary-clr-200;
     border-radius: $radius-sm;

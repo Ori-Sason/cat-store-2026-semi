@@ -16,6 +16,8 @@ export const AppHeader: React.FC = () => {
   const headerRef = useRef<HTMLElement>(null)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [prevPathname, setPrevPathname] = useState(pathname)
+  // Directed back to this page after logging in
+  const loginTo = `/login?redirectTo=${encodeURIComponent(pathname + search)}`
 
   // A route change closes the menu (Alt+← or Mouse back button). Adjusted during render,
   // not in an effect, so the old page's menu never paints over the new page
@@ -63,6 +65,7 @@ export const AppHeader: React.FC = () => {
           cat-store
         </Link>
         <div className="end">
+          {/* The nav, divider and Login link are desktop only */}
           <nav>
             {NAV_LINKS.map(({ to, label }) => (
               <NavLink key={to} to={to}>
@@ -71,25 +74,19 @@ export const AppHeader: React.FC = () => {
             ))}
           </nav>
           <span className="divider" aria-hidden="true" />
-          <div className="user-area">
-            {loggedInUser ? (
-              <HeaderMenu
-                user={loggedInUser}
-                isOpen={isMenuOpen}
-                onToggle={toggleMenu}
-                onClose={closeMenu}
-                onLogout={onLogout}
-              />
-            ) : (
-              // Directed back to this page after logging in
-              <Link
-                to={`/login?redirectTo=${encodeURIComponent(pathname + search)}`}
-                className="login-btn"
-              >
-                Login
-              </Link>
-            )}
-          </div>
+          {!loggedInUser && (
+            <Link to={loginTo} className="login-btn">
+              Login
+            </Link>
+          )}
+          <HeaderMenu
+            user={loggedInUser}
+            isOpen={isMenuOpen}
+            loginTo={loginTo}
+            onToggle={toggleMenu}
+            onClose={closeMenu}
+            onLogout={onLogout}
+          />
         </div>
       </div>
     </header>

@@ -11,8 +11,9 @@ Stack, dependencies and the **why** behind decisions live in `architecture.md`.
 the `cats` collection. Part 3 has started: Playwright E2E is set up (`npm run test:e2e`) with a guest
 smoke flow, the `users` collection exists with a seeded `user` and `admin`, and the auth API is in
 (`/api/auth/*`, JWT in the `loginToken` cookie), with login and signup pages at `/login` and
-`/signup` and a header that shows Login or "Hi, {name}" + Logout. Part 3 is paused
-after item 4 to build the App header section. Then it resumes with item 5, `ownerId` on cats.
+`/signup`. The App header section is done: a restyled bar and one header menu (the avatar
+on desktop, a hamburger below `$bp-md` that also holds the pages). Part 3 resumes with
+item 5, `ownerId` on cats.
 
 ## Part 1: DB + backend + frontend skeleton (CRUD over cats)
 
@@ -119,7 +120,7 @@ independent of the rest of Part 3.
    Login button and get no menu. Profile stays hidden until the `user-details` page exists
    (Part 4 item 5). It's one menu for every screen size, so item 3 extends it instead of
    adding a second one.
-- [ ] 3. Header menu, mobile: below `$bp-md`, a hamburger opens the same header menu in place
+- [x] 3. Header menu, mobile: below `$bp-md`, a hamburger opens the same header menu in place
    of the avatar, as a full-width drop-down under the header, and the menu adds the pages.
    Guests get the hamburger too (pages + Login), or they can't reach the pages.
 

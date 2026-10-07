@@ -4,13 +4,13 @@
   // Read by app-header.tsx for its matchMedia query, so $bp-md stays the single source
   --bp-md: #{$bp-md};
 
+  // The containing block for the menu's full-width card below $bp-md
+  position: relative;
   color: $primary-clr-100;
   background-color: $primary-clr-900;
 
-  // No hamburger yet (a follow-up): on narrow screens the nav + user area wrap under the logo
   .content {
     display: flex;
-    flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
     gap: $space-3 $space-4;
@@ -43,15 +43,24 @@
 
   .end {
     display: flex;
-    flex-wrap: wrap;
     align-items: center;
-    gap: $space-3 $space-4;
+    gap: $space-4;
   }
 
-  nav {
-    display: flex;
-    flex-wrap: wrap;
+  // Desktop only. Below $bp-md the header menu holds the pages and Login
+  .end > nav,
+  .divider,
+  .login-btn {
+    display: none;
+  }
+
+  // `.end > nav`, not `nav`: the menu card's page rows sit inside .end too
+  .end > nav {
     gap: $space-1;
+
+    @include from($bp-md) {
+      display: flex;
+    }
 
     a {
       padding: 7px 16px;
@@ -74,12 +83,10 @@
     width: 1px;
     height: 22px;
     background-color: $primary-clr-850;
-  }
 
-  .user-area {
-    display: flex;
-    align-items: center;
-    gap: $space-3;
+    @include from($bp-md) {
+      display: block;
+    }
   }
 
   .login-btn {
@@ -93,6 +100,10 @@
 
     &:hover {
       background-color: $primary-clr-600;
+    }
+
+    @include from($bp-md) {
+      display: block;
     }
   }
 }
