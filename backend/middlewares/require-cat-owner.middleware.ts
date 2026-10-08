@@ -1,4 +1,5 @@
 import type { RequestHandler } from 'express'
+import { catPermissionService } from '@cat-store/shared'
 import { catService } from '../api/cat/cat.service.ts'
 import { HttpError } from '../models/http-error.ts'
 import { alsService } from '../services/als.service.ts'
@@ -8,8 +9,8 @@ import { requireAuth } from './require-auth.middleware.ts'
 const _checkCatOwner: RequestHandler<{ id: string }> = async (req, _res, next) => {
   const verifiedUser = alsService.getVerifiedUser()
   const cat = await catService.getById(req.params.id)
-  const isOwner = cat.ownerId.toHexString() === verifiedUser._id
-  if (!isOwner && !verifiedUser.isAdmin) {
+  const ownerId = cat.ownerId.toHexString()
+  if (!catPermissionService.canEditCat({ ownerId }, verifiedUser)) {
     throw new HttpError(403, 'FORBIDDEN', `Cat ${req.params.id} isn't yours`) // 403 Forbidden
   }
   next()

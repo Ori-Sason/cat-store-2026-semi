@@ -11,7 +11,7 @@ prod: browser ──▶ Express (static FE + /api + socket.io) ──▶ MongoDB
 
 ## Components
 - `shared/` (`@cat-store/shared`) — wire contract: types, Zod schemas, constants,
-  `catFilterService`. No build step, erasable TS only, no DOM/Node/mongodb imports.
+  `catFilterService`, `catPermissionService`. No build step, erasable TS only, no DOM/Node/mongodb imports.
 - `frontend/` — Vite + React SPA. Routes and data loading via `react-router`, client state
   in Zustand, HTTP via axios with relative URLs only (`/api/...`).
 - `backend/` — Express 5, route → controller → service layers, native `mongodb`
@@ -27,6 +27,7 @@ prod: browser ──▶ Express (static FE + /api + socket.io) ──▶ MongoDB
 - `requireAuth` re-reads the user from the DB and sets `verifiedUser`, the only user permission
   checks trust (via `alsService.getVerifiedUser()`). A `require*` that needs a user bundles it.
 - Backend middleware enforces guest / owner / admin rules on cats and reviews. The FE only hides UI.
+  For edit / delete, both check through the shared `catPermissionService`, so they agree on the rule.
 - `ownerId` / `userId` are set by the server, never accepted from the client.
 
 ## Stack

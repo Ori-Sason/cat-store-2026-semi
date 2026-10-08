@@ -17,6 +17,8 @@
 	  edit or delete it. Set by the server, never by the client.
 	- Rule: `ownerId` is named for the role, not the entity, a deliberate exception to
 	  the `<entity>Id` rule in `naming.md`. It holds a `users` `_id`.
+	- Rule: `catPermissionService` (`shared/`) holds the cat rules. The FE hides what fails
+	  them. The BE checks edit / delete through it (`requireCatOwner`), and add with `requireAuth`.
 	- Avoid: `seller`, `creator`, `createdBy`, `userId` (on a cat).
 - label (`labels`, `CatLabel`, `CAT_LABELS`)
 	- Canonical meaning: one of a fixed set of descriptors attached to a cat.

@@ -1,9 +1,10 @@
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { DEFAULT_CAT_FILTER, type Cat } from '@cat-store/shared'
+import { DEFAULT_CAT_FILTER, type Cat, type LoggedInUser } from '@cat-store/shared'
 import { createMemoryRouter, RouterProvider, useLocation } from 'react-router'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { catService } from '../../services/cat.service'
+import { useLoggedInUserStore } from '../../store/logged-in-user.store'
 import { CatApp } from './cat-app'
 import { catAppLoader } from './cat-app.loader'
 
@@ -25,6 +26,8 @@ const _CATS = [
     updatedAt: 1,
   },
 ] satisfies Cat[]
+
+const USER: LoggedInUser = { _id: 'user-2', username: 'user', fullname: 'U', isAdmin: false }
 
 function LocationStateProbe() {
   return <pre>{JSON.stringify(useLocation().state)}</pre>
@@ -57,7 +60,16 @@ describe('CatApp', () => {
     expect(screen.getByRole('button', { name: 'In stock' })).toHaveAttribute('aria-pressed', 'true')
   })
 
+  it('hides the add button from a guest', async () => {
+    useLoggedInUserStore.setState({ loggedInUser: null })
+    _renderAt('/cat')
+
+    await screen.findByRole('heading', { name: 'Mitzi' })
+    expect(screen.queryByRole('link', { name: '+ Add cat' })).not.toBeInTheDocument()
+  })
+
   it('hands the list filter to the add page', async () => {
+    useLoggedInUserStore.setState({ loggedInUser: USER })
     const router = _renderAt('/cat?labels=Calm')
 
     await userEvent.click(await screen.findByRole('link', { name: '+ Add cat' }))

@@ -7,6 +7,7 @@ import { RouteError } from '../../cmps/common/util/route-error'
 import { ApiError } from '../../models/api-error'
 import type { CatListLocationState } from '../../models/util'
 import { catService } from '../../services/cat.service'
+import { useLoggedInUserStore } from '../../store/logged-in-user.store'
 import { useUserMsgStore } from '../../store/user-msg.store'
 import { CatDetails } from '../cat-details/cat-details'
 import { catDetailsLoader } from '../cat-details/cat-details.loader'
@@ -56,6 +57,10 @@ describe('CatEdit', () => {
   beforeEach(() => {
     vi.resetAllMocks()
     useUserMsgStore.setState({ msg: null, navigationMsg: null })
+    // The cat's owner - the loader's guards have their own tests
+    useLoggedInUserStore.setState({
+      loggedInUser: { _id: 'user-1', username: 'user', fullname: 'Mitzi Owner', isAdmin: false },
+    })
     vi.mocked(catService.getById).mockResolvedValue(_CAT)
   })
 

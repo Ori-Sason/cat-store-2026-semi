@@ -1,10 +1,11 @@
 import type React from 'react'
 import { useEffect, useRef, useState } from 'react'
 import { Link, useLoaderData, useLocation, useNavigation, useSearchParams } from 'react-router'
-import { catFilterService, type CatFilter } from '@cat-store/shared'
+import { catFilterService, catPermissionService, type CatFilter } from '@cat-store/shared'
 import { CatFilterBar } from '../../cmps/cat-app/cat-filter-bar'
 import { CatList } from '../../cmps/cat-app/cat-list'
 import { useDebouncedCallback } from '../../hooks/use-debounced-callback'
+import { useLoggedInUserStore } from '../../store/logged-in-user.store'
 import type { catAppLoader } from './cat-app.loader'
 
 const FILTER_DEBOUNCE_MS = 500
@@ -14,6 +15,7 @@ export const CatApp: React.FC = () => {
   const [, setSearchParams] = useSearchParams()
   const navigation = useNavigation()
   const location = useLocation()
+  const loggedInUser = useLoggedInUserStore((state) => state.loggedInUser)
 
   // Filter debouncer
   const [draftFilterBy, setDraftFilterBy] = useState(filterBy)
@@ -41,6 +43,8 @@ export const CatApp: React.FC = () => {
     writeUrl.call(filterBy)
   }
 
+  const isCanAddCat = catPermissionService.canAddCat(loggedInUser)
+
   return (
     <section className="cat-app">
       <header className="page-head">
@@ -48,9 +52,11 @@ export const CatApp: React.FC = () => {
         <span className="count">
           {cats.length} {cats.length === 1 ? 'cat' : 'cats'}
         </span>
-        <Link to="/cat/new" state={{ listSearch: location.search }} className="main-btn add-btn">
-          + Add cat
-        </Link>
+        {isCanAddCat && (
+          <Link to="/cat/new" state={{ listSearch: location.search }} className="main-btn add-btn">
+            + Add cat
+          </Link>
+        )}
       </header>
       <CatFilterBar filterBy={draftFilterBy} onSetFilter={onSetFilter} />
       <div className={`list-container ${isLoading ? 'is-loading' : ''}`}>

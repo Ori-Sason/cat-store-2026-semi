@@ -1,12 +1,13 @@
 import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import type { Cat } from '@cat-store/shared'
+import type { Cat, LoggedInUser } from '@cat-store/shared'
 import { createMemoryRouter, RouterProvider } from 'react-router'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { RouteError } from '../../cmps/common/util/route-error'
 import { ApiError } from '../../models/api-error'
 import type { CatListLocationState } from '../../models/util'
 import { catService } from '../../services/cat.service'
+import { useLoggedInUserStore } from '../../store/logged-in-user.store'
 import { useUserMsgStore } from '../../store/user-msg.store'
 import { CatDetails } from './cat-details'
 import { catDetailsAction } from './cat-details.action'
@@ -14,7 +15,7 @@ import { catDetailsLoader } from './cat-details.loader'
 
 vi.mock('../../services/cat.service')
 
-const _CAT = {
+const CAT = {
   _id: 'cat-1',
   ownerId: 'user-1',
   name: 'Mitzi',
@@ -25,6 +26,10 @@ const _CAT = {
   createdAt: Date.UTC(2026, 9, 4, 12),
   updatedAt: Date.UTC(2026, 9, 4, 12),
 } satisfies Cat
+
+const CAT_OWNER: LoggedInUser = { _id: 'user-1', username: 'user', fullname: 'U', isAdmin: false }
+const NON_CAT_OWNER_USER: LoggedInUser = { ...CAT_OWNER, _id: 'user-2' }
+const ADMIN: LoggedInUser = { _id: 'admin-1', username: 'admin', fullname: 'A', isAdmin: true }
 
 function _renderAt(path: string, state?: CatListLocationState) {
   const router = createMemoryRouter(
@@ -51,7 +56,9 @@ function _renderAt(path: string, state?: CatListLocationState) {
 describe('CatDetails', () => {
   beforeEach(() => {
     vi.resetAllMocks()
-    vi.mocked(catService.getById).mockResolvedValue(_CAT)
+    vi.mocked(catService.getById).mockResolvedValue(CAT)
+    // The owner, so Edit / Delete show - the cat rules have their own tests below
+    useLoggedInUserStore.setState({ loggedInUser: CAT_OWNER })
   })
 
   it('shows the cat the loader got for the id', async () => {
@@ -113,7 +120,7 @@ describe('CatDetails', () => {
     const networkErr = new ApiError(0, 'NETWORK_ERROR', 'Network Error')
     vi.mocked(catService.remove).mockRejectedValue(networkErr)
     // the server is down, so a reload of the cat would fail too
-    vi.mocked(catService.getById).mockResolvedValueOnce(_CAT).mockRejectedValue(networkErr)
+    vi.mocked(catService.getById).mockResolvedValueOnce(CAT).mockRejectedValue(networkErr)
     _renderAt('/cat/cat-1')
     await userEvent.click(await screen.findByRole('button', { name: 'Delete' }))
 
@@ -124,6 +131,26 @@ describe('CatDetails', () => {
     expect(screen.getByRole('heading', { name: 'Mitzi' })).toBeInTheDocument()
     expect(useUserMsgStore.getState().msg).toMatchObject({ type: 'error' })
     expect(catService.getById).toHaveBeenCalledOnce()
+  })
+
+  it('shows Edit and Delete to an admin who does not own the cat', async () => {
+    useLoggedInUserStore.setState({ loggedInUser: ADMIN })
+    _renderAt('/cat/cat-1')
+
+    expect(await screen.findByRole('link', { name: 'Edit' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Delete' })).toBeInTheDocument()
+  })
+
+  it.each([
+    ['a guest', null],
+    ["a user who doesn't own the cat", NON_CAT_OWNER_USER],
+  ])('hides Edit and Delete from %s', async (_, loggedInUser) => {
+    useLoggedInUserStore.setState({ loggedInUser })
+    _renderAt('/cat/cat-1')
+
+    await screen.findByRole('heading', { name: 'Mitzi' })
+    expect(screen.queryByRole('link', { name: 'Edit' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Delete' })).not.toBeInTheDocument()
   })
 
   it("shows the not-found message for a cat that doesn't exist", async () => {

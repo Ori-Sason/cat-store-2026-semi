@@ -14,8 +14,8 @@ auth API is in (`/api/auth/*`, JWT in the `loginToken` cookie), with login and s
 `/login` and `/signup`. The App header section is done: a restyled bar and one header menu (the
 avatar on desktop, a hamburger below `$bp-md` that also holds the pages). Part 4 has started:
 cats have an `ownerId` (the seed gives each cat a random owner, `user` or `admin`), and the
-backend enforces the cat rules (`requireAuth`, `requireCatOwner`). Part 4 resumes with item 3,
-hiding what the user can't use in the FE.
+backend enforces the cat rules (`requireAuth`, `requireCatOwner`), and the FE hides what the
+user can't use. Part 4 resumes with item 4, the E2E coverage of the cat rules.
 
 ## Part 1: DB + backend + frontend skeleton (CRUD over cats)
 
@@ -132,7 +132,10 @@ shows buttons that fail with 403. After 3, the UI matches the backend. 4 proves 
    | Add             | ❌    | ✅              | ✅    |
    | Edit / delete   | ❌    | Own cats only   | ✅    |
 
-- [ ] 3. The FE hides buttons and pages the user can't use (the cat rules above).
+- [x] 3. The FE hides buttons and pages the user can't use (the cat rules above).
+   Guests get no "+ Add cat", and Edit / Delete show only to the owner or an admin. A typed
+   `/cat/new` or `/cat/:id/edit` URL: a guest goes to login (and back after it), a non-owner
+   gets the 403 route error. The rule itself lives in the shared `catPermissionService`.
 - [ ] 4. Close Part 4 with E2E coverage of the cat rules for guest / user / admin, and admin cat
    CRUD (sign up → log in is already covered by `auth.spec.ts`). Rename `guest-browse.spec.ts`
    to `guest.spec.ts` and add the guest rules to it (no Add / Edit / Delete).
