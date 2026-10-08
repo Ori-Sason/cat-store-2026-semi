@@ -126,6 +126,7 @@ Open questions live in `roadmap.md`. When one is decided, record it here.
 ## Update Triggers
 - Update this file when the stack, auth boundaries, collections, or the dev/prod topology
   change, or when an open question from `roadmap.md` is decided.
+- Not for: choices scoped to one feature or page (a library for one page, a UI behavior).
 - Add a Change Log line (date + one line) only when the architecture itself changes:
   components, how they connect (dev/prod topology), data flow, or the auth boundary.
   New decisions inside the same shape, config, and doc edits don't count.
