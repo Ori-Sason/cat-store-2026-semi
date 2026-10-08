@@ -67,7 +67,13 @@ describe('userSchema', () => {
   })
 
   describe('password', () => {
-    it.each(['Abcdef1!', 'A1!' + 'a'.repeat(47)])('accepts %s', (password) => {
+    // 'א' is 2 bytes in UTF-8: 4 + 34 * 2 = 72 bytes, exactly bcrypt's limit
+    it.each([
+      'Abcdef1!',
+      'A1!' + 'a'.repeat(47),
+      'Ab1!' + 'א'.repeat(34),
+      'Ab1!' + '😺'.repeat(17),
+    ])('accepts %s', (password) => {
       expect(userSchema.parse({ ...validUser, password }).password).toBe(password)
     })
 
@@ -78,6 +84,13 @@ describe('userSchema', () => {
       ['missing an uppercase letter', 'secret-pass1', 'Password must have an uppercase letter'],
       ['missing a digit', 'Secret-pass', 'Password must have a digit'],
       ['missing a symbol', 'SecretPass1', 'Password must have a symbol'],
+      [
+        'over 72 bytes, though under 50 characters',
+        'Ab1!' + 'א'.repeat(35),
+        'Password is too long',
+      ],
+      // '😺' is 4 bytes: 4 + 17 * 4 = 72 is fine, 18 of them is over
+      ['over 72 bytes with 4-byte characters', 'Ab1!' + '😺'.repeat(18), 'Password is too long'],
     ])('rejects a password that is %s', (_, password, message) => {
       expect(_issueMessages({ ...validUser, password })).toEqual([`password: ${message}`])
     })
