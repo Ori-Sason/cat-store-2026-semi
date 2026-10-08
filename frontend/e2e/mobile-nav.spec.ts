@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import { signUpViaApi } from './helpers/auth.helper.ts'
 
 // Below $bp-md the bar's nav is hidden, and the header menu (a hamburger) holds the pages
 test.use({ viewport: { width: 390, height: 844 } })
@@ -25,12 +26,7 @@ test('a guest reaches a page through the mobile menu', async ({ page }) => {
 test('a logged-in user gets the hamburger, not the avatar, and the greeting in the menu', async ({
   page,
 }) => {
-  // Sign up through the API: page.request shares the browser context's cookies
-  const username = `e2e_m${Date.now()}`
-  const res = await page.request.post('/api/auth/signup', {
-    data: { fullname: 'Mobile Tester', username, password: 'Secret1!', isRemembered: false },
-  })
-  expect(res.ok()).toBe(true)
+  await signUpViaApi(page.request, 'm', 'Mobile Tester')
 
   await page.goto('/cat')
   const menuBtn = page.getByRole('button', { name: 'Menu', exact: true })
