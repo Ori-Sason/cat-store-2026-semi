@@ -5,14 +5,22 @@ import { useLoggedInUserStore } from '../store/logged-in-user.store'
 
 const BASE_URL = '/api'
 const SECRET_FIELDS = new Set(['password', 'confirmPassword'])
+// A stalled server fails the call instead of hanging it. A timeout has no response, so it
+// surfaces as NETWORK_ERROR
+const DEFAULT_TIMEOUT_MS = 10_000
 
 const axios = Axios.create({
   withCredentials: true, // relevant on cross-origin (irrelevant for this project since we use Vite's proxy)
+  timeout: DEFAULT_TIMEOUT_MS,
 })
 
+interface RequestOptions {
+  timeoutMs?: number
+}
+
 export const httpService = {
-  get<T>(endpoint: string, data?: unknown): Promise<T> {
-    return _ajax(endpoint, 'GET', data)
+  get<T>(endpoint: string, data?: unknown, options?: RequestOptions): Promise<T> {
+    return _ajax(endpoint, 'GET', data, options)
   },
   post<T>(endpoint: string, data?: unknown): Promise<T> {
     return _ajax(endpoint, 'POST', data)
@@ -25,11 +33,17 @@ export const httpService = {
   },
 }
 
-const _ajax = async <T>(endpoint: string, method = 'GET', data: unknown = null): Promise<T> => {
+const _ajax = async <T>(
+  endpoint: string,
+  method = 'GET',
+  data: unknown = null,
+  options: RequestOptions = {},
+): Promise<T> => {
   try {
     const res = await axios({
       url: `${BASE_URL}/${endpoint}`,
       method,
+      timeout: options.timeoutMs ?? DEFAULT_TIMEOUT_MS,
       data: method === 'GET' ? undefined : data,
       params: method === 'GET' ? data : null,
     })

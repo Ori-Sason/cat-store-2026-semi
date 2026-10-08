@@ -49,6 +49,7 @@ describe('authService', () => {
 
     expect(await authService.getLoggedInUser()).toEqual(_USER)
     expect(await authService.getLoggedInUser()).toBeNull()
-    expect(httpService.get).toHaveBeenCalledWith('auth/me')
+    // A short timeout: this call blocks the first render
+    expect(httpService.get).toHaveBeenCalledWith('auth/me', undefined, { timeoutMs: 3_000 })
   })
 })

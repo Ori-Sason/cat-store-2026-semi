@@ -60,6 +60,24 @@ describe('httpService', () => {
     )
   })
 
+  it('times out after 10s by default, or after the timeoutMs passed', async () => {
+    mockRequest.mockResolvedValue({ data: [] })
+    await httpService.get('cats')
+    await httpService.get('auth/me', undefined, { timeoutMs: 3_000 })
+
+    expect(mockRequest).toHaveBeenNthCalledWith(1, expect.objectContaining({ timeout: 10_000 }))
+    expect(mockRequest).toHaveBeenNthCalledWith(2, expect.objectContaining({ timeout: 3_000 }))
+  })
+
+  it('throws NETWORK_ERROR on a timeout', async () => {
+    mockRequest.mockRejectedValue(new AxiosError('timeout of 10000ms exceeded', 'ECONNABORTED'))
+
+    await expect(httpService.get('cats')).rejects.toMatchObject({
+      status: 0,
+      code: 'NETWORK_ERROR',
+    })
+  })
+
   it('sends POST data as the body', async () => {
     mockRequest.mockResolvedValue({ data: {} })
     await httpService.post('cats', { name: 'Mitzi' })
