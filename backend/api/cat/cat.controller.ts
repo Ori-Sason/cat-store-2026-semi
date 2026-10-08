@@ -1,5 +1,6 @@
 import type { Request, Response } from 'express'
 import { catFilterService, type CatInput } from '@cat-store/shared'
+import { alsService } from '../../services/als.service.ts'
 import { catService } from './cat.service.ts'
 
 export async function getCats(req: Request, res: Response) {
@@ -21,9 +22,10 @@ export async function getCatById(req: Request<{ id: string }>, res: Response) {
   res.json(cat)
 }
 
-// req.body is already parsed by validateBody(catSchema)
+// req.body is already parsed by validateBody(catSchema). requireAuth set loggedInUser
 export async function addCat(req: Request<object, unknown, CatInput>, res: Response) {
-  const cat = await catService.add(req.body)
+  const loggedInUser = alsService.getStore().loggedInUser!
+  const cat = await catService.add(req.body, loggedInUser._id)
   res.status(201).json(cat) // 201 Created
 }
 

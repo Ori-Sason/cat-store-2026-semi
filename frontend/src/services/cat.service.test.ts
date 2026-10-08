@@ -17,7 +17,7 @@ const _CAT_INPUT: CatInput = {
   imgUrl: '',
 }
 
-const _CAT: Cat = { ..._CAT_INPUT, _id: 'cat-1', createdAt: 1, updatedAt: 1 }
+const _CAT: Cat = { ..._CAT_INPUT, _id: 'cat-1', ownerId: 'user-1', createdAt: 1, updatedAt: 1 }
 
 function _sentParams() {
   return vi.mocked(httpService.get).mock.lastCall?.[1] as URLSearchParams

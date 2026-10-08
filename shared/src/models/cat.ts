@@ -46,6 +46,7 @@ export type CatInput = z.infer<typeof catSchema>
 
 export interface Cat extends CatInput {
   _id: string
+  ownerId: string // the user who created the cat - server-set, so it's not in catSchema
   createdAt: number
   updatedAt: number
 }

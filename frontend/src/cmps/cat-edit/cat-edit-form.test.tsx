@@ -7,6 +7,7 @@ import { CatEditForm } from './cat-edit-form'
 
 const _CAT = {
   _id: 'cat-1',
+  ownerId: 'user-1',
   name: 'Mitzi',
   price: 95.5,
   labels: ['Calm'],

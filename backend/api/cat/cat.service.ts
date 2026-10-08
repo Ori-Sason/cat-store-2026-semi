@@ -22,9 +22,15 @@ async function getById(catId: string): Promise<CatDoc> {
   return cat
 }
 
-async function add(input: CatInput): Promise<CatDoc> {
+async function add(input: CatInput, ownerId: string): Promise<CatDoc> {
   const now = Date.now()
-  const cat: CatDoc = { _id: new ObjectId(), ...input, createdAt: now, updatedAt: now }
+  const cat: CatDoc = {
+    _id: new ObjectId(),
+    ...input,
+    ownerId: new ObjectId(ownerId),
+    createdAt: now,
+    updatedAt: now,
+  }
   const collection = await mongoService.getCollection<CatDoc>(CAT_COLLECTION)
   await collection.insertOne(cat)
   return cat
@@ -33,7 +39,7 @@ async function add(input: CatInput): Promise<CatDoc> {
 async function update(catId: string, input: CatInput): Promise<CatDoc> {
   const _id = utilService.toObjectId(catId)
   const collection = await mongoService.getCollection<CatDoc>(CAT_COLLECTION)
-  // $set touches only the client fields and updatedAt - _id and createdAt stay as they are
+  // $set touches only the client fields and updatedAt - _id, ownerId and createdAt stay as they are
   const cat =
     _id &&
     (await collection.findOneAndUpdate(

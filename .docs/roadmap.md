@@ -12,8 +12,9 @@ the `cats` collection. Part 3 is done except the home page (item 5): Playwright 
 (`npm run test:e2e`), the `users` collection exists with a seeded `user` and `admin`, and the
 auth API is in (`/api/auth/*`, JWT in the `loginToken` cookie), with login and signup pages at
 `/login` and `/signup`. The App header section is done: a restyled bar and one header menu (the
-avatar on desktop, a hamburger below `$bp-md` that also holds the pages). Part 4 (cat ownership)
-starts with item 1, `ownerId` on cats.
+avatar on desktop, a hamburger below `$bp-md` that also holds the pages). Part 4 has started:
+cats have an `ownerId` (the seed gives each cat a random owner, `user` or `admin`), and adding a
+cat needs a login (`requireAuth`). Part 4 resumes with item 2, the backend cat rules.
 
 ## Part 1: DB + backend + frontend skeleton (CRUD over cats)
 
@@ -114,7 +115,7 @@ One release batch. The items are built and committed one at a time, but only shi
 After 1, edit / delete are still open to anyone. After 2, the backend is secure, but the UI still
 shows buttons that fail with 403. After 3, the UI matches the backend. 4 proves it end to end.
 
-- [ ] 1. Add `ownerId` to cats:
+- [x] 1. Add `ownerId` to cats:
    - New cats get `ownerId` = the logged-in user's `_id`, set by the server. Adding a cat
      needs a login (`requireAuth`, 401 for a guest), or the cat would have no owner.
    - `ownerId` is not in `catSchema`, so the client can't send or change it.

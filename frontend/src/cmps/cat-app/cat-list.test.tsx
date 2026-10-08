@@ -7,6 +7,7 @@ import { CatList } from './cat-list'
 function _cat(overrides: Partial<Cat>): Cat {
   return {
     _id: 'cat-1',
+    ownerId: 'user-1',
     name: 'Mitzi',
     price: 120,
     labels: [],

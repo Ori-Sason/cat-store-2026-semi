@@ -15,7 +15,13 @@ const _CAT_INPUT = {
   imgUrl: '',
 } satisfies CatInput
 
-const _SAVED_CAT = { ..._CAT_INPUT, _id: 'cat-1', createdAt: 1, updatedAt: 1 } satisfies Cat
+const _SAVED_CAT = {
+  ..._CAT_INPUT,
+  _id: 'cat-1',
+  ownerId: 'user-1',
+  createdAt: 1,
+  updatedAt: 1,
+} satisfies Cat
 
 const store = () => useUserMsgStore.getState()
 

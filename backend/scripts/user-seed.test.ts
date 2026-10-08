@@ -16,11 +16,15 @@ async function _getUsers() {
 }
 
 describe('seedUsers', () => {
-  it('creates user and admin with a hashed password', async () => {
+  it('creates user and admin with a hashed password, and returns them', async () => {
     const before = Date.now()
-    expect(await seedUsers(PASSWORD)).toEqual(['user', 'admin'])
+    const seededUsers = await seedUsers(PASSWORD)
 
     const [admin, user] = await _getUsers()
+    expect(seededUsers).toEqual([
+      { _id: user!._id, username: 'user', isAdmin: false, isCreated: true },
+      { _id: admin!._id, username: 'admin', isAdmin: true, isCreated: true },
+    ])
     expect(admin).toMatchObject({ username: 'admin', fullname: 'Admin User', isAdmin: true })
     expect(user).toMatchObject({ username: 'user', fullname: 'Regular User', isAdmin: false })
     for (const doc of [admin!, user!]) {
@@ -31,20 +35,24 @@ describe('seedUsers', () => {
     }
   })
 
-  it('keeps existing users as they are on a re-run', async () => {
-    await seedUsers(PASSWORD)
+  it('keeps existing users as they are on a re-run, and still returns their ids', async () => {
+    const firstRun = await seedUsers(PASSWORD)
     const before = await _getUsers()
 
-    expect(await seedUsers(PASSWORD)).toEqual([])
+    expect(await seedUsers(PASSWORD)).toEqual(
+      firstRun.map((user) => ({ ...user, isCreated: false })),
+    )
     expect(await _getUsers()).toEqual(before)
   })
 
-  it('creates only the missing user', async () => {
-    await seedUsers(PASSWORD)
+  it('creates only the missing user, and returns both in SEED_USERS order', async () => {
+    const [, firstAdmin] = await seedUsers(PASSWORD)
     const collection = await mongoService.getCollection<UserDoc>(USER_COLLECTION)
     await collection.deleteOne({ username: 'user' })
 
-    expect(await seedUsers(PASSWORD)).toEqual(['user'])
+    const [user, admin] = await seedUsers(PASSWORD)
+    expect(user).toMatchObject({ username: 'user', isCreated: true })
+    expect(admin).toEqual({ ...firstAdmin, isCreated: false })
   })
 
   it('throws on a password mismatch, naming the users and leaving them untouched', async () => {

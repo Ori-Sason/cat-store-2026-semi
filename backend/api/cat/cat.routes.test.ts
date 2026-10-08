@@ -10,14 +10,58 @@ import {
 } from '@cat-store/shared'
 import { app } from '../../app.ts'
 import { CAT_COLLECTION, type CatDoc } from '../../models/cat.ts'
+import { USER_COLLECTION, type UserDoc } from '../../models/user.ts'
 import { mongoService } from '../../services/mongodb.service.ts'
 import { setupTestDb } from '../../test/test-db.helper.ts'
+import { authService } from '../auth/auth.service.ts'
 
 setupTestDb()
+
+function _buildUser(username: string, isAdmin: boolean): UserDoc {
+  const fullname = `${username} fullname`
+  return {
+    _id: new ObjectId(),
+    username,
+    fullname,
+    password: 'hash',
+    isAdmin,
+    createdAt: 1,
+    updatedAt: 1,
+  }
+}
+
+// CAT_OWNER owns every cat _buildCat makes, unless a test says otherwise
+const CAT_OWNER = _buildUser('cat_owner', false)
+const NON_CAT_OWNER_USER = _buildUser('non_cat_owner', false)
+const ADMIN = _buildUser('admin', true)
+
+// setupTestDb empties the DB before each test (registered first, so it runs first)
+beforeEach(async () => {
+  const collection = await mongoService.getCollection<UserDoc>(USER_COLLECTION)
+  await collection.insertMany([CAT_OWNER, NON_CAT_OWNER_USER, ADMIN])
+})
+
+// A signed loginToken cookie, the same one login sets
+function _loginCookie({ _id, username, fullname, isAdmin }: UserDoc): string {
+  const loggedInUser = { _id: _id.toHexString(), username, fullname, isAdmin }
+  return `loginToken=${authService.createLoginToken(loggedInUser, false)}`
+}
+
+// The cat as the API sends it: ObjectIds become hex strings
+function _toJson(cat: CatDoc): Cat {
+  return { ...cat, _id: cat._id.toHexString(), ownerId: cat.ownerId.toHexString() }
+}
+
+async function _insertCat(cat: CatDoc) {
+  const collection = await mongoService.getCollection<CatDoc>(CAT_COLLECTION)
+  await collection.insertOne(cat)
+  return collection
+}
 
 function _buildCat(overrides: Partial<CatDoc>): CatDoc {
   return {
     _id: new ObjectId(),
+    ownerId: CAT_OWNER._id,
     name: 'Mitzi',
     price: 100,
     labels: [],
@@ -186,7 +230,7 @@ describe('GET /api/cats/:id', () => {
     const res = await request(app).get(`/api/cats/${cat._id.toHexString()}`)
 
     expect(res.status).toBe(200)
-    expect(res.body).toEqual({ ...cat, _id: cat._id.toHexString() })
+    expect(res.body).toEqual(_toJson(cat))
   })
 
   it('returns 404 CAT_NOT_FOUND for an id that does not exist', async () => {
@@ -216,8 +260,7 @@ describe('DELETE /api/cats/:id', () => {
 
   it('deletes the cat and returns 204', async () => {
     const cat = _buildCat({ name: 'Mitzi' })
-    const collection = await mongoService.getCollection<CatDoc>(CAT_COLLECTION)
-    await collection.insertOne(cat)
+    const collection = await _insertCat(cat)
 
     const res = await request(app).delete(`/api/cats/${cat._id.toHexString()}`)
 
@@ -256,35 +299,74 @@ describe('POST /api/cats', () => {
     vi.restoreAllMocks()
   })
 
-  it('creates the cat and returns 201 with server-set fields', async () => {
-    const res = await request(app).post('/api/cats').send(INPUT)
+  it('creates the cat, owned by the logged-in user, and returns 201 with server-set fields', async () => {
+    const res = await request(app)
+      .post('/api/cats')
+      .set('Cookie', _loginCookie(CAT_OWNER))
+      .send(INPUT)
 
     expect(res.status).toBe(201)
     expect(res.body).toEqual({
       ...INPUT,
       _id: expect.any(String),
+      ownerId: CAT_OWNER._id.toHexString(),
       createdAt: NOW,
       updatedAt: NOW,
     })
     const collection = await mongoService.getCollection<CatDoc>(CAT_COLLECTION)
     const saved = await collection.findOne({ _id: new ObjectId(res.body._id as string) })
-    expect(saved).toMatchObject(INPUT)
+    expect(saved).toMatchObject({ ...INPUT, ownerId: CAT_OWNER._id })
   })
 
-  it('ignores a client-sent _id, createdAt and updatedAt', async () => {
+  it('ignores a client-sent _id, ownerId, createdAt and updatedAt', async () => {
     const clientId = new ObjectId().toHexString()
     const res = await request(app)
       .post('/api/cats')
-      .send({ ...INPUT, _id: clientId, createdAt: 1, updatedAt: 1 })
+      .set('Cookie', _loginCookie(CAT_OWNER))
+      .send({
+        ...INPUT,
+        _id: clientId,
+        ownerId: ADMIN._id.toHexString(),
+        createdAt: 1,
+        updatedAt: 1,
+      })
 
     expect(res.status).toBe(201)
     expect(res.body._id).not.toBe(clientId)
-    expect(res.body).toMatchObject({ createdAt: NOW, updatedAt: NOW })
+    expect(res.body).toMatchObject({
+      ownerId: CAT_OWNER._id.toHexString(),
+      createdAt: NOW,
+      updatedAt: NOW,
+    })
+  })
+
+  it('returns 401 UNAUTHORIZED for a guest and saves nothing', async () => {
+    const res = await request(app).post('/api/cats').send(INPUT)
+
+    expect(res.status).toBe(401)
+    expect(res.body).toMatchObject({ code: 'UNAUTHORIZED' })
+    const collection = await mongoService.getCollection<CatDoc>(CAT_COLLECTION)
+    expect(await collection.countDocuments()).toBe(0)
+  })
+
+  // requireAuth reads the user from the DB, not just the token
+  it('returns 401 UNAUTHORIZED for a valid token of a deleted user', async () => {
+    const users = await mongoService.getCollection<UserDoc>(USER_COLLECTION)
+    await users.deleteOne({ _id: CAT_OWNER._id })
+
+    const res = await request(app)
+      .post('/api/cats')
+      .set('Cookie', _loginCookie(CAT_OWNER))
+      .send(INPUT)
+
+    expect(res.status).toBe(401)
+    expect(res.body).toMatchObject({ code: 'UNAUTHORIZED' })
   })
 
   it("stores an empty imgUrl as ''", async () => {
     const res = await request(app)
       .post('/api/cats')
+      .set('Cookie', _loginCookie(CAT_OWNER))
       .send({ ...INPUT, imgUrl: '' })
 
     expect(res.status).toBe(201)
@@ -294,6 +376,7 @@ describe('POST /api/cats', () => {
   it('returns 400 VALIDATION_FAILED with fieldErrors and saves nothing', async () => {
     const res = await request(app)
       .post('/api/cats')
+      .set('Cookie', _loginCookie(CAT_OWNER))
       .send({ ...INPUT, name: 'M', price: -1 })
 
     expect(res.status).toBe(400)
@@ -326,31 +409,37 @@ describe('PUT /api/cats/:id', () => {
     vi.restoreAllMocks()
   })
 
-  it('updates the cat, keeps createdAt and bumps updatedAt', async () => {
+  it('updates the cat, keeps createdAt and ownerId, and bumps updatedAt', async () => {
     const cat = _buildCat({ name: 'Mitzi', createdAt: 1_000, updatedAt: 1_000 })
-    const collection = await mongoService.getCollection<CatDoc>(CAT_COLLECTION)
-    await collection.insertOne(cat)
+    const collection = await _insertCat(cat)
 
     const res = await request(app).put(`/api/cats/${cat._id.toHexString()}`).send(INPUT)
 
     expect(res.status).toBe(200)
-    const expected = { ...INPUT, _id: cat._id.toHexString(), createdAt: 1_000, updatedAt: NOW }
-    expect(res.body).toEqual(expected)
-    expect(await collection.findOne({ _id: cat._id })).toEqual({ ...expected, _id: cat._id })
+    const expected = { ...cat, ...INPUT, updatedAt: NOW }
+    expect(res.body).toEqual(_toJson(expected))
+    expect(await collection.findOne({ _id: cat._id })).toEqual(expected)
   })
 
-  it('ignores a client-sent _id, createdAt and updatedAt', async () => {
+  it('ignores a client-sent _id, ownerId, createdAt and updatedAt', async () => {
     const cat = _buildCat({ createdAt: 1_000, updatedAt: 1_000 })
-    const collection = await mongoService.getCollection<CatDoc>(CAT_COLLECTION)
-    await collection.insertOne(cat)
+    await _insertCat(cat)
 
     const res = await request(app)
       .put(`/api/cats/${cat._id.toHexString()}`)
-      .send({ ...INPUT, _id: new ObjectId().toHexString(), createdAt: 1, updatedAt: 1 })
+      .set('Cookie', _loginCookie(CAT_OWNER))
+      .send({
+        ...INPUT,
+        _id: new ObjectId().toHexString(),
+        ownerId: NON_CAT_OWNER_USER._id.toHexString(),
+        createdAt: 1,
+        updatedAt: 1,
+      })
 
     expect(res.status).toBe(200)
     expect(res.body).toMatchObject({
       _id: cat._id.toHexString(),
+      ownerId: CAT_OWNER._id.toHexString(),
       createdAt: 1_000,
       updatedAt: NOW,
     })
@@ -365,11 +454,11 @@ describe('PUT /api/cats/:id', () => {
 
   it('returns 400 VALIDATION_FAILED with fieldErrors and leaves the cat as it was', async () => {
     const cat = _buildCat({ name: 'Mitzi' })
-    const collection = await mongoService.getCollection<CatDoc>(CAT_COLLECTION)
-    await collection.insertOne(cat)
+    const collection = await _insertCat(cat)
 
     const res = await request(app)
       .put(`/api/cats/${cat._id.toHexString()}`)
+      .set('Cookie', _loginCookie(CAT_OWNER))
       .send({ ...INPUT, labels: ['Dog'] })
 
     expect(res.status).toBe(400)

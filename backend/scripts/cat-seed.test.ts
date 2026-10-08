@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
+import { ObjectId } from 'mongodb'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { CAT_LABELS, catSchema } from '@cat-store/shared'
 import { buildSeedCat, getRandomLabels, type RawCat } from './cat-seed.ts'
@@ -48,22 +49,25 @@ describe('getRandomLabels', () => {
 })
 
 describe('buildSeedCat', () => {
-  it('keeps the JSON fields and fills in the missing ones', () => {
-    const cat = buildSeedCat(rawCat)
+  const ownerId = new ObjectId()
+
+  it('keeps the JSON fields and fills in the missing ones, with the given owner', () => {
+    const cat = buildSeedCat(rawCat, ownerId)
     expect(cat).toMatchObject(rawCat)
+    expect(cat.ownerId).toBe(ownerId)
     expect(cat.updatedAt).toBe(rawCat.createdAt)
     expect(cat.imgUrl).toBe(`https://robohash.org/${cat._id.toHexString()}?set=set4`)
     expect(catSchema.safeParse(cat).success).toBe(true)
   })
 
   it('throws on a row the schema rejects', () => {
-    expect(() => buildSeedCat({ ...rawCat, price: 0 })).toThrow()
+    expect(() => buildSeedCat({ ...rawCat, price: 0 }, ownerId)).toThrow()
   })
 
   it('builds every cat in cats.json', () => {
     const rawCats: RawCat[] = JSON.parse(
       readFileSync(join(import.meta.dirname, 'data', 'cats.json'), 'utf8'),
     )
-    expect(() => rawCats.map((raw) => buildSeedCat(raw))).not.toThrow()
+    expect(() => rawCats.map((raw) => buildSeedCat(raw, ownerId))).not.toThrow()
   })
 })

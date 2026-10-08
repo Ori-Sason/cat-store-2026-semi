@@ -38,8 +38,8 @@ export function getRandomLabels(): CatLabel[] {
 }
 
 // Fills in the fields the JSON lacks, then validates with the shared schema,
-// so a bad row fails here instead of landing in the DB
-export function buildSeedCat(raw: RawCat): CatDoc {
+// so a bad row fails here instead of landing in the DB. The caller picks the owner
+export function buildSeedCat(raw: RawCat, ownerId: ObjectId): CatDoc {
   const _id = new ObjectId()
   const input = catSchema.parse({
     name: raw.name,
@@ -48,5 +48,5 @@ export function buildSeedCat(raw: RawCat): CatDoc {
     labels: getRandomLabels(),
     imgUrl: `https://robohash.org/${_id.toHexString()}?set=set4`,
   })
-  return { _id, ...input, createdAt: raw.createdAt, updatedAt: raw.createdAt }
+  return { _id, ...input, ownerId, createdAt: raw.createdAt, updatedAt: raw.createdAt }
 }

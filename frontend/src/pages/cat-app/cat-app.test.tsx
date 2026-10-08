@@ -15,6 +15,7 @@ const _FILTER_DEBOUNCE_MS = 500
 const _CATS = [
   {
     _id: 'cat-1',
+    ownerId: 'user-1',
     name: 'Mitzi',
     price: 120,
     labels: ['Calm'],
