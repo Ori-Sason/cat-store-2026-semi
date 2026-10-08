@@ -24,6 +24,7 @@ export const router = createBrowserRouter([
         errorElement: <RouteError />,
         children: [
           // One page and one action for both - the route decides the mode
+          // Logged-in users aren't redirected away from /login. That's intended.
           {
             path: '/login',
             action: (args) => loginSignupAction(args, 'login'),
