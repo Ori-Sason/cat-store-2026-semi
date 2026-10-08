@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { parseEnv } from 'node:util'
-import { expect, type APIRequestContext } from '@playwright/test'
+import { expect, type APIRequestContext, type ConsoleMessage, type Page } from '@playwright/test'
 
 const PASSWORD = 'Secret1!'
 const BACKEND_ENV_TEST_URL = new URL('../../../backend/.env.test', import.meta.url)
@@ -40,4 +40,23 @@ export function getSeedUsersPassword(): string {
   const password = env.SEED_USERS_PASSWORD
   if (!password) throw new Error('SEED_USERS_PASSWORD is missing in backend/.env.test')
   return password
+}
+
+// Records every browser console message from now on. Call the returned getter after the flow
+// to get each message as one string. It reads the logged values themselves (jsonValue), not
+// msg.text(): http.service logs an object, and text() shows only a preview of it, so a leaked
+// field could be missed. The handler keeps the promises, so the getter waits for every message
+export function collectConsoleText(page: Page): () => Promise<string[]> {
+  const pendingTexts: Promise<string>[] = []
+  page.on('console', (msg) => pendingTexts.push(_toConsoleText(msg)))
+  return () => Promise.all(pendingTexts)
+}
+
+// Throws if the page navigated away before the values were read, which fails the test. On
+// purpose, no fallback to msg.text(): a preview may cut off the leaked field, and the check
+// would pass quietly. For a flow that navigates, serialize inside the page instead
+// (addInitScript wrapping console.log)
+async function _toConsoleText(msg: ConsoleMessage): Promise<string> {
+  const values = await Promise.all(msg.args().map((arg) => arg.jsonValue()))
+  return JSON.stringify(values)
 }
