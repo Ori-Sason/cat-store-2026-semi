@@ -59,6 +59,10 @@ test("an admin edits and deletes another user's cat", async ({ page, request }) 
   await signUpViaApi(request, 'o')
   const otherUserCat = await createCatViaApi(request, { name: `Other user cat ${Date.now()}` })
 
+  // A typed (or reloaded) edit URL shows the form: the router waits for /me before running loaders
+  await page.goto(`/cat/${otherUserCat._id}/edit`)
+  await expect(page.getByLabel('Name')).toHaveValue(otherUserCat.name)
+
   await page.goto(`/cat/${otherUserCat._id}`)
   await expect(page.getByRole('heading', { level: 1, name: otherUserCat.name })).toBeVisible()
 
