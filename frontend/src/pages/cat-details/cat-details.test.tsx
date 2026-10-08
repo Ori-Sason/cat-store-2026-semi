@@ -34,15 +34,21 @@ const ADMIN: LoggedInUser = { _id: 'admin-1', username: 'admin', fullname: 'A', 
 function _renderAt(path: string, state?: CatListLocationState) {
   const router = createMemoryRouter(
     [
-      { path: '/cat', element: <p>Cat list</p> },
+      // Like the app's root route: no fallback logs a warning while the first loader runs
       {
-        errorElement: <RouteError />,
+        HydrateFallback: () => null,
         children: [
+          { path: '/cat', element: <p>Cat list</p> },
           {
-            path: '/cat/:id',
-            loader: catDetailsLoader,
-            action: catDetailsAction,
-            element: <CatDetails />,
+            errorElement: <RouteError />,
+            children: [
+              {
+                path: '/cat/:id',
+                loader: catDetailsLoader,
+                action: catDetailsAction,
+                element: <CatDetails />,
+              },
+            ],
           },
         ],
       },

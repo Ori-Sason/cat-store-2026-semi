@@ -28,9 +28,17 @@ const _STATS: CatLabelStats[] = _ZERO_STATS.map((s) =>
 function _render() {
   const router = createMemoryRouter(
     [
+      // Like the app's root route: no fallback logs a warning while the first loader runs
       {
-        errorElement: <RouteError />,
-        children: [{ path: '/dashboard', loader: catDashboardLoader, element: <CatDashboard /> }],
+        HydrateFallback: () => null,
+        children: [
+          {
+            errorElement: <RouteError />,
+            children: [
+              { path: '/dashboard', loader: catDashboardLoader, element: <CatDashboard /> },
+            ],
+          },
+        ],
       },
     ],
     { initialEntries: ['/dashboard'] },

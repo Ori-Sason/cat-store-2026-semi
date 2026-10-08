@@ -32,17 +32,28 @@ const _CAT = {
 function _renderAt(path: string, state?: CatListLocationState) {
   const router = createMemoryRouter(
     [
-      { path: '/cat', element: <p>Cat list</p> },
-      { path: '/cat/:id', loader: catDetailsLoader, element: <CatDetails /> },
+      // Like the app's root route: no fallback logs a warning while the first loader runs
       {
-        errorElement: <RouteError />,
+        HydrateFallback: () => null,
         children: [
-          { path: '/cat/new', loader: catEditLoader, action: catEditAction, element: <CatEdit /> },
+          { path: '/cat', element: <p>Cat list</p> },
+          { path: '/cat/:id', loader: catDetailsLoader, element: <CatDetails /> },
           {
-            path: '/cat/:id/edit',
-            loader: catEditLoader,
-            action: catEditAction,
-            element: <CatEdit />,
+            errorElement: <RouteError />,
+            children: [
+              {
+                path: '/cat/new',
+                loader: catEditLoader,
+                action: catEditAction,
+                element: <CatEdit />,
+              },
+              {
+                path: '/cat/:id/edit',
+                loader: catEditLoader,
+                action: catEditAction,
+                element: <CatEdit />,
+              },
+            ],
           },
         ],
       },

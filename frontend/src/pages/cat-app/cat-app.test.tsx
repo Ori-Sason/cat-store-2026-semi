@@ -36,9 +36,15 @@ function LocationStateProbe() {
 function _renderAt(path: string) {
   const router = createMemoryRouter(
     [
-      { path: '/cat', loader: catAppLoader, element: <CatApp /> },
-      { path: '/cat/new', element: <LocationStateProbe /> },
-      { path: '/cat/:id', element: <LocationStateProbe /> },
+      // Like the app's root route: no fallback logs a warning while the first loader runs
+      {
+        HydrateFallback: () => null,
+        children: [
+          { path: '/cat', loader: catAppLoader, element: <CatApp /> },
+          { path: '/cat/new', element: <LocationStateProbe /> },
+          { path: '/cat/:id', element: <LocationStateProbe /> },
+        ],
+      },
     ],
     { initialEntries: [path] },
   )
@@ -50,6 +56,8 @@ describe('CatApp', () => {
   beforeEach(() => {
     vi.resetAllMocks()
     vi.mocked(catService.query).mockResolvedValue(_CATS)
+    // The store outlives a test, so each one starts as a guest
+    useLoggedInUserStore.setState({ loggedInUser: null })
   })
 
   it('shows the cats the loader got for the URL filter', async () => {
