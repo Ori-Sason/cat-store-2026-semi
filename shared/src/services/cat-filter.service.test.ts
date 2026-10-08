@@ -19,6 +19,7 @@ const _FULL_FILTER: CatFilter = {
   labels: ['Kitten', 'Calm'],
   sortBy: 'price',
   sortDir: 'asc',
+  limit: 4,
 }
 
 describe('catFilterService.paramsToFilter', () => {
@@ -35,6 +36,7 @@ describe('catFilterService.paramsToFilter', () => {
         ['labels', 'Calm'],
         ['sortBy', 'price'],
         ['sortDir', 'asc'],
+        ['limit', '4'],
       ),
     )
     expect(filter).toEqual({
@@ -43,6 +45,7 @@ describe('catFilterService.paramsToFilter', () => {
       labels: ['Kitten', 'Calm'],
       sortBy: 'price',
       sortDir: 'asc',
+      limit: 4,
     })
   })
 
@@ -69,10 +72,18 @@ describe('catFilterService.paramsToFilter', () => {
         ['labels', 'kitten'], // labels are case-sensitive
         ['sortBy', 'ownerId'],
         ['sortDir', 'up'],
+        ['limit', 'abc'],
       ),
     )
     expect(filter).toEqual(DEFAULT_CAT_FILTER)
   })
+
+  it.each(['abc', '0', '-3', '2.5', '1e3', ' 4', '', '99999999999999999999'])(
+    'reads limit=%j as no limit',
+    (value) => {
+      expect(paramsToFilter(_params(['limit', value])).limit).toBeNull()
+    },
+  )
 })
 
 describe('catFilterService.filterToParams', () => {
@@ -88,6 +99,7 @@ describe('catFilterService.filterToParams', () => {
       ['labels', 'Calm'],
       ['sortBy', 'price'],
       ['sortDir', 'asc'],
+      ['limit', '4'],
     ])
   })
 

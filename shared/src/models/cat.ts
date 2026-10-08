@@ -75,6 +75,7 @@ export interface CatFilter {
   labels: Cat['labels'] // a cat must have every one of them
   sortBy: CatSortField
   sortDir: SortByDirection
+  limit: number | null // the first N after sorting. null = every match
 }
 
 export const DEFAULT_CAT_FILTER: CatFilter = {
@@ -83,4 +84,5 @@ export const DEFAULT_CAT_FILTER: CatFilter = {
   labels: [],
   sortBy: 'createdAt',
   sortDir: 'desc',
+  limit: null,
 }

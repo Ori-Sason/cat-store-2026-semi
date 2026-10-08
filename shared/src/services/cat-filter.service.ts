@@ -19,6 +19,7 @@ function paramsToFilter(params: QueryParamsReader): CatFilter {
     labels: _parseLabels(params.getAll('labels')),
     sortBy: _pickOne(params.get('sortBy'), CAT_SORT_FIELDS) ?? DEFAULT_CAT_FILTER.sortBy,
     sortDir: _pickOne(params.get('sortDir'), _SORT_DIRS) ?? DEFAULT_CAT_FILTER.sortDir,
+    limit: _parsePositiveInt(params.get('limit')) ?? DEFAULT_CAT_FILTER.limit,
   }
 }
 
@@ -34,6 +35,7 @@ function filterToParams(filter: CatFilter): [string, string][] {
   for (const label of filter.labels) pairs.push(['labels', label])
   if (filter.sortBy !== DEFAULT_CAT_FILTER.sortBy) pairs.push(['sortBy', filter.sortBy])
   if (filter.sortDir !== DEFAULT_CAT_FILTER.sortDir) pairs.push(['sortDir', filter.sortDir])
+  if (filter.limit !== null) pairs.push(['limit', String(filter.limit)])
   return pairs
 }
 
@@ -41,6 +43,13 @@ function _parseBoolean(value: string | null): boolean | null {
   if (value === 'true') return true
   if (value === 'false') return false
   return null
+}
+
+// Digits only, so "2.5", "1e3", "-3" and " 4" don't sneak through Number(). 0 isn't a limit either
+function _parsePositiveInt(value: string | null): number | null {
+  if (!value || !/^\d+$/.test(value)) return null
+  const num = Number(value)
+  return Number.isSafeInteger(num) && num > 0 ? num : null
 }
 
 // CAT_LABELS order, deduped - the same labels in any order give the same filter
