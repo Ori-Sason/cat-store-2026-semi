@@ -50,7 +50,7 @@ Files with `paths:` frontmatter load only when matching files are touched.
 - `naming.md` — routes, DB, code, files, domain terms.
 - `git-workflow.md` — approval gates, branches, commits, the index as review marker.
 - `testing.md` — when to write tests, E2E timing, done = tests + lint + typecheck pass.
-- `research.md` — research goes to subagents by default; follow-ups via SendMessage.
+- `subagents.md` — research goes to subagents by default; briefs list what was ruled out.
 - `shared.md` (`shared/**`) — erasable TS, no platform imports, models vs services.
 - `frontend.md` (`frontend/**`) — shared imports, relative `/api` URLs.
 - `ui-and-styling.md` (`frontend/**`) — SCSS structure, tokens, class names.
