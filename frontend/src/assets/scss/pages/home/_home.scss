@@ -1,0 +1,27 @@
+@use 'setup' as *;
+
+.home {
+  display: grid;
+  gap: $space-6;
+
+  // Bigger pill buttons on this page only. The rest of the app keeps the shared look
+  .main-btn,
+  .sub-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: $space-2;
+    padding: 0.75em 1.4em;
+    font-weight: 700;
+    border-radius: $radius-pill;
+  }
+
+  .bottom {
+    display: grid;
+    gap: $space-6;
+  }
+
+  .bottom-row {
+    display: grid;
+    gap: $space-4;
+  }
+}

@@ -1,0 +1,46 @@
+@use 'setup' as *;
+
+.home-cta {
+  display: grid;
+  align-content: center;
+  gap: $space-3;
+  padding: $space-6 $space-5;
+  border-radius: $radius-lg;
+  color: $primary-clr-100;
+  background-color: $primary-clr-900;
+
+  h2 {
+    font-size: 1.3rem;
+    color: $clr-white;
+  }
+
+  p {
+    font-size: 0.92rem;
+    line-height: 1.55;
+    color: $primary-clr-300;
+  }
+
+  .ctas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $space-3;
+    margin-top: $space-1;
+  }
+
+  // The light glow is lost on the dark card
+  .main-btn {
+    box-shadow: none;
+  }
+
+  // A ghost button: the white .sub-btn would compete with the main one here
+  .sub-btn {
+    color: $clr-white;
+    border-color: rgba($clr-white, 0.35);
+    background-color: transparent;
+    box-shadow: none;
+
+    &:hover {
+      background-color: rgba($clr-white, 0.08);
+    }
+  }
+}

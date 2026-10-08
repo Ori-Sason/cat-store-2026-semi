@@ -53,22 +53,25 @@ test('sign up, log out and log in again, with and without remember me', async ({
   await page.reload()
   await expect(page.getByRole('button', { name: 'Menu', exact: true })).toHaveText('E')
 
-  // Logout goes to / , which redirects to /cat until the home page exists
+  // Logout lands on the home page, in its guest version
   await page.getByRole('button', { name: 'Menu', exact: true }).click()
   await expect(page.locator('.header-menu .menu')).toContainText('Hi, E2e!')
   await page.getByRole('button', { name: 'Logout' }).click()
-  await expect(page).toHaveURL(/\/cat$/)
-  await expect(page.getByRole('link', { name: 'Login' })).toBeVisible()
+  await expect(page).toHaveURL(/\/$/)
+  await expect(page.locator('.home-hero .eyebrow')).toHaveText('Browse · Meet · Pick up')
+  await expect(page.getByRole('link', { name: 'Login', exact: true })).toBeVisible()
   expect(await _getLoginTokenCookie(context)).toBeUndefined()
 
-  await page.getByRole('link', { name: 'Login' }).click()
-  await expect(page).toHaveURL(/\/login\?redirectTo=%2Fcat$/)
+  await page.getByRole('link', { name: 'Login', exact: true }).click()
+  await expect(page).toHaveURL(/\/login\?redirectTo=%2F$/)
   await page.getByLabel('Username').fill(USERNAME)
   await page.getByLabel('Password').fill(PASSWORD)
   await page.getByRole('checkbox', { name: 'Remember me' }).check()
   await page.getByRole('button', { name: 'Log in' }).click()
 
-  await expect(page).toHaveURL(/\/cat$/)
+  // Back to home, now greeting the user
+  await expect(page).toHaveURL(/\/$/)
+  await expect(page.locator('.home-hero .eyebrow')).toHaveText('Welcome back, E2e')
   await expect(page.getByRole('button', { name: 'Menu', exact: true })).toHaveText('E')
   // Remember me → a cookie that lasts about 7 days
   const expires = (await _getLoginTokenCookie(context))?.expires ?? 0

@@ -1,10 +1,12 @@
 import { expect, test } from '@playwright/test'
 import { signUpViaApi } from './helpers/auth.helper.ts'
 
-// Guest smoke flow: browse → filter → details → back, over the seed data in
+// Guest smoke flow: home → browse → filter → details → back, over the seed data in
 // backend/scripts/data/cats.json. Seed labels are random, so the filter uses name and stock only.
 test('guest browses, filters and opens a cat', async ({ page }) => {
   await page.goto('/')
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('Meet your next cat')
+  await page.locator('.home-hero').getByRole('link', { name: 'Browse cats' }).click()
   await expect(page).toHaveURL(/\/cat$/)
 
   const cards = page.locator('.cat-preview')

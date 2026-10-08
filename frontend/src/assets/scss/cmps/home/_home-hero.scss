@@ -1,0 +1,181 @@
+@use 'setup' as *;
+
+// Mobile: text, then the art, then the label chips. From $bp-lg: text | art, chips under both
+.home-hero {
+  display: grid;
+  gap: $space-6;
+  align-items: center;
+  padding-top: $space-5;
+
+  @include from($bp-lg) {
+    grid-template-columns: 1.1fr 0.9fr;
+    padding-top: $space-6;
+  }
+
+  .eyebrow {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: $primary-clr-600;
+  }
+
+  h1 {
+    margin-block: $space-3 $space-4;
+    font-size: clamp(2rem, 5vw, 3.1rem);
+    line-height: 1.08;
+    letter-spacing: -0.025em;
+    text-wrap: balance;
+    color: $primary-clr-900;
+
+    em {
+      font-style: normal;
+      color: $primary-clr-600;
+    }
+  }
+
+  .lede {
+    max-width: 46ch;
+    font-size: 1.05rem;
+    line-height: 1.6;
+    color: $primary-clr-850;
+  }
+
+  .ctas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $space-3;
+    margin-top: $space-6;
+  }
+
+  .fine {
+    margin-top: $space-3;
+    font-size: 0.85rem;
+    color: $primary-clr-850;
+
+    a {
+      font-weight: 700;
+      color: $primary-clr-600;
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+  }
+
+  // Decoration: a dashed ring, a disc behind the cat, floating chips and a price tag
+  .art {
+    position: relative;
+    justify-self: center;
+    width: 100%;
+    max-width: 440px;
+    aspect-ratio: 1;
+
+    .ring {
+      position: absolute;
+      inset: 0;
+      border: 2px dashed rgba($primary-clr-600, 0.25);
+      border-radius: 50%;
+    }
+
+    .disc {
+      position: absolute;
+      inset: 6%;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 30%, $primary-clr-100, $primary-clr-300);
+    }
+
+    img {
+      position: absolute;
+      inset: 14%;
+      width: 72%;
+      height: 72%;
+      object-fit: contain;
+      filter: drop-shadow(0 18px 24px rgba($primary-clr-900, 0.25));
+    }
+
+    .float {
+      position: absolute;
+      padding: 6px 14px;
+      font-size: 0.85rem;
+      box-shadow: $shadow-md;
+    }
+
+    .f1 {
+      top: 10%;
+      left: -2%;
+    }
+
+    .f2 {
+      top: 30%;
+      right: -4%;
+    }
+
+    .f3 {
+      bottom: 12%;
+      left: 4%;
+    }
+
+    .price-tag {
+      position: absolute;
+      bottom: 4%;
+      right: 6%;
+      display: grid;
+      gap: 2px;
+      padding: 10px 14px;
+      border-radius: $radius-lg;
+      background-color: $clr-white;
+      box-shadow: $shadow-md;
+
+      small {
+        font-size: 0.7rem;
+        color: $primary-clr-850;
+      }
+
+      strong {
+        font-size: 1.05rem;
+        color: $primary-clr-900;
+      }
+
+      .stock {
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: $clr-success;
+      }
+    }
+  }
+
+  .labels {
+    grid-column: 1 / -1;
+    display: grid;
+    gap: $space-3;
+
+    p {
+      font-weight: 700;
+      color: $primary-clr-900;
+    }
+
+    ul {
+      display: flex;
+      flex-wrap: wrap;
+      gap: $space-2;
+    }
+
+    .label-chip {
+      padding: 6px 14px;
+      font-size: 0.85rem;
+      transition:
+        transform 0.15s,
+        box-shadow 0.15s;
+
+      @media (prefers-reduced-motion: reduce) {
+        transition: none;
+      }
+    }
+
+    a:hover .label-chip {
+      transform: translateY(-1px);
+      box-shadow: $shadow-sm;
+    }
+  }
+}

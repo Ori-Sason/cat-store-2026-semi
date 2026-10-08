@@ -1,4 +1,4 @@
-import { data, redirect, type RouteObject } from 'react-router'
+import { data, type RouteObject } from 'react-router'
 import { LayoutApp } from './cmps/layout/layout-app'
 import { LayoutRoot } from './cmps/layout/layout-root'
 import { RouteError } from './cmps/common/util/route-error'
@@ -10,6 +10,7 @@ import { CatDetails } from './pages/cat-details/cat-details'
 import { catDetailsAction } from './pages/cat-details/cat-details.action'
 import { catDetailsLoader } from './pages/cat-details/cat-details.loader'
 import { CatEdit } from './pages/cat-edit/cat-edit'
+import { Home } from './pages/home/home'
 import { catEditAction } from './pages/cat-edit/cat-edit.action'
 import { catEditLoader } from './pages/cat-edit/cat-edit.loader'
 import { LoginSignup } from './pages/login-signup/login-signup'
@@ -50,7 +51,7 @@ export const routes: RouteObject[] = [
               // pages with app-header
               {
                 path: '/',
-                loader: () => redirect('/cat'),
+                element: <Home />,
               },
               {
                 path: '/cat',

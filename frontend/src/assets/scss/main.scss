@@ -10,6 +10,7 @@
 @use './pages/cat-dashboard/cat-dashboard';
 @use './pages/cat-details/cat-details';
 @use './pages/cat-edit/cat-edit';
+@use './pages/home/home';
 @use './pages/login-signup/login-signup';
 
 /* COMPONENTS */
@@ -30,6 +31,9 @@
 @use './cmps/common/util/route-error';
 @use './cmps/common/util/toggle-switch';
 @use './cmps/common/util/user-message';
+@use './cmps/home/home-cta';
+@use './cmps/home/home-hero';
+@use './cmps/home/how-it-works';
 @use './cmps/layout/app-header';
 @use './cmps/layout/header-menu';
 @use './cmps/layout/user-avatar';

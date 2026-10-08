@@ -66,7 +66,7 @@ export const AppHeader: React.FC = () => {
   return (
     <header className="app-header" ref={headerRef}>
       <div className="main-layout content">
-        <Link to="/cat" className="logo">
+        <Link to="/" className="logo">
           <img src={catImg} alt="" />
           cat-store
         </Link>

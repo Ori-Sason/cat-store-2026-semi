@@ -1,0 +1,73 @@
+@use 'setup' as *;
+
+.how-it-works {
+  display: grid;
+  gap: $space-4;
+
+  h2 {
+    font-size: 1.35rem;
+    color: $primary-clr-900;
+  }
+
+  .steps {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: $space-4;
+  }
+
+  .step {
+    display: grid;
+    align-content: start;
+    gap: $space-2;
+    padding: $space-5;
+    border: 1px solid rgba($primary-clr-900, 0.06);
+    border-radius: $radius-lg;
+    background-color: $clr-white;
+
+    h3 {
+      margin-top: $space-1;
+      font-size: 1.05rem;
+      color: $primary-clr-900;
+    }
+
+    p {
+      font-size: 0.88rem;
+      line-height: 1.55;
+      color: $primary-clr-850;
+    }
+
+    a {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: $primary-clr-600;
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+  }
+
+  .num {
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: $clr-white;
+    background-color: $primary-clr-900;
+  }
+
+  .soon {
+    padding: 2px 7px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    vertical-align: middle;
+    color: $primary-clr-850;
+    border: 1px solid $primary-clr-300;
+    border-radius: $radius-pill;
+  }
+}
