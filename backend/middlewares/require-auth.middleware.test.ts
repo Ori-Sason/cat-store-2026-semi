@@ -84,6 +84,18 @@ describe('requireAuth', () => {
     expect(res.body.code).toBe('UNAUTHORIZED')
   })
 
+  // Same as /api/auth/me: a dead token is dropped, so the browser stops sending it
+  it('returns 401 and clears the cookie for a valid token of a deleted user', async () => {
+    const deletedUser = { ...USER, _id: new ObjectId() }
+
+    const res = await request(app).get('/twice').set('Cookie', _loginCookie(deletedUser))
+
+    expect(res.status).toBe(401)
+    expect(res.body.code).toBe('UNAUTHORIZED')
+    const setCookie = res.headers['set-cookie'] as unknown as string[] | undefined
+    expect(setCookie?.find((cookie) => cookie.startsWith('loginToken='))).toMatch(/^loginToken=;/)
+  })
+
   // Both layers together: a check mounted without requireAuth fails loudly, even with a valid
   // token. The message pins it to getVerifiedUser, so any other 500 doesn't pass this test
   it('two layers: fails with 500, not 200, when a route reads the verified user without requireAuth', async () => {
