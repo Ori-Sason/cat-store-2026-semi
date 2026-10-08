@@ -200,3 +200,31 @@
   void trackAnalytics(); 
   ```
 * HTML `aria-label` isn't an identifier. It's the text a screen reader speaks, like a visible button label, so it reads "Close". The test has to match it exactly, because string name matching is case-sensitive. This is why we use sentence capitalize.
+* `HydrateFallback`  
+  **`HydrateFallback` is a route component React Router renders on the app's first load, while the first page's loaders are still running.** It exists in data mode (`createBrowserRouter`, what we use) and in Framework mode.
+
+  **Why is it needed?**
+  On every later navigation, React Router keeps the current page on screen until the new page's loaders finish. On the first load there is no current page yet, so it needs something to show. In Framework mode (SSR) that's the server HTML being hydrated. In our SPA it's just the first navigation, and "hydrate" means "the router's initial load".
+  * Without `HydrateFallback`: React Router renders nothing (a blank screen) and logs `No HydrateFallback element provided to render during initial hydration`. It never renders the page with missing `loaderData`.
+  * With `HydrateFallback`: it renders the fallback instead, e.g. a spinner or a skeleton, until the loaders resolve. `() => null` keeps the blank screen and only silences the warning.
+
+  **Our case:** before, the router was created on import, so its loaders started before we knew who's logged in:
+  ```tsx
+  // router.tsx - runs on import, and the first page's loaders start right away
+  export const router = createBrowserRouter(routes)
+
+  // main.tsx
+  import { router } from './router'          // catEditLoader already runs here, the store says "guest"
+  await authService.getLoggedInUser()        // too late
+  ```
+  Bug: a logged-in user who reloads `/cat/:id/edit` gets sent to login. Fix: create the router after `/me`:
+  ```tsx
+  // main.tsx
+  const loggedInUser = await authService.getLoggedInUser()
+  // ...set the store
+  const router = createBrowserRouter(routes) // loaders start now, with the right user
+  ```
+  Side effect: the first render now happens while the loaders are still pending, so React Router warns. So the root route gets an empty fallback (same blank screen as before, no warning):
+  ```tsx
+  { element: <LayoutRoot />, HydrateFallback: () => null, children: [...] }
+  ```
