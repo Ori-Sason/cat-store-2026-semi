@@ -4,6 +4,7 @@ import request from 'supertest'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { LoggedInUser, SignupInput } from '@cat-store/shared'
 import { app } from '../../app.ts'
+import { config } from '../../config/index.ts'
 import { USER_COLLECTION, type UserDoc } from '../../models/user.ts'
 import { mongoService } from '../../services/mongodb.service.ts'
 import { setupTestDb } from '../../test/test-db.helper.ts'
@@ -18,10 +19,32 @@ const SIGNUP: SignupInput = {
 }
 
 const SEVEN_DAYS_S = 7 * 24 * 60 * 60
+const ONE_DAY_S = 24 * 60 * 60
 
+const TOKEN_USER: LoggedInUser = {
+  _id: 'aaaaaaaaaaaaaaaaaaaaaaaa',
+  username: 'admin',
+  fullname: 'Admin User',
+  isAdmin: true,
+}
+
+// The last one wins in the browser, so a clear followed by a set means "logged in"
 function _getLoginTokenCookie(res: request.Response): string | undefined {
   const setCookie = res.headers['set-cookie'] as unknown as string[] | undefined
-  return setCookie?.find((cookie) => cookie.startsWith('loginToken='))
+  return setCookie?.findLast((cookie) => cookie.startsWith('loginToken='))
+}
+
+// exp - iat, the lifetime the token was signed with
+function _getTokenTtlS(res: request.Response): number {
+  const token = _getLoginTokenCookie(res)!.split(';')[0]!.split('=')[1]!
+  const { iat, exp } = jwt.decode(token) as jwt.JwtPayload
+  return exp! - iat!
+}
+
+// jsonwebtoken refuses to sign with "none", so build one by hand
+function _unsignedToken(payload: object): string {
+  const encode = (part: object) => Buffer.from(JSON.stringify(part)).toString('base64url')
+  return `${encode({ alg: 'none', typ: 'JWT' })}.${encode(payload)}.`
 }
 
 async function _getUserDoc(username: string) {
@@ -53,6 +76,8 @@ describe('POST /api/auth/signup', () => {
     expect(cookie).toMatch(/HttpOnly/)
     expect(cookie).toMatch(/SameSite=Strict/)
     expect(cookie).not.toMatch(/Max-Age|Expires/)
+    expect(cookie).toMatch(/Path=\//)
+    expect(_getTokenTtlS(res)).toBe(ONE_DAY_S)
   })
 
   it('sets a 7-day cookie when isRemembered is true', async () => {
@@ -62,6 +87,7 @@ describe('POST /api/auth/signup', () => {
 
     expect(res.status).toBe(201)
     expect(_getLoginTokenCookie(res)).toMatch(new RegExp(`Max-Age=${SEVEN_DAYS_S}`))
+    expect(_getTokenTtlS(res)).toBe(SEVEN_DAYS_S)
   })
 
   it('stores a bcrypt hash, ignores a client-sent isAdmin and does not store isRemembered', async () => {
@@ -126,6 +152,19 @@ describe('POST /api/auth/login', () => {
 
     expect(res.status).toBe(200)
     expect(_getLoginTokenCookie(res)).toMatch(new RegExp(`Max-Age=${SEVEN_DAYS_S}`))
+    expect(_getTokenTtlS(res)).toBe(SEVEN_DAYS_S)
+  })
+
+  it('replaces an expired cookie with a fresh one', async () => {
+    const expired = jwt.sign({ ...TOKEN_USER, exp: 1 }, config.jwtSecret)
+
+    const res = await request(app)
+      .post('/api/auth/login')
+      .set('Cookie', `loginToken=${expired}`)
+      .send({ username: 'user', password: SIGNUP.password })
+
+    expect(res.status).toBe(200)
+    expect(_getLoginTokenCookie(res)).not.toMatch(/^loginToken=;/)
   })
 
   it('returns the same 401 INVALID_CREDENTIALS for a wrong password and an unknown user', async () => {
@@ -152,6 +191,15 @@ describe('POST /api/auth/login', () => {
     expect(res.status).toBe(400)
     expect(res.body.fieldErrors).toHaveProperty('password')
   })
+
+  it('returns 413 PAYLOAD_TOO_LARGE for an oversized body', async () => {
+    const res = await request(app)
+      .post('/api/auth/login')
+      .send({ username: 'user', password: 'a'.repeat(200 * 1024) })
+
+    expect(res.status).toBe(413)
+    expect(res.body.code).toBe('PAYLOAD_TOO_LARGE')
+  })
 })
 
 describe('GET /api/auth/me', () => {
@@ -170,6 +218,7 @@ describe('GET /api/auth/me', () => {
 
     expect(res.status).toBe(200)
     expect(res.body).toEqual(signupRes.body)
+    expect(_getLoginTokenCookie(res)).toBeUndefined() // a valid cookie is left alone
   })
 
   it('returns the fresh isAdmin from the DB, not the one in the token', async () => {
@@ -195,19 +244,17 @@ describe('GET /api/auth/me', () => {
     expect(_getLoginTokenCookie(res)).toMatch(/^loginToken=;/)
   })
 
-  it('returns null for a token signed with another secret', async () => {
-    const forgedUser: LoggedInUser = {
-      _id: 'aaaaaaaaaaaaaaaaaaaaaaaa',
-      username: 'admin',
-      fullname: 'Admin User',
-      isAdmin: true,
-    }
-    const forged = jwt.sign(forgedUser, 'not-the-secret')
-
-    const res = await request(app).get('/api/auth/me').set('Cookie', `loginToken=${forged}`)
+  it.each([
+    ['signed with another secret', () => jwt.sign(TOKEN_USER, 'not-the-secret')],
+    ['expired', () => jwt.sign({ ...TOKEN_USER, exp: 1 }, config.jwtSecret)],
+    ['unsigned (alg: none)', () => _unsignedToken(TOKEN_USER)],
+    ['not a JWT at all', () => 'garbage'],
+  ])('returns null and clears the cookie for a token that is %s', async (_, makeToken) => {
+    const res = await request(app).get('/api/auth/me').set('Cookie', `loginToken=${makeToken()}`)
 
     expect(res.status).toBe(200)
     expect(res.body).toBeNull()
+    expect(_getLoginTokenCookie(res)).toMatch(/^loginToken=;/)
   })
 })
 
@@ -221,5 +268,11 @@ describe('POST /api/auth/logout', () => {
     expect(res.status).toBe(204)
     expect(_getLoginTokenCookie(res)).toMatch(/^loginToken=;/)
     expect((await agent.get('/api/auth/me')).body).toBeNull()
+  })
+
+  it('returns 204 for a guest too', async () => {
+    const res = await request(app).post('/api/auth/logout')
+
+    expect(res.status).toBe(204)
   })
 })
