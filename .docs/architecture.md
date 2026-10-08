@@ -115,6 +115,11 @@ Env: `node --env-file=.env.local`, no dotenv. Prod needs `JWT_SECRET`, Mongo URL
 - **A session cookie still has a token expiry** (1 day).
   Why: "until the browser closes" can mean weeks for a browser that stays open, or one with
   session restore. The JWT `exp` caps it.
+- **Logout doesn't revoke the token.** It only clears the cookie. A copied token keeps
+  working until its `exp` (1 or 7 days).
+  Why: the server keeps no token state, which is the point of a JWT. Revoking would need a
+  denylist checked on every request, which is a session store again. A deleted or demoted
+  user is still caught early, because `/me` and the guards read the user from the DB.
 
 Open questions live in `roadmap.md`. When one is decided, record it here.
 
