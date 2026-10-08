@@ -18,6 +18,6 @@ catRoutes.get('/', getCats)
 catRoutes.get('/stats', getCatLabelStats)
 catRoutes.get('/:id', getCatById)
 catRoutes.post('/', requireAuth, validateBody(catSchema), addCat)
-// requireCatOwner includes requireAuth. It runs before validateBody, so a non-owner gets a 403, not a 400
+// requireCatOwner (which includes requireAuth) runs before validateBody, so a non-owner gets a 403, not a 400
 catRoutes.put('/:id', requireCatOwner, validateBody(catSchema), updateCat)
 catRoutes.delete('/:id', requireCatOwner, removeCat)

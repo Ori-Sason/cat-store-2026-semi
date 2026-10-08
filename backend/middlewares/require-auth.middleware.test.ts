@@ -84,10 +84,13 @@ describe('requireAuth', () => {
     expect(res.body.code).toBe('UNAUTHORIZED')
   })
 
-  // Regression: the check used to pass with the token user alone, unverified against the DB
-  it('fails with 500, not 200, when a route reads the verified user without requireAuth', async () => {
+  // Both layers together: a check mounted without requireAuth fails loudly, even with a valid
+  // token. The message pins it to getVerifiedUser, so any other 500 doesn't pass this test
+  it('two layers: fails with 500, not 200, when a route reads the verified user without requireAuth', async () => {
     const res = await request(app).get('/no-auth').set('Cookie', _loginCookie(USER))
 
     expect(res.status).toBe(500)
+    expect(res.body).toMatchObject({ code: 'INTERNAL' })
+    expect(res.body.message).toContain('missing requireAuth')
   })
 })

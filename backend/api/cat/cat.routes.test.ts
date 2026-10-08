@@ -518,6 +518,39 @@ describe('PUT /api/cats/:id', () => {
     expect(res.body).toMatchObject({ code: 'CAT_NOT_FOUND' })
   })
 
+  // requireCatOwner bundles requireAuth, which re-reads the user from the DB
+  it('returns 401 UNAUTHORIZED for a valid token of a deleted user', async () => {
+    const cat = _buildCat({})
+    const collection = await _insertCat(cat)
+    const users = await mongoService.getCollection<UserDoc>(USER_COLLECTION)
+    await users.deleteOne({ _id: CAT_OWNER._id })
+
+    const res = await request(app)
+      .put(`/api/cats/${cat._id.toHexString()}`)
+      .set('Cookie', _loginCookie(CAT_OWNER))
+      .send(INPUT)
+
+    expect(res.status).toBe(401)
+    expect(res.body).toMatchObject({ code: 'UNAUTHORIZED' })
+    expect(await collection.findOne({ _id: cat._id })).toEqual(cat)
+  })
+
+  // A token signed while the user was an admin, revoked since. The check must trust the DB's
+  // isAdmin (the verified user), not the token's - this fails if it reads the token user
+  it('returns 403 FORBIDDEN for a stale admin token of a user who is no longer admin', async () => {
+    const cat = _buildCat({})
+    const collection = await _insertCat(cat)
+
+    const res = await request(app)
+      .put(`/api/cats/${cat._id.toHexString()}`)
+      .set('Cookie', _loginCookie({ ...NON_CAT_OWNER_USER, isAdmin: true }))
+      .send(INPUT)
+
+    expect(res.status).toBe(403)
+    expect(res.body).toMatchObject({ code: 'FORBIDDEN' })
+    expect(await collection.findOne({ _id: cat._id })).toEqual(cat)
+  })
+
   it('returns 400 VALIDATION_FAILED with fieldErrors and leaves the cat as it was', async () => {
     const cat = _buildCat({ name: 'Mitzi' })
     const collection = await _insertCat(cat)
