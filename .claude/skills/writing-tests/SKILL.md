@@ -51,6 +51,9 @@ How to write tests. When to write them lives in `.claude/rules/testing.md`.
   calls for it.
 - E2E: Playwright starts its own backend (:8001, `catsTest`, re-seeded each run) and Vite
   (:5174), so `npm run dev` can stay up. Specs start from the seed data in
-  `backend/scripts/data/cats.json`. Seed labels are random, so don't assert on them. Don't run
+  `backend/scripts/data/cats.json`. Seed labels and owners are random, so don't assert on them:
+  for owner cases, sign up a fresh user (`e2e/helpers/auth.helper.ts`) and use a cat it adds,
+  and don't edit or delete seed cats, since other specs rely on them. The seeded `admin` logs in
+  with `getSeedUsersPassword()`, which reads only that key from `backend/.env.test`. Don't run
   E2E and the backend Vitest suite at the same time, since both use `catsTest`.
 - Keep output short when running suites, e.g. `npm test -- --reporter=dot`.

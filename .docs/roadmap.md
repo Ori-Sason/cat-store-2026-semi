@@ -6,16 +6,8 @@ The roadmap gives the shape of the project, not a literal script.
 This file covers **what** gets built, **in what order**, and how far along it is.
 Stack, dependencies and the **why** behind decisions live in `architecture.md`.
 
-**Current:** Parts 1 and 2 are done: cat CRUD (API + FE list, details and edit pages), the
-`/dashboard` label charts and the `/about` pickup-point map. `npm run seed -w backend` re-seeds
-the `cats` collection. Part 3 is done except the home page (item 5): Playwright E2E is set up
-(`npm run test:e2e`), the `users` collection exists with a seeded `user` and `admin`, and the
-auth API is in (`/api/auth/*`, JWT in the `loginToken` cookie), with login and signup pages at
-`/login` and `/signup`. The App header section is done: a restyled bar and one header menu (the
-avatar on desktop, a hamburger below `$bp-md` that also holds the pages). Part 4 has started:
-cats have an `ownerId` (the seed gives each cat a random owner, `user` or `admin`), and the
-backend enforces the cat rules (`requireAuth`, `requireCatOwner`), and the FE hides what the
-user can't use. Part 4 resumes with item 4, the E2E coverage of the cat rules.
+**Current:** Parts 1, 2 and 4 and the App header are done. Part 3 is done except the home page
+(item 5), which comes next, before Part 5.
 
 ## Part 1: DB + backend + frontend skeleton (CRUD over cats)
 
@@ -136,7 +128,7 @@ shows buttons that fail with 403. After 3, the UI matches the backend. 4 proves 
    Guests get no "+ Add cat", and Edit / Delete show only to the owner or an admin. A typed
    `/cat/new` or `/cat/:id/edit` URL: a guest goes to login (and back after it), a non-owner
    gets the 403 route error. The rule itself lives in the shared `catPermissionService`.
-- [ ] 4. Close Part 4 with E2E coverage of the cat rules for guest / user / admin, and admin cat
+- [x] 4. Close Part 4 with E2E coverage of the cat rules for guest / user / admin, and admin cat
    CRUD (sign up → log in is already covered by `auth.spec.ts`). Rename `guest-browse.spec.ts`
    to `guest.spec.ts` and add the guest rules to it (no Add / Edit / Delete).
 
