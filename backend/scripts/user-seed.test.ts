@@ -57,6 +57,16 @@ describe('seedUsers', () => {
     expect(await _getUsers()).toEqual(before)
   })
 
+  // Regression: the missing users were inserted before the mismatch check threw
+  it('creates no user when an existing one mismatches', async () => {
+    await seedUsers(PASSWORD)
+    const collection = await mongoService.getCollection<UserDoc>(USER_COLLECTION)
+    await collection.deleteOne({ username: 'user' })
+
+    await expect(seedUsers('Other-pass1')).rejects.toThrow('stored password for: admin')
+    expect(await collection.findOne({ username: 'user' })).toBeNull()
+  })
+
   it('throws on a password the schema rejects, before any insert', async () => {
     await expect(seedUsers('password')).rejects.toThrow()
     expect(await _getUsers()).toEqual([])
