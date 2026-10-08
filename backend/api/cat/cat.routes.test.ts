@@ -144,14 +144,23 @@ describe('GET /api/cats', () => {
     ])
   })
 
+  it('returns only the first N cats in sort order for limit=N', async () => {
+    expect(await _getNames('?limit=2')).toEqual(['Felix', 'garfield'])
+    expect(await _getNames('?sortBy=price&sortDir=asc&limit=2')).toEqual(['bella', 'Max'])
+  })
+
+  it('returns every cat for a limit above the match count', async () => {
+    expect(await _getNames('?isInStock=false&limit=4')).toEqual(['Max'])
+  })
+
   it('ignores invalid params instead of failing', async () => {
-    expect(await _getNames('?isInStock=maybe&labels=Dog&sortBy=ownerId&sortDir=up')).toEqual([
-      'Felix',
-      'garfield',
-      'Max',
-      'bella',
-      'tom',
-    ])
+    expect(
+      await _getNames('?isInStock=maybe&labels=Dog&sortBy=ownerId&sortDir=up&limit=abc'),
+    ).toEqual(['Felix', 'garfield', 'Max', 'bella', 'tom'])
+  })
+
+  it('reads limit=0 as no limit, not as zero cats', async () => {
+    expect(await _getNames('?limit=0')).toHaveLength(CATS.length)
   })
 })
 

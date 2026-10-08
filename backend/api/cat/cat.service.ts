@@ -11,6 +11,7 @@ async function query(filterBy: CatFilter): Promise<CatDoc[]> {
     .find(_buildCriteria(filterBy))
     .sort(utilService.buildSort<CatDoc>(filterBy))
     .collation({ locale: 'en' }) // case-insensitive string sort: "bella" sits next to "Bella"
+    .limit(filterBy.limit ?? 0) // after the sort, so it keeps the first N in sort order. 0 = no limit
     .toArray()
 }
 
