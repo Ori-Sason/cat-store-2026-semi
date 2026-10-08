@@ -8,12 +8,12 @@ Stack, dependencies and the **why** behind decisions live in `architecture.md`.
 
 **Current:** Parts 1 and 2 are done: cat CRUD (API + FE list, details and edit pages), the
 `/dashboard` label charts and the `/about` pickup-point map. `npm run seed -w backend` re-seeds
-the `cats` collection. Part 3 has started: Playwright E2E is set up (`npm run test:e2e`) with a guest
-smoke flow, the `users` collection exists with a seeded `user` and `admin`, and the auth API is in
-(`/api/auth/*`, JWT in the `loginToken` cookie), with login and signup pages at `/login` and
-`/signup`. The App header section is done: a restyled bar and one header menu (the avatar
-on desktop, a hamburger below `$bp-md` that also holds the pages). Part 3 resumes with
-item 5, `ownerId` on cats.
+the `cats` collection. Part 3 is done except the home page (item 5): Playwright E2E is set up
+(`npm run test:e2e`), the `users` collection exists with a seeded `user` and `admin`, and the
+auth API is in (`/api/auth/*`, JWT in the `loginToken` cookie), with login and signup pages at
+`/login` and `/signup`. The App header section is done: a restyled bar and one header menu (the
+avatar on desktop, a hamburger below `$bp-md` that also holds the pages). Part 4 (cat ownership)
+starts with item 1, `ownerId` on cats.
 
 ## Part 1: DB + backend + frontend skeleton (CRUD over cats)
 
@@ -21,7 +21,7 @@ No localStorage and no JSON-file stage. The app runs on a real DB from day one.
 
 - [x] 1. Set up MongoDB with a `cats` collection.
 - [x] 2. Cat shape: `{ _id, name, price, labels: [...], isInStock, imgUrl, createdAt, updatedAt }`.
-   No `ownerId` yet. It's added in Part 3, when users exist.
+   No `ownerId` yet. It's added in Part 4, once users exist.
    `imgUrl` is optional in the form, and the user can leave it empty. If it's empty, it's stored as `''` and the FE shows a default image (`cat-default-bw.png`), also used when an image fails to load. There's no upload. The field is a URL only.
 - [x] 3. Express backend split into service, controller and route layers.
 - [x] 4. Build the routes in Postman order: GET list (with filterBy) → GET by id → DELETE → POST → PUT.
@@ -74,9 +74,9 @@ The order of BE and FE can go either way, as long as the DB comes first.
      It runs on the VM from the CLI. No browser-driving MCP.
    - Specs live in `frontend/e2e/`, excluded from Vitest's `include`.
    - Prove the setup with one guest smoke flow: browse → filter → cat details.
-   - Then add an E2E test with each auth piece as it lands: sign up → log in, the cat rules,
-     admin cat CRUD. Auth is where mocks hide the most (cookies, the proxy, BE guards).
-   - After Part 3, add E2E only when asked, or when a part adds a new end-to-end flow.
+   - Then add an E2E test with each auth piece as it lands: sign up → log in here, the cat rules
+     and admin cat CRUD in Part 4. Auth is where mocks hide the most (cookies, the proxy, BE guards).
+   - After Part 4, add E2E only when asked, or when a part adds a new end-to-end flow.
 - [x] 2. `users` collection: `{ _id, fullname, username, password, isAdmin, createdAt, updatedAt }`, with a seeded
    `user` and `admin` (password from `SEED_USERS_PASSWORD`), created if missing.
    `password` is a bcrypt hash, never the plain text. `username` is lowercased and unique.
@@ -88,23 +88,7 @@ The order of BE and FE can go either way, as long as the DB comes first.
    Login: username + password. Signup: full name, username, password and confirm password
    (client-side check only, not sent). "Remember me" on both. The header shows Login, or the
    user's name + Logout. The login and signup pages themselves have no header.
-- [ ] 5. Add `ownerId` to cats:
-   - New cats get `ownerId` = the logged-in user's `_id`, set by the server.
-   - `ownerId` is not in `catSchema`, so the client can't send or change it.
-   - Existing cats need an owner, e.g. backfill them to the seeded admin.
-- [ ] 6. Rules for cats:
-
-   | Action          | Guest | Logged-in user  | Admin |
-   |-----------------|-------|-----------------|-------|
-   | Read            | ✅    | ✅              | ✅    |
-   | Add             | ❌    | ✅              | ✅    |
-   | Edit / delete   | ❌    | Own cats only   | ✅    |
-
-- [ ] 7. Backend middleware enforces these rules. The FE hides buttons and pages the user can't use.
-- [ ] 8. Close Part 3 with E2E coverage of every auth flow: sign up → log in, the cat rules for
-   guest / user / admin, admin cat CRUD. Rename `guest-browse.spec.ts` to `guest.spec.ts` and add
-   the guest rules to it (no Add / Edit / Delete).
-- [ ] 9. Home page at `/`, replacing today's `/` → `/cat` redirect. Logout already navigates to `/`,
+- [ ] 5. Home page at `/`, replacing today's `/` → `/cat` redirect. Logout already navigates to `/`,
    so it lands here once it exists. It links to the cats list and to login / signup. Content TBD.
 
 ## App header
@@ -118,13 +102,40 @@ independent of the rest of Part 3.
 - [x] 2. Header menu, desktop: a round avatar button with the user's initial opens the header
    menu, a card with the greeting, full name + username, Profile and Logout. Guests keep the
    Login button and get no menu. Profile stays hidden until the `user-details` page exists
-   (Part 4 item 5). It's one menu for every screen size, so item 3 extends it instead of
+   (Part 5 item 6). It's one menu for every screen size, so item 3 extends it instead of
    adding a second one.
 - [x] 3. Header menu, mobile: below `$bp-md`, a hamburger opens the same header menu in place
    of the avatar, as a full-width drop-down under the header, and the menu adds the pages.
    Guests get the hamburger too (pages + Login), or they can't reach the pages.
 
-## Part 4: Reviews + user page
+## Part 4: Cat ownership
+
+One release batch. The items are built and committed one at a time, but only shippable together.
+After 1, edit / delete are still open to anyone. After 2, the backend is secure, but the UI still
+shows buttons that fail with 403. After 3, the UI matches the backend. 4 proves it end to end.
+
+- [ ] 1. Add `ownerId` to cats:
+   - New cats get `ownerId` = the logged-in user's `_id`, set by the server. Adding a cat
+     needs a login (`requireAuth`, 401 for a guest), or the cat would have no owner.
+   - `ownerId` is not in `catSchema`, so the client can't send or change it.
+   - The seed gives each cat a random owner among the seed users, about half `user` and half
+     `admin`. So there's an admin who owns cats (and can edit every cat), a user who owns
+     cats (and can edit only those), and a guest who can only read.
+- [ ] 2. Rules for cats, enforced by backend middleware: `requireAuth` (401) on edit / delete too,
+   and `requireCatOwner` (403, admins pass) on edit / delete.
+
+   | Action          | Guest | Logged-in user  | Admin |
+   |-----------------|-------|-----------------|-------|
+   | Read            | ✅    | ✅              | ✅    |
+   | Add             | ❌    | ✅              | ✅    |
+   | Edit / delete   | ❌    | Own cats only   | ✅    |
+
+- [ ] 3. The FE hides buttons and pages the user can't use (the cat rules above).
+- [ ] 4. Close Part 4 with E2E coverage of the cat rules for guest / user / admin, and admin cat
+   CRUD (sign up → log in is already covered by `auth.spec.ts`). Rename `guest-browse.spec.ts`
+   to `guest.spec.ts` and add the guest rules to it (no Add / Edit / Delete).
+
+## Part 5: Reviews + user page
 
 - [ ] 1. `reviews` collection: `{ _id, userId, catId, content, createdAt, updatedAt }`.
 - [ ] 2. An aggregation (`$lookup`) that joins review + cat + user into one shape.
@@ -137,12 +148,14 @@ independent of the rest of Part 3.
    | Add             | ❌    | ✅                | ✅    |
    | Edit / delete   | ❌    | Own reviews only  | ✅    |
 
-- [ ] 5. `user-details` page with two sub-pages: the user's cats and the user's reviews.
+- [ ] 5. Show each cat's owner (full name) on `cat-details`, linking to their `user-details` page.
+   Likely through a `$lookup` on `users`, like item 2.
+- [ ] 6. `user-details` page with two sub-pages: the user's cats and the user's reviews.
    Anyone can open any user's profile. For example, user1 can see the cats and reviews user2 created.
    Show the Profile item in the header menu, linking to the logged-in user's page.
-- [ ] 6. Reviews show up in exactly two places: per cat on `cat-details`, and per user on the user's reviews sub-page. There's no system-wide reviews page.
+- [ ] 7. Reviews show up in exactly two places: per cat on `cat-details`, and per user on the user's reviews sub-page. There's no system-wide reviews page.
 
-## Part 5: Deploy + realtime
+## Part 6: Deploy + realtime
 
 - [ ] 1. Deploy to Render, with MongoDB Atlas as the prod DB. Express serves the built FE from `backend/public`.
    **Open:** the Render build/start steps aren't configured yet.
@@ -159,7 +172,7 @@ No image upload.
 
 ### Prod checklist
 
-Before the first real deploy. This turns into a `deploy` skill once Part 5 starts.
+Before the first real deploy. This turns into a `deploy` skill once Part 6 starts.
 
 - `JWT_SECRET` set on the host, different from the local one (`openssl rand -base64 32`). Without it the server refuses to start.
 - Mongo connection env vars point at the prod DB (e.g. Atlas).
@@ -172,7 +185,7 @@ Before the first real deploy. This turns into a `deploy` skill once Part 5 start
 
 - [ ] Pagination on the cat list.
 - [ ] CI: GitHub Actions runs lint, typecheck and tests on every push and PR, with a `mongo`
-   service container for the backend tests. Most useful before the Part 5 deploy.
+   service container for the backend tests. Most useful before the Part 6 deploy.
 
 ## Open questions
 

@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test'
 
 // Guest smoke flow: browse → filter → details → back, over the seed data in
 // backend/scripts/data/cats.json. Seed labels are random, so the filter uses name and stock only.
-// TODO(Part 3, roadmap item 8): rename to guest.spec.ts and add the guest rules
+// TODO(Part 4, roadmap item 4): rename to guest.spec.ts and add the guest rules
 // (no Add / Edit / Delete) once auth lands.
 test('guest browses, filters and opens a cat', async ({ page }) => {
   await page.goto('/')

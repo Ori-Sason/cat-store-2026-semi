@@ -36,7 +36,7 @@ Main libraries only. Exact versions and `@types/*` live in each `package.json`.
 - auth: jsonwebtoken, bcrypt, cookie-parser. Installed already, used from Part 3.
 - testing: Vitest everywhere, React Testing Library + jsdom (FE), Supertest (BE), Playwright (E2E).
 - tooling: oxlint, oxfmt.
-- planned: socket.io + socket.io-client (Part 5).
+- planned: socket.io + socket.io-client (Part 6).
 
 External services: MongoDB (local in dev, Atlas in prod), Render (hosting).
 Env: `node --env-file=.env.local`, no dotenv. Prod needs `JWT_SECRET`, Mongo URL,
@@ -68,7 +68,7 @@ Env: `node --env-file=.env.local`, no dotenv. Prod needs `JWT_SECRET`, Mongo URL
     Node → Node, with no browser in that hop, so there's no CORS check.
   - In prod, Express serves the FE and `/api` from one origin, so the proxy is dev-only.
   - Same-origin cookies (auth from Part 3) need no `cors({ credentials })` / `withCredentials`.
-  - Socket.io (Part 5) needs its own proxy entry: `'/socket.io'` with `ws: true`. Its
+  - Socket.io (Part 6) needs its own proxy entry: `'/socket.io'` with `ws: true`. Its
     default request path is `/socket.io/`, so `ws: true` on `/api` wouldn't catch it.
   - CORS would only be needed for split hosting: FE on one domain, API on another.
 
