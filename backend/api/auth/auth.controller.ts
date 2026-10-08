@@ -26,7 +26,7 @@ export function logout(_req: Request, res: Response) {
 
 // 200 with null for a guest
 export async function getMe(_req: Request, res: Response) {
-  const tokenUser = alsService.getStore().loggedInUser
+  const tokenUser = alsService.getStore().tokenUser
   const loggedInUser = tokenUser && (await authService.getLoggedInUserById(tokenUser._id))
   // A valid token for a user that's gone - drop the cookie so later requests are plain guests
   if (tokenUser && !loggedInUser) res.clearCookie(LOGIN_TOKEN_COOKIE, LOGIN_TOKEN_COOKIE_OPTIONS)

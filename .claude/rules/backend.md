@@ -10,6 +10,8 @@ paths:
   not in `shared/`.
 - `_id`, `createdAt`, `updatedAt` and `ownerId` are server-set. Never take them from the
   request body.
+- Permission checks and controllers read the user via `alsService.getVerifiedUser()`, never
+  the ALS `tokenUser` (token-only, can be stale).
 - Expected failures throw `HttpError(status, code, message)`. The error middleware turns
   every error into an `ApiErrorBody`. Don't `res.status().json()` an error by hand.
 - Zod failure → `400 VALIDATION_FAILED` with `fieldErrors`. No 422.

@@ -22,10 +22,10 @@ export async function getCatById(req: Request<{ id: string }>, res: Response) {
   res.json(cat)
 }
 
-// req.body is already parsed by validateBody(catSchema). requireAuth set loggedInUser
+// req.body is already parsed by validateBody(catSchema)
 export async function addCat(req: Request<object, unknown, CatInput>, res: Response) {
-  const loggedInUser = alsService.getStore().loggedInUser!
-  const cat = await catService.add(req.body, loggedInUser._id)
+  const verifiedUserId = alsService.getVerifiedUser()._id
+  const cat = await catService.add(req.body, verifiedUserId)
   res.status(201).json(cat) // 201 Created
 }
 

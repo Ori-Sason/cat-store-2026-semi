@@ -27,7 +27,8 @@ function _createApp() {
   })
   app.get(
     '/with-request-id',
-    (req, res, next) => alsService.run({ requestId: REQUEST_ID, loggedInUser: null }, next),
+    (req, res, next) =>
+      alsService.run({ requestId: REQUEST_ID, tokenUser: null, verifiedUser: null }, next),
     () => {
       throw new HttpError(404, 'CAT_NOT_FOUND', 'Cat not found')
     },

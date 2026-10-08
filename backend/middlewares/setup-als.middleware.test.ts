@@ -24,7 +24,11 @@ describe('setupAsyncLocalStorage', () => {
     const res = await request(app).get('/store')
 
     expect(res.headers['x-request-id']).toBeTypeOf('string')
-    expect(res.body).toEqual({ requestId: res.headers['x-request-id'], loggedInUser: null })
+    expect(res.body).toEqual({
+      requestId: res.headers['x-request-id'],
+      tokenUser: null,
+      verifiedUser: null,
+    })
   })
 
   it('ignores a client-sent X-Request-Id', async () => {

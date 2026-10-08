@@ -3,7 +3,7 @@ import cookieParser from 'cookie-parser'
 import path from 'node:path'
 
 import { setupAsyncLocalStorage } from './middlewares/setup-als.middleware.ts'
-import { attachLoggedInUser } from './middlewares/attach-logged-in-user.middleware.ts'
+import { attachTokenUser } from './middlewares/attach-token-user.middleware.ts'
 
 import { HttpError } from './models/http-error.ts'
 import { errorHandler } from './middlewares/error.middleware.ts'
@@ -25,7 +25,7 @@ if (process.env.NODE_ENV === 'production') {
 
 app.use(express.json())
 app.use(cookieParser())
-app.use(attachLoggedInUser)
+app.use(attachTokenUser)
 
 /* ROUTES */
 app.use('/api/auth', authRoutes)

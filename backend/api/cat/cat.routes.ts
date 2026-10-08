@@ -17,7 +17,7 @@ export const catRoutes = Router()
 catRoutes.get('/', getCats)
 catRoutes.get('/stats', getCatLabelStats)
 catRoutes.get('/:id', getCatById)
-// The ownership check runs before validateBody, so a non-owner gets a 403, not a 400
 catRoutes.post('/', requireAuth, validateBody(catSchema), addCat)
-catRoutes.put('/:id', requireAuth, requireCatOwner, validateBody(catSchema), updateCat)
-catRoutes.delete('/:id', requireAuth, requireCatOwner, removeCat)
+// requireCatOwner includes requireAuth. It runs before validateBody, so a non-owner gets a 403, not a 400
+catRoutes.put('/:id', requireCatOwner, validateBody(catSchema), updateCat)
+catRoutes.delete('/:id', requireCatOwner, removeCat)

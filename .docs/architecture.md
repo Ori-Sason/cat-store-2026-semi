@@ -22,8 +22,10 @@ prod: browser ──▶ Express (static FE + /api + socket.io) ──▶ MongoDB
 - JWT in an httpOnly cookie (`loginToken`): `sameSite: 'strict'`, `secure` in production.
   "Remember me" (`isRemembered`) → cookie and token last 7 days. Without it → a session cookie
   (no `maxAge`) and a 1-day token.
-- `attachLoggedInUser` reads the token into the ALS store on every request, without the DB and
-  without blocking. `GET /api/auth/me` re-reads the user from the DB.
+- `attachTokenUser` reads the token into the ALS store (`tokenUser`) on every request, without
+  the DB and without blocking. `GET /api/auth/me` re-reads the user from the DB.
+- `requireAuth` re-reads the user from the DB and sets `verifiedUser`, the only user permission
+  checks trust (via `alsService.getVerifiedUser()`). A `require*` that needs a user bundles it.
 - Backend middleware enforces guest / owner / admin rules on cats and reviews. The FE only hides UI.
 - `ownerId` / `userId` are set by the server, never accepted from the client.
 

@@ -181,7 +181,7 @@ Before the first real deploy. This turns into a `deploy` skill once Part 6 start
 - `NODE_ENV=production`, so the auth cookie gets `secure` and 500 errors don't leak internals.
 - Node version pinned (root `engines` or `.nvmrc`), since running `.ts` directly needs a recent Node.
 - Consider rate-limiting login (`express-rate-limit`).
-- Consider a logger that reads `requestId` / `loggedInUser` from the per-request context.
+- Consider a logger that reads `requestId` / `tokenUser` from the per-request context.
 
 ## Extras (optional)
 

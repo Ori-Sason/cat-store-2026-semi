@@ -70,9 +70,20 @@
 ### Auth
 - `loggedInUser` / `LoggedInUser`
 	- Canonical meaning: the session identity. `_id`, `username`, `fullname`,
-	  `isAdmin` only. It's the JWT payload and the ALS store field.
+	  `isAdmin` only. It's the JWT payload and the type of both ALS user fields
+	  (`tokenUser`, `verifiedUser`).
 	- Avoid: `currentUser`, `authUser`, `sessionUser`, `me`. (`me` only
 	  appears in the route `GET /api/auth/me`.)
+- token user (`tokenUser`)
+	- Canonical meaning: the `LoggedInUser` decoded from the `loginToken`, with no DB read.
+	  `attachTokenUser` puts it in the ALS store on every request. It can be up to 7 days stale
+	  (`isAdmin` revoked, user deleted), so it's for logs and `/me`'s lookup only.
+	- Avoid: using it in a permission check.
+- verified user (`verifiedUser`)
+	- Canonical meaning: the `LoggedInUser` re-read from the DB. Only `requireAuth` sets it.
+	  Permission checks and controllers read it through `alsService.getVerifiedUser()`,
+	  which throws (500) when `requireAuth` didn't run.
+	- Avoid: `freshUser`, `dbUser`.
 - `loginToken`
 	- Canonical meaning: the signed JWT, and the name of the cookie that holds it.
 	- Avoid: `token`, `jwt`, `accessToken`, `session`.
@@ -89,8 +100,10 @@
 	- Avoid: `signin`, `register`, `signout`.
 - `require*` vs `attach*` middleware
 	- Canonical meaning: `require*` (`requireAuth`, `requireCatOwner`, `requireAdmin`) throws on
-	  failure. `attach*` (`attachLoggedInUser`) only decorates the request and
+	  failure. `attach*` (`attachTokenUser`) only decorates the request and
 	  never blocks.
+	- Rule: a `require*` that needs a user bundles `requireAuth` in front of its check
+	  (`requireCatOwner = [requireAuth, _checkCatOwner]`), so it's mounted alone.
 
 ### Errors + request context
 - `HttpError`
