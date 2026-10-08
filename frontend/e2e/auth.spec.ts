@@ -28,7 +28,14 @@ test('sign up, log out and log in again, with and without remember me', async ({
   await expect(page).toHaveURL(/\/cat$/)
   await expect(page.getByRole('button', { name: 'Menu', exact: true })).toHaveText('E')
   // No remember me → a session cookie (Playwright reports it as expires -1)
-  expect((await _getLoginTokenCookie(context))?.expires).toBe(-1)
+  const sessionCookie = await _getLoginTokenCookie(context)
+  expect(sessionCookie?.expires).toBe(-1)
+  // The flags from LOGIN_TOKEN_COOKIE_OPTIONS. `secure` is skipped: it's on only in production
+  expect(sessionCookie).toMatchObject({ httpOnly: true, sameSite: 'Strict', path: '/' })
+
+  // A session cookie survives a reload too: main.tsx re-reads the user from /api/auth/me
+  await page.reload()
+  await expect(page.getByRole('button', { name: 'Menu', exact: true })).toHaveText('E')
 
   // Logout goes to / , which redirects to /cat until the home page exists
   await page.getByRole('button', { name: 'Menu', exact: true }).click()
