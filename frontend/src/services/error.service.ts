@@ -4,6 +4,7 @@ const GENERIC_MSG = 'Something went wrong. Please try again.'
 
 const ERROR_MSG_MAP: Record<ClientErrorCode, string> = {
   VALIDATION_FAILED: 'Some details are invalid.',
+  PAYLOAD_TOO_LARGE: 'That is too much data to send.',
   ROUTE_NOT_FOUND: GENERIC_MSG, // FE called an endpoint that doesn't exist - a bug, not the user's fault
 
   CAT_NOT_FOUND: "Cat doesn't exist (anymore).",

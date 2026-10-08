@@ -2,6 +2,7 @@
 // Add a code only when some route can actually return it.
 export const ERROR_CODES = [
   'VALIDATION_FAILED',
+  'PAYLOAD_TOO_LARGE',
   'ROUTE_NOT_FOUND',
 
   'CAT_NOT_FOUND',

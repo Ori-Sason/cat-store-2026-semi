@@ -79,6 +79,15 @@ describe('errorHandler', () => {
     expect(res.body).toEqual({ code: 'VALIDATION_FAILED', message: 'Malformed JSON body' })
   })
 
+  it('returns 413 PAYLOAD_TOO_LARGE for a body over the express.json() limit', async () => {
+    const res = await request(app)
+      .post('/echo')
+      .send({ name: 'a'.repeat(200 * 1024) })
+
+    expect(res.status).toBe(413)
+    expect(res.body).toEqual({ code: 'PAYLOAD_TOO_LARGE', message: 'Request body too large' })
+  })
+
   it('returns 500 INTERNAL with the error message outside production', async () => {
     const res = await request(app).get('/crash')
 

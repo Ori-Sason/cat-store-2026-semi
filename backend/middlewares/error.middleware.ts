@@ -39,6 +39,11 @@ const _toErrorResponse = (err: any): { status: number; body: ApiErrorBody } => {
     return { status: 400, body: { code: 'VALIDATION_FAILED', message: 'Malformed JSON body' } }
   }
 
+  // express.json() rejected a body over its limit (100kb by default). A client error, not a 500
+  if (err?.type === 'entity.too.large') {
+    return { status: 413, body: { code: 'PAYLOAD_TOO_LARGE', message: 'Request body too large' } }
+  }
+
   // Anything else is a bug or an infra failure - don't leak internals in production
   const message =
     process.env.NODE_ENV === 'production' ? 'Internal server error' : (err?.message ?? String(err))
