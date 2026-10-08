@@ -1,7 +1,7 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { RouterProvider } from 'react-router'
-import { router } from './router'
+import { createBrowserRouter, RouterProvider } from 'react-router'
+import { routes } from './router'
 import { authService } from './services/auth.service'
 import { useLoggedInUserStore } from './store/logged-in-user.store'
 import './assets/scss/main.scss'
@@ -14,6 +14,10 @@ try {
 } catch {
   // Server down or unreachable - start as a guest; the pages show their own errors
 }
+
+// Created only now: createBrowserRouter runs the first page's loaders immediately, so creating
+// it at import time made a reload of /cat/:id/edit send a logged-in user to login
+const router = createBrowserRouter(routes)
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

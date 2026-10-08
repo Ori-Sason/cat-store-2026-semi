@@ -1,4 +1,4 @@
-import { createBrowserRouter, data, redirect } from 'react-router'
+import { data, redirect, type RouteObject } from 'react-router'
 import { LayoutApp } from './cmps/layout/layout-app'
 import { LayoutRoot } from './cmps/layout/layout-root'
 import { RouteError } from './cmps/common/util/route-error'
@@ -15,9 +15,12 @@ import { catEditLoader } from './pages/cat-edit/cat-edit.loader'
 import { LoginSignup } from './pages/login-signup/login-signup'
 import { loginSignupAction } from './pages/login-signup/login-signup.action'
 
-export const router = createBrowserRouter([
+// Just the routes. main.tsx creates the router after loading the logged-in user, since
+// createBrowserRouter runs the first page's loaders right away, and the cat-edit loader reads the user
+export const routes: RouteObject[] = [
   {
     element: <LayoutRoot />,
+    HydrateFallback: () => null,
     children: [
       // pages without app-header
       {
@@ -96,4 +99,4 @@ export const router = createBrowserRouter([
       },
     ],
   },
-])
+]
