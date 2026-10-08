@@ -12,9 +12,9 @@ argument-hint: '[since-last | today | YYYY-MM-DD | YYYY-MM-DD..YYYY-MM-DD]'
 An open, candid review of how the user worked in recent sessions. Scope: `$ARGUMENTS`
 (empty means `since-last`: everything after the last record the previous review covered).
 
-Runs in a forked subagent. Only the final report returns to the main session. Meant
-to be run in a fresh session: the invoking session is excluded from the digest as a
-whole.
+Runs in a forked subagent. The report lives in the file. Only a link to it returns to
+the main session, which then discusses it with the user. Meant to be run in a fresh
+session: the invoking session is excluded from the digest as a whole.
 
 ## 1. Gather
 - Build the digest:
@@ -74,4 +74,11 @@ End with:
 - Second line: `Last reviewed: <ISO> (session <id>)`, copied verbatim from the digest's
   `Last record:` line. Never work out the time yourself. The next `since-last` run starts
   after it. If the digest has no `Last record:`, omit the line.
-- Return the full report as your final message.
+- Don't return the report. The user reads it in the file. Your final message is only:
+  ```
+  Review saved: [<file name>](.handoffs/reviews/<file name>)
+
+  Read the file before discussing it. Ready to go through any section or Next item.
+  ```
+  The last line is for the main session: it only sees this message, so it reads the
+  file before answering questions about the review.
