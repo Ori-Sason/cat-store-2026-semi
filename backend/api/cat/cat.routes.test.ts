@@ -258,19 +258,50 @@ describe('DELETE /api/cats/:id', () => {
     vi.restoreAllMocks()
   })
 
-  it('deletes the cat and returns 204', async () => {
+  it.each([
+    ['the owner', CAT_OWNER],
+    ['an admin, on a cat they do not own', ADMIN],
+  ])('lets %s delete the cat, with 204', async (_, user) => {
     const cat = _buildCat({ name: 'Mitzi' })
     const collection = await _insertCat(cat)
 
-    const res = await request(app).delete(`/api/cats/${cat._id.toHexString()}`)
+    const res = await request(app)
+      .delete(`/api/cats/${cat._id.toHexString()}`)
+      .set('Cookie', _loginCookie(user))
 
     expect(res.status).toBe(204)
     expect(res.body).toEqual({})
     expect(await collection.findOne({ _id: cat._id })).toBeNull()
   })
 
+  it('returns 401 UNAUTHORIZED for a guest and keeps the cat', async () => {
+    const cat = _buildCat({})
+    const collection = await _insertCat(cat)
+
+    const res = await request(app).delete(`/api/cats/${cat._id.toHexString()}`)
+
+    expect(res.status).toBe(401)
+    expect(res.body).toMatchObject({ code: 'UNAUTHORIZED' })
+    expect(await collection.findOne({ _id: cat._id })).toEqual(cat)
+  })
+
+  it("returns 403 FORBIDDEN for a user who doesn't own the cat, and keeps it", async () => {
+    const cat = _buildCat({})
+    const collection = await _insertCat(cat)
+
+    const res = await request(app)
+      .delete(`/api/cats/${cat._id.toHexString()}`)
+      .set('Cookie', _loginCookie(NON_CAT_OWNER_USER))
+
+    expect(res.status).toBe(403)
+    expect(res.body).toMatchObject({ code: 'FORBIDDEN' })
+    expect(await collection.findOne({ _id: cat._id })).toEqual(cat)
+  })
+
   it('returns 404 CAT_NOT_FOUND for an id that does not exist', async () => {
-    const res = await request(app).delete(`/api/cats/${new ObjectId().toHexString()}`)
+    const res = await request(app)
+      .delete(`/api/cats/${new ObjectId().toHexString()}`)
+      .set('Cookie', _loginCookie(ADMIN))
 
     expect(res.status).toBe(404)
     expect(res.body).toMatchObject({ code: 'CAT_NOT_FOUND' })
@@ -409,11 +440,17 @@ describe('PUT /api/cats/:id', () => {
     vi.restoreAllMocks()
   })
 
-  it('updates the cat, keeps createdAt and ownerId, and bumps updatedAt', async () => {
+  it.each([
+    ['the owner', CAT_OWNER],
+    ['an admin, on a cat they do not own', ADMIN],
+  ])('lets %s update the cat, keeping createdAt and bumping updatedAt', async (_, user) => {
     const cat = _buildCat({ name: 'Mitzi', createdAt: 1_000, updatedAt: 1_000 })
     const collection = await _insertCat(cat)
 
-    const res = await request(app).put(`/api/cats/${cat._id.toHexString()}`).send(INPUT)
+    const res = await request(app)
+      .put(`/api/cats/${cat._id.toHexString()}`)
+      .set('Cookie', _loginCookie(user))
+      .send(INPUT)
 
     expect(res.status).toBe(200)
     const expected = { ...cat, ...INPUT, updatedAt: NOW }
@@ -445,8 +482,37 @@ describe('PUT /api/cats/:id', () => {
     })
   })
 
+  it('returns 401 UNAUTHORIZED for a guest and leaves the cat as it was', async () => {
+    const cat = _buildCat({})
+    const collection = await _insertCat(cat)
+
+    const res = await request(app).put(`/api/cats/${cat._id.toHexString()}`).send(INPUT)
+
+    expect(res.status).toBe(401)
+    expect(res.body).toMatchObject({ code: 'UNAUTHORIZED' })
+    expect(await collection.findOne({ _id: cat._id })).toEqual(cat)
+  })
+
+  // The ownership check runs before validation, so even an invalid body gets the 403
+  it("returns 403 FORBIDDEN for a user who doesn't own the cat, before validating the body", async () => {
+    const cat = _buildCat({})
+    const collection = await _insertCat(cat)
+
+    const res = await request(app)
+      .put(`/api/cats/${cat._id.toHexString()}`)
+      .set('Cookie', _loginCookie(NON_CAT_OWNER_USER))
+      .send({ ...INPUT, labels: ['Dog'] })
+
+    expect(res.status).toBe(403)
+    expect(res.body).toMatchObject({ code: 'FORBIDDEN' })
+    expect(await collection.findOne({ _id: cat._id })).toEqual(cat)
+  })
+
   it('returns 404 CAT_NOT_FOUND for an id that does not exist', async () => {
-    const res = await request(app).put(`/api/cats/${new ObjectId().toHexString()}`).send(INPUT)
+    const res = await request(app)
+      .put(`/api/cats/${new ObjectId().toHexString()}`)
+      .set('Cookie', _loginCookie(ADMIN))
+      .send(INPUT)
 
     expect(res.status).toBe(404)
     expect(res.body).toMatchObject({ code: 'CAT_NOT_FOUND' })

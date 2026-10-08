@@ -88,7 +88,7 @@
 	  `login` / `signup` / `logout` are the actions.
 	- Avoid: `signin`, `register`, `signout`.
 - `require*` vs `attach*` middleware
-	- Canonical meaning: `require*` (`requireAuth`, `requireAdmin`) throws on
+	- Canonical meaning: `require*` (`requireAuth`, `requireCatOwner`, `requireAdmin`) throws on
 	  failure. `attach*` (`attachLoggedInUser`) only decorates the request and
 	  never blocks.
 

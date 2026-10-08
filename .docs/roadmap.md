@@ -13,8 +13,9 @@ the `cats` collection. Part 3 is done except the home page (item 5): Playwright 
 auth API is in (`/api/auth/*`, JWT in the `loginToken` cookie), with login and signup pages at
 `/login` and `/signup`. The App header section is done: a restyled bar and one header menu (the
 avatar on desktop, a hamburger below `$bp-md` that also holds the pages). Part 4 has started:
-cats have an `ownerId` (the seed gives each cat a random owner, `user` or `admin`), and adding a
-cat needs a login (`requireAuth`). Part 4 resumes with item 2, the backend cat rules.
+cats have an `ownerId` (the seed gives each cat a random owner, `user` or `admin`), and the
+backend enforces the cat rules (`requireAuth`, `requireCatOwner`). Part 4 resumes with item 3,
+hiding what the user can't use in the FE.
 
 ## Part 1: DB + backend + frontend skeleton (CRUD over cats)
 
@@ -122,7 +123,7 @@ shows buttons that fail with 403. After 3, the UI matches the backend. 4 proves 
    - The seed gives each cat a random owner among the seed users, about half `user` and half
      `admin`. So there's an admin who owns cats (and can edit every cat), a user who owns
      cats (and can edit only those), and a guest who can only read.
-- [ ] 2. Rules for cats, enforced by backend middleware: `requireAuth` (401) on edit / delete too,
+- [x] 2. Rules for cats, enforced by backend middleware: `requireAuth` (401) on edit / delete too,
    and `requireCatOwner` (403, admins pass) on edit / delete.
 
    | Action          | Guest | Logged-in user  | Admin |
