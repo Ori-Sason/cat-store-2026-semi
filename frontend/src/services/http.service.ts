@@ -4,6 +4,7 @@ import { ApiError } from '../models/api-error'
 import { useLoggedInUserStore } from '../store/logged-in-user.store'
 
 const BASE_URL = '/api'
+const SECRET_FIELDS = new Set(['password', 'confirmPassword'])
 
 const axios = Axios.create({
   withCredentials: true, // relevant on cross-origin (irrelevant for this project since we use Vite's proxy)
@@ -34,15 +35,10 @@ const _ajax = async <T>(endpoint: string, method = 'GET', data: unknown = null):
     })
     return res.data
   } catch (err) {
-    console.log(
-      `Had Issues ${method}ing to the backend, endpoint: ${endpoint}, with data:`,
-      _describeData(data),
-    )
-    console.dir(err)
-    if (Axios.isAxiosError(err) && err.response?.status === 401) {
-      useLoggedInUserStore.getState().clearLoggedInUser()
-    }
-    throw _toApiError(err)
+    const apiError = _toApiError(err)
+    _logError(method, endpoint, data, apiError)
+    if (apiError.code === 'UNAUTHORIZED') useLoggedInUserStore.getState().clearLoggedInUser()
+    throw apiError
   }
 }
 
@@ -71,8 +67,28 @@ const _isApiErrorBody = (data: unknown): data is ApiErrorBody => {
   )
 }
 
+const _logError = (method: string, endpoint: string, data: unknown, apiError: ApiError) => {
+  const { status, code, message, requestId } = apiError
+  const msg = `Had Issues ${method}ing to the backend, endpoint: ${endpoint}`
+
+  if (import.meta.env.DEV) {
+    console.log(msg, { status, code, message, requestId, data: _describeData(data) })
+  } else {
+    console.log(msg, { status, code, message, requestId })
+  }
+}
+
 const _describeData = (data: unknown) => {
-  if (data instanceof URLSearchParams) return data.toString()
-  if (data instanceof FormData) return [...data.entries()]
+  if (data instanceof URLSearchParams || data instanceof FormData) {
+    return [...data.entries()].map(_maskEntry)
+  }
+  if (typeof data === 'object' && data !== null && !Array.isArray(data)) {
+    return Object.fromEntries(Object.entries(data).map(_maskEntry))
+  }
   return data
 }
+
+const _maskEntry = ([key, value]: [string, unknown]) => [
+  key,
+  SECRET_FIELDS.has(key) ? '***' : value,
+]

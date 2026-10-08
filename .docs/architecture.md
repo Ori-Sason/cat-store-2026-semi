@@ -108,8 +108,7 @@ Env: `node --env-file=.env.local`, no dotenv. Prod needs `JWT_SECRET`, Mongo URL
   majors, and its tests run real map code in jsdom.
 
 - **`GET /api/auth/me` returns `200 null` for a guest**, not 401.
-  Why: the FE calls it on every app load, and a guest isn't an error. A 401 would also trip the
-  FE's "session expired" handling for someone who never logged in.
+  Why: the FE calls it on every app load, and a guest isn't an error.
 - **Login failures look the same.** An unknown username and a wrong password both get
   `401 INVALID_CREDENTIALS`, and an unknown username still runs `bcrypt.compare` against a dummy hash.
   Why: otherwise the message or the response time tells an attacker which usernames exist.

@@ -15,6 +15,18 @@ vi.mock('axios', async (importOriginal) => {
   }
 })
 
+const LOGIN_BODY = { username: 'ori', password: 'Secret-pass1' }
+const INVALID_CREDENTIALS_RESPONSE = {
+  status: 401,
+  data: { code: 'INVALID_CREDENTIALS', message: 'Invalid credentials', requestId: 'req-1' },
+}
+
+function _setLoggedInUser() {
+  useLoggedInUserStore
+    .getState()
+    .setLoggedInUser({ _id: 'user-1', username: 'ori', fullname: 'Ori Sason', isAdmin: false })
+}
+
 function _axiosError(response?: { status: number; data: unknown }) {
   return new AxiosError(
     'Request failed',
@@ -30,7 +42,7 @@ describe('httpService', () => {
     mockRequest.mockReset()
     // the service logs every failed call - keep test output clean
     vi.spyOn(console, 'log').mockImplementation(() => {})
-    vi.spyOn(console, 'dir').mockImplementation(() => {})
+    vi.unstubAllEnvs()
   })
 
   it('returns the response data', async () => {
@@ -107,15 +119,53 @@ describe('httpService', () => {
     await expect(promise).rejects.toMatchObject({ status: 0, code: 'UNKNOWN' })
   })
 
-  it('logs the user out on a 401', async () => {
-    useLoggedInUserStore
-      .getState()
-      .setLoggedInUser({ _id: 'user-1', username: 'ori', fullname: 'Ori Sason', isAdmin: false })
+  it('logs the user out on a 401 UNAUTHORIZED', async () => {
+    _setLoggedInUser()
     mockRequest.mockRejectedValue(
       _axiosError({ status: 401, data: { code: 'UNAUTHORIZED', message: 'Not logged in' } }),
     )
 
     await expect(httpService.post('cats', {})).rejects.toMatchObject({ status: 401 })
     expect(useLoggedInUserStore.getState().loggedInUser).toBeNull()
+  })
+
+  it('keeps the user logged in on a 401 INVALID_CREDENTIALS', async () => {
+    _setLoggedInUser()
+    mockRequest.mockRejectedValue(_axiosError(INVALID_CREDENTIALS_RESPONSE))
+
+    await expect(httpService.post('auth/login', LOGIN_BODY)).rejects.toMatchObject({
+      code: 'INVALID_CREDENTIALS',
+    })
+    expect(useLoggedInUserStore.getState().loggedInUser).not.toBeNull()
+  })
+
+  it('masks secret fields when logging a failed call in dev', async () => {
+    mockRequest.mockRejectedValue(_axiosError(INVALID_CREDENTIALS_RESPONSE))
+
+    await expect(httpService.post('auth/login', LOGIN_BODY)).rejects.toThrow()
+
+    const logged = JSON.stringify(vi.mocked(console.log).mock.calls)
+    expect(logged).not.toContain(LOGIN_BODY.password)
+    expect(console.log).toHaveBeenCalledWith(expect.stringContaining('auth/login'), {
+      status: 401,
+      code: 'INVALID_CREDENTIALS',
+      message: 'Invalid credentials',
+      requestId: 'req-1',
+      data: { username: 'ori', password: '***' },
+    })
+  })
+
+  it('logs no request body in prod', async () => {
+    vi.stubEnv('DEV', false)
+    mockRequest.mockRejectedValue(_axiosError(INVALID_CREDENTIALS_RESPONSE))
+
+    await expect(httpService.post('auth/login', LOGIN_BODY)).rejects.toThrow()
+
+    expect(console.log).toHaveBeenCalledWith(expect.stringContaining('auth/login'), {
+      status: 401,
+      code: 'INVALID_CREDENTIALS',
+      message: 'Invalid credentials',
+      requestId: 'req-1',
+    })
   })
 })
