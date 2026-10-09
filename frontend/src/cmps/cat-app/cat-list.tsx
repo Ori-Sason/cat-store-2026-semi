@@ -1,6 +1,6 @@
 import type React from 'react'
 import type { Cat } from '@cat-store/shared'
-import { CatPreview } from './cat-preview'
+import { CatPreview } from '../common/cat/cat-preview'
 
 interface CatListProps {
   cats: Cat[]

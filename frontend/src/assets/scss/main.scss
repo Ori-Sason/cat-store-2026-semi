@@ -18,13 +18,13 @@
 @use './cmps/about/pickup-point-list';
 @use './cmps/about/pickup-point-map';
 @use './cmps/cat-app/cat-filter-bar';
-@use './cmps/cat-app/cat-labels';
 @use './cmps/cat-app/cat-list';
-@use './cmps/cat-app/cat-preview';
 @use './cmps/cat-dashboard/label-price-chart';
 @use './cmps/cat-dashboard/label-stock-chart';
 @use './cmps/cat-edit/cat-edit-form';
 @use './cmps/common/cat/cat-img';
+@use './cmps/common/cat/cat-labels';
+@use './cmps/common/cat/cat-preview';
 @use './cmps/common/cat/label-chip';
 @use './cmps/common/cat/label-toggles';
 @use './cmps/common/util/confirm-modal';
