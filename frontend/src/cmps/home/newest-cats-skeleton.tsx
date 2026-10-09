@@ -1,6 +1,5 @@
 import type React from 'react'
-
-const _CARD_COUNT = 4 // matches the home loader's limit
+import { NEWEST_CATS_LIMIT } from '../../models/home'
 
 // Uses the .cat-list grid, so the cards land in the same spots as the real ones
 export const NewestCatsSkeleton: React.FC = () => {
@@ -10,7 +9,7 @@ export const NewestCatsSkeleton: React.FC = () => {
       aria-busy="true"
       aria-label="Loading cats"
     >
-      {Array.from({ length: _CARD_COUNT }, (_, idx) => (
+      {Array.from({ length: NEWEST_CATS_LIMIT }, (_, idx) => (
         <li key={idx} className="card">
           <span className="skel img" />
           <span className="skel line" />

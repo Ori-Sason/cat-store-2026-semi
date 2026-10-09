@@ -1,7 +1,6 @@
 import { DEFAULT_CAT_FILTER } from '@cat-store/shared'
+import { NEWEST_CATS_LIMIT } from '../../models/home'
 import { catService } from '../../services/cat.service'
-
-const NEWEST_CATS_LIMIT = 4
 
 // Not async on purpose: the promises go out un-awaited, so navigation and the hero don't wait
 // on the API. The page resolves each one in its own <Await>, so a failed call breaks only its
