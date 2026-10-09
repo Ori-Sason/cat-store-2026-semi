@@ -2,6 +2,7 @@ import type React from 'react'
 import { Link } from 'react-router'
 import { CAT_LABELS, catFilterService, DEFAULT_CAT_FILTER, type CatLabel } from '@cat-store/shared'
 import catImg from '../../assets/img/cat-default-color.png'
+import { HOME_LOGIN_URL, HOME_SIGNUP_URL } from '../../models/home'
 import { LabelChip } from '../common/cat/label-chip'
 
 interface HomeHeroProps {
@@ -33,14 +34,14 @@ export const HomeHero: React.FC<HomeHeroProps> = ({ firstName }) => {
               + Add a cat
             </Link>
           ) : (
-            <Link to="/login" className="sub-btn">
+            <Link to={HOME_LOGIN_URL} className="sub-btn">
               Log in
             </Link>
           )}
         </div>
         {!firstName && (
           <p className="fine">
-            New here? <Link to="/signup">Create an account</Link> to list your own cat.
+            New here? <Link to={HOME_SIGNUP_URL}>Create an account</Link> to list your own cat.
           </p>
         )}
       </div>

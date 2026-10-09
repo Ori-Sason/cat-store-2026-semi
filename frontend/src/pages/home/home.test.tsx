@@ -73,10 +73,17 @@ describe('Home', () => {
 
     expect(screen.getByText('Browse · Meet · Pick up')).toBeInTheDocument()
     expect(_getLink('Browse cats →')).toHaveAttribute('href', '/cat')
-    expect(screen.getAllByRole('link', { name: 'Log in' })).toHaveLength(2) // hero + CTA card
+    // Login and signup come back to home, like the header's Login does
+    const loginLinks = screen.getAllByRole('link', { name: 'Log in' })
+    expect(loginLinks).toHaveLength(2) // hero + CTA card
+    for (const link of loginLinks) expect(link).toHaveAttribute('href', '/login?redirectTo=%2F')
     expect(screen.getByRole('link', { name: 'Create an account' })).toHaveAttribute(
       'href',
-      '/signup',
+      '/signup?redirectTo=%2F',
+    )
+    expect(screen.getByRole('link', { name: 'Sign up' })).toHaveAttribute(
+      'href',
+      '/signup?redirectTo=%2F',
     )
     expect(screen.getByRole('heading', { name: 'Got a cat to list?' })).toBeInTheDocument()
     expect(screen.queryByRole('link', { name: '+ Add a cat' })).not.toBeInTheDocument()
