@@ -12,7 +12,7 @@ const _STEPS: HowItWorksStep[] = [
   {
     title: 'Browse',
     txt: 'Filter by label, stock and name. Sort by price or by newest.',
-    link: { to: '/cat', txt: 'Browse cats →' },
+    link: { to: '/cat', txt: 'Browse cats' },
   },
   {
     title: 'Meet',
@@ -22,7 +22,7 @@ const _STEPS: HowItWorksStep[] = [
   {
     title: 'Pick up',
     txt: 'Arrange the handover with the owner and meet at one of our pickup points.',
-    link: { to: '/about', txt: 'See pickup points →' },
+    link: { to: '/about', txt: 'See pickup points' },
   },
 ]
 
@@ -40,7 +40,11 @@ export const HowItWorks: React.FC = () => {
               {title} {isSoon && <span className="soon">Soon</span>}
             </h3>
             <p>{txt}</p>
-            {link && <Link to={link.to}>{link.txt}</Link>}
+            {link && (
+              <Link to={link.to}>
+                {link.txt} <span aria-hidden="true">→</span>
+              </Link>
+            )}
           </li>
         ))}
       </ol>

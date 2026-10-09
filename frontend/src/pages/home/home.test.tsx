@@ -52,9 +52,10 @@ function _getSection(name: string) {
   return screen.getByRole('heading', { name }).closest('section')!
 }
 
-// "Browse cats →" is in the hero and in How it works - the hero's is the first
-function _getLink(name: string) {
-  return screen.getAllByRole('link', { name })[0]!
+// "Browse cats" is in the hero and in How it works, so look inside the hero
+function _getHeroLink(name: string) {
+  const hero = screen.getByRole('heading', { level: 1 }).closest('section')!
+  return within(hero).getByRole('link', { name })
 }
 
 describe('Home', () => {
@@ -72,7 +73,7 @@ describe('Home', () => {
     await _render()
 
     expect(screen.getByText('Browse · Meet · Pick up')).toBeInTheDocument()
-    expect(_getLink('Browse cats →')).toHaveAttribute('href', '/cat')
+    expect(_getHeroLink('Browse cats')).toHaveAttribute('href', '/cat')
     // Login and signup come back to home, like the header's Login does
     const loginLinks = screen.getAllByRole('link', { name: 'Log in' })
     expect(loginLinks).toHaveLength(2) // hero + CTA card
@@ -94,7 +95,7 @@ describe('Home', () => {
     await _render()
 
     expect(screen.getByText('Welcome back, Ori')).toBeInTheDocument()
-    expect(_getLink('Browse cats →')).toHaveAttribute('href', '/cat')
+    expect(_getHeroLink('Browse cats')).toHaveAttribute('href', '/cat')
     const addLinks = screen.getAllByRole('link', { name: '+ Add a cat' })
     expect(addLinks).toHaveLength(2) // hero + CTA card
     for (const link of addLinks) expect(link).toHaveAttribute('href', '/cat/new')
@@ -115,6 +116,18 @@ describe('Home', () => {
     expect(
       screen.getAllByRole('listitem').filter((li) => li.querySelector('.label-chip')),
     ).toHaveLength(10)
+  })
+
+  // The arrows are decoration, so screen readers hear only the link text
+  it('links the How it works steps, with the arrows hidden from screen readers', async () => {
+    await _render()
+
+    const steps = screen.getByRole('heading', { name: 'How it works' }).closest('section')!
+    expect(within(steps).getByRole('link', { name: 'Browse cats' })).toHaveAttribute('href', '/cat')
+    expect(within(steps).getByRole('link', { name: 'See pickup points' })).toHaveAttribute(
+      'href',
+      '/about',
+    )
   })
 
   it('tags the Meet step as Soon, with no link', async () => {
