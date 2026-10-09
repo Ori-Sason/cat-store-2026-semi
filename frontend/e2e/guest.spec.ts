@@ -8,7 +8,7 @@ test('guest browses, filters and opens a cat', async ({ page }) => {
   await expect(page.getByRole('heading', { level: 1 })).toContainText('Meet your next cat')
   // The lazy sections load through the real API: limit=4 on the cats, label stats for the bars
   await expect(page.locator('.newest-cats .cat-preview')).toHaveCount(4)
-  await expect(page.locator('.label-price-teaser .bar-row')).toHaveCount(5)
+  await expect(page.locator('.label-price-teaser .bars .bar-row')).toHaveCount(5)
   await page.locator('.home-hero').getByRole('link', { name: 'Browse cats' }).click()
   await expect(page).toHaveURL(/\/cat$/)
 
