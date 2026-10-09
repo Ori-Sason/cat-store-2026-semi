@@ -56,10 +56,12 @@
 
 - `CatFilter` / `filterBy` / `catFilterService`
 	- Canonical meaning: `CatFilter` is the type for how the cat list is filtered and
-	  sorted (`txt`, `isInStock`, `labels`, `sortBy`, `sortDir`). `filterBy` is a variable
+	  sorted (`txt`, `isInStock`, `labels`, `sortBy`, `sortDir`, `limit`). `filterBy` is a variable
 	  that holds one. `catFilterService.paramsToFilter` parses the query string into it,
 	  on both the FE and the BE.
 	- Rule: several `labels` match with `$all`, so a cat must have every selected label.
+	- Rule: `limit` keeps the first N cats after the sort. `null` means every match, and a bad
+	  or `0` value parses to `null`, like the other params (no 400).
 	- Avoid: `criteria` (that's the Mongo query built from it), `query`, `searchParams` (for the parsed value).
 
 - `CatLabelStats` / label stats
