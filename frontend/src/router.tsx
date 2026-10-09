@@ -10,9 +10,10 @@ import { CatDetails } from './pages/cat-details/cat-details'
 import { catDetailsAction } from './pages/cat-details/cat-details.action'
 import { catDetailsLoader } from './pages/cat-details/cat-details.loader'
 import { CatEdit } from './pages/cat-edit/cat-edit'
-import { Home } from './pages/home/home'
 import { catEditAction } from './pages/cat-edit/cat-edit.action'
 import { catEditLoader } from './pages/cat-edit/cat-edit.loader'
+import { Home } from './pages/home/home'
+import { homeLoader } from './pages/home/home.loader'
 import { LoginSignup } from './pages/login-signup/login-signup'
 import { loginSignupAction } from './pages/login-signup/login-signup.action'
 
@@ -51,6 +52,7 @@ export const routes: RouteObject[] = [
               // pages with app-header
               {
                 path: '/',
+                loader: homeLoader,
                 element: <Home />,
               },
               {

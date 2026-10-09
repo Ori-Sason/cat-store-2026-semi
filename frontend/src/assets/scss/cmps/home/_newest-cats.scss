@@ -1,0 +1,39 @@
+@use 'setup' as *;
+
+.newest-cats {
+  display: grid;
+  gap: $space-4;
+  padding-block: 40px;
+  // A full-width band while the section stays inside main-layout. 100vw would add a
+  // horizontal scrollbar on desktop, and a border-image outset doesn't create scrollable overflow
+  border-image: linear-gradient($primary-clr-100 0 0) fill 0 / /0 100vw;
+
+  .head {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: $space-2;
+
+    h2 {
+      font-size: 1.35rem;
+      color: $primary-clr-900;
+    }
+
+    a {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: $primary-clr-600;
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+  }
+
+  .empty {
+    padding: $space-5 $space-4;
+    text-align: center;
+    color: $primary-clr-850;
+  }
+}

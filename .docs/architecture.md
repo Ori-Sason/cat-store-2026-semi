@@ -59,6 +59,8 @@ Env: `node --env-file=.env.local`, no dotenv. Prod needs `JWT_SECRET`, Mongo URL
 - **FE server data goes through react-router loaders and actions.** Zustand holds only client
   state, with no cat store.
   Why: the router already holds and revalidates the data, and a store copy would go stale.
+  Data a page can render without (e.g. the home page's newest cats) is returned un-awaited and
+  resolved in its own `<Suspense>` + `<Await>`, so it doesn't block the page or break the route.
 - **Server-set timestamps:** every doc (cats, users, reviews) has `createdAt`/`updatedAt`, set
   by the server with `Date.now()`. `updatedAt` changes on every update. Client-sent values are
   stripped by Zod.

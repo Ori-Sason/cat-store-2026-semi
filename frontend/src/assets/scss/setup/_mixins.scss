@@ -69,3 +69,56 @@
     }
   }
 }
+
+// Loading placeholder: a light band sweeping across. Still under reduced motion.
+// The keyframes bubble up to the root, so including this in a few places is fine
+@mixin skeleton-shimmer {
+  border-radius: $radius-md;
+  background: linear-gradient(
+    90deg,
+    $primary-clr-200 0%,
+    $primary-clr-100 50%,
+    $primary-clr-200 100%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.2s linear infinite;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+
+  @keyframes skeleton-shimmer {
+    from {
+      background-position: 100% 0;
+    }
+
+    to {
+      background-position: -100% 0;
+    }
+  }
+}
+
+// The home page's median price bars: label | track | value. Shared by the teaser and its
+// skeleton, so the rows sit in the same spots while the data loads.
+// One grid for all rows (subgrid), so the label column fits the longest label
+@mixin price-bar-rows {
+  display: grid;
+  grid-template-columns: max-content 1fr 56px;
+  gap: 10px;
+  font-size: 0.82rem;
+  line-height: 1.4;
+
+  .bar-row {
+    display: grid;
+    grid-column: 1 / -1;
+    grid-template-columns: subgrid;
+    align-items: center;
+    // A skeleton row has no text. This keeps it as tall as a real one
+    min-height: 1.4em;
+  }
+
+  .track {
+    height: 12px;
+    border-radius: $radius-pill;
+  }
+}

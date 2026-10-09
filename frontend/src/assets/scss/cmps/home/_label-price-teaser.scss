@@ -1,0 +1,67 @@
+@use 'setup' as *;
+
+.label-price-teaser {
+  display: grid;
+  align-content: start;
+  gap: $space-4;
+  padding: $space-5;
+  border-radius: $radius-lg;
+  background-color: $clr-white;
+  box-shadow: $shadow-sm;
+
+  .head {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: $space-2;
+
+    h2 {
+      font-size: 1.05rem;
+      color: $primary-clr-900;
+    }
+
+    a {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: $primary-clr-600;
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+  }
+
+  .bars {
+    @include price-bar-rows;
+  }
+
+  .name {
+    font-weight: 700;
+    color: $primary-clr-900;
+  }
+
+  .track {
+    overflow: hidden;
+    background-color: $primary-clr-100;
+  }
+
+  // Width and color come from TSX: % of the top median, the label's fg
+  .fill {
+    display: block;
+    height: 100%;
+    border-radius: $radius-pill;
+    opacity: 0.8;
+  }
+
+  .val {
+    text-align: end;
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+    color: $primary-clr-900;
+  }
+
+  .empty {
+    color: $primary-clr-850;
+  }
+}

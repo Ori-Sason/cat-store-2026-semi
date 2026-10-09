@@ -1,0 +1,18 @@
+@use 'setup' as *;
+
+// The row geometry comes from price-bar-rows, the same as the real bars.
+// Only the shimmer and the placeholder widths live here
+.label-price-teaser-skeleton {
+  @include price-bar-rows;
+
+  .skel {
+    @include skeleton-shimmer;
+    height: 12px;
+    border-radius: $radius-pill;
+  }
+
+  // The label column is max-content, so this width sets it. About a mid-length label
+  .name {
+    width: 88px;
+  }
+}

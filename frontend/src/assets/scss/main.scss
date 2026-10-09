@@ -33,7 +33,12 @@
 @use './cmps/common/util/user-message';
 @use './cmps/home/home-cta';
 @use './cmps/home/home-hero';
+@use './cmps/home/home-section-error';
 @use './cmps/home/how-it-works';
+@use './cmps/home/label-price-teaser';
+@use './cmps/home/label-price-teaser-skeleton';
+@use './cmps/home/newest-cats';
+@use './cmps/home/newest-cats-skeleton';
 @use './cmps/layout/app-header';
 @use './cmps/layout/header-menu';
 @use './cmps/layout/user-avatar';

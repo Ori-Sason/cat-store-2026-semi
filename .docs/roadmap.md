@@ -6,8 +6,7 @@ The roadmap gives the shape of the project, not a literal script.
 This file covers **what** gets built, **in what order**, and how far along it is.
 Stack, dependencies and the **why** behind decisions live in `architecture.md`.
 
-**Current:** Parts 1, 2 and 4 and the App header are done. Part 3 is done except the home page
-(item 5), which comes next, before Part 5.
+**Current:** Parts 1–4 and the App header are done. Part 5 is next.
 
 ## Part 1: DB + backend + frontend skeleton (CRUD over cats)
 
@@ -82,8 +81,10 @@ The order of BE and FE can go either way, as long as the DB comes first.
    Login: username + password. Signup: full name, username, password and confirm password
    (client-side check only, not sent). "Remember me" on both. The header shows Login, or the
    user's name + Logout. The login and signup pages themselves have no header.
-- [ ] 5. Home page at `/`, replacing today's `/` → `/cat` redirect. Logout already navigates to `/`,
-   so it lands here once it exists. It links to the cats list and to login / signup. Content TBD.
+- [x] 5. Home page at `/`, under `app-header`, replacing the `/` → `/cat` redirect. Logout lands
+   here. Sections: a static hero (CTAs by guest / logged in, label chips linking to the filtered
+   list), the newest 4 cats, "How it works", a median-price-by-label teaser, and a CTA card.
+   The newest cats and the teaser load lazily, each with a skeleton and its own error.
 
 ## App header
 

@@ -1,0 +1,29 @@
+@use 'setup' as *;
+
+// The grid comes from .cat-list. Only the cards are drawn here
+.newest-cats-skeleton {
+  .card {
+    display: grid;
+    gap: 10px;
+    padding: $space-2;
+    border-radius: $radius-lg;
+    background-color: $clr-white;
+    box-shadow: $shadow-sm;
+  }
+
+  .skel {
+    @include skeleton-shimmer;
+  }
+
+  .img {
+    aspect-ratio: 6 / 5;
+  }
+
+  .line {
+    height: 12px;
+
+    &.short {
+      width: 55%;
+    }
+  }
+}
