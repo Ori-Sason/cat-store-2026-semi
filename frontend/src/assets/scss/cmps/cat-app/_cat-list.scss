@@ -6,8 +6,8 @@
   gap: $space-3;
 
   @include from($bp-md) {
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: $space-4;
+    grid-template-columns: repeat(auto-fill, minmax($cat-list-col-min, 1fr));
+    gap: $cat-list-gap;
   }
 
   &.empty {

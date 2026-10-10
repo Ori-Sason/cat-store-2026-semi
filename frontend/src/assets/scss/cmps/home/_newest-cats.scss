@@ -1,5 +1,10 @@
 @use 'setup' as *;
 
+// The list width at which .cat-list's auto-fill grid fits $cols columns
+@function _cols-width($cols) {
+  @return $cols * $cat-list-col-min + ($cols - 1) * $cat-list-gap;
+}
+
 .newest-cats {
   display: grid;
   gap: $space-4;
@@ -27,6 +32,34 @@
 
       &:hover {
         text-decoration: underline;
+      }
+    }
+  }
+
+  // The loader fetches NEWEST_CATS_LIMIT (6, the most columns main-layout fits), and this
+  // hides the cards that would leave a row part-empty: 2 cols → 4, 3 → 6, 4 → 4, 5 → 5, 6 → 6.
+  // Covers the skeleton too, since it's a .cat-list in this section.
+  // display: none, not clipping, so the hidden cards leave the tab order and a11y tree
+  .cat-list {
+    // The query measures the list itself, so the thresholds are pure grid math, no page padding
+    container-type: inline-size;
+
+    // Below $bp-md, .cat-list is a fixed 2 columns
+    @media (width < $bp-md) {
+      > li:nth-child(n + 5) {
+        display: none;
+      }
+    }
+
+    @container (#{_cols-width(4)} <= width < #{_cols-width(5)}) {
+      > li:nth-child(n + 5) {
+        display: none;
+      }
+    }
+
+    @container (#{_cols-width(5)} <= width < #{_cols-width(6)}) {
+      > li:nth-child(n + 6) {
+        display: none;
       }
     }
   }

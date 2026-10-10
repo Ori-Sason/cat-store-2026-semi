@@ -56,12 +56,12 @@ describe('homeLoader', () => {
     }
   })
 
-  it('asks for the 4 newest cats on the default filter', () => {
+  it('asks for the 6 newest cats on the default filter', () => {
     vi.mocked(catService.query).mockReturnValue(new Promise(() => {}))
     vi.mocked(catService.getLabelStats).mockReturnValue(new Promise(() => {}))
 
     homeLoader()
 
-    expect(catService.query).toHaveBeenCalledWith({ ...DEFAULT_CAT_FILTER, limit: 4 })
+    expect(catService.query).toHaveBeenCalledWith({ ...DEFAULT_CAT_FILTER, limit: 6 })
   })
 })

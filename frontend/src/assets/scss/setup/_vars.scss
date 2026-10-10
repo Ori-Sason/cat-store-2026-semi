@@ -37,6 +37,11 @@ $radius-pill: 999px; // fully round ends at any height
 $shadow-sm: 0 1px 3px rgba($primary-clr-900, 0.08);
 $shadow-md: 0 8px 20px rgba($primary-clr-900, 0.14);
 
+/* CAT LIST - the auto-fill grid from $bp-md. The home page's newest cats derives its
+   column thresholds from these, so change them here, not in the partials */
+$cat-list-col-min: 180px;
+$cat-list-gap: $space-4;
+
 /* BREAKPOINTS - mobile-first, used with the `from` mixin */
 $bp-md: 700px;
 $bp-lg: 1024px;
