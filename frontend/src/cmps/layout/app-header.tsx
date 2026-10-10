@@ -81,7 +81,7 @@ export const AppHeader: React.FC = () => {
           </nav>
           <span className="divider" aria-hidden="true" />
           {!loggedInUser && (
-            <Link to={loginTo} className="login-btn">
+            <Link to={loginTo} className="main-btn login-btn">
               Login
             </Link>
           )}

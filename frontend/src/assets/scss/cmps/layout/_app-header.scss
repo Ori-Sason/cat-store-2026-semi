@@ -90,17 +90,11 @@
   }
 
   .login-btn {
-    padding: 5px 14px;
+    padding: 6px 15px;
     font-size: 0.85rem;
     font-weight: 600;
     color: $clr-white;
-    border: 1px solid $primary-clr-500;
-    border-radius: $radius-sm;
-    background-color: $primary-clr-500;
-
-    &:hover {
-      background-color: $primary-clr-600;
-    }
+    box-shadow: none;
 
     @include from($bp-md) {
       display: block;
