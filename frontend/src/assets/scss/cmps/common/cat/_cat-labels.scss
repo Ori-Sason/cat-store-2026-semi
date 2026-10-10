@@ -19,10 +19,9 @@
     visibility: hidden;
   }
 
+  // Same size as a .label-chip, so it lines up with the chips beside it
   .more {
-    padding: 3px 10px;
-    border-radius: 999px;
-    font-size: 0.75rem;
+    @include pill;
     font-weight: 700;
     color: $primary-clr-850;
     background-color: $primary-clr-100;

@@ -4,11 +4,8 @@
 .label-chip {
   display: inline-flex;
   align-items: center;
-  padding: 3px 10px;
-  border-radius: 999px;
-  font-size: 0.75rem;
+  @include pill;
   font-weight: 700;
-  white-space: nowrap;
   color: var(--label-fg);
   background-color: var(--label-bg);
 }

@@ -162,8 +162,7 @@
     }
 
     .label-chip {
-      padding: 6px 14px;
-      font-size: 0.85rem;
+      @include pill(lg);
       transition:
         transform 0.15s,
         box-shadow 0.15s;
