@@ -1,6 +1,6 @@
 import type React from 'react'
 import { CAT_LABELS, type CatLabel } from '@cat-store/shared'
-import { LABEL_COLORS } from '../../../models/label'
+import { utilService } from '../../../services/util.service'
 
 interface LabelTogglesProps {
   labels: CatLabel[]
@@ -18,21 +18,18 @@ export const LabelToggles: React.FC<LabelTogglesProps> = ({ labels, onChange, ..
 
   return (
     <div className="label-toggles" role="group" {...ariaProps}>
-      {CAT_LABELS.map((label) => {
-        const { bg, fg } = LABEL_COLORS[label]
-        return (
-          <button
-            key={label}
-            type="button"
-            className="label-toggle"
-            style={{ '--label-bg': bg, '--label-fg': fg } as React.CSSProperties}
-            aria-pressed={labels.includes(label)}
-            onClick={() => onToggle(label)}
-          >
-            {label}
-          </button>
-        )
-      })}
+      {CAT_LABELS.map((label) => (
+        <button
+          key={label}
+          type="button"
+          className="label-toggle"
+          style={utilService.getLabelStyle(label)}
+          aria-pressed={labels.includes(label)}
+          onClick={() => onToggle(label)}
+        >
+          {label}
+        </button>
+      ))}
     </div>
   )
 }

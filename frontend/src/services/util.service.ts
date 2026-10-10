@@ -1,5 +1,8 @@
+import type { CSSProperties } from 'react'
 import { data } from 'react-router'
+import type { CatLabel } from '@cat-store/shared'
 import { ApiError } from '../models/api-error'
+import { LABEL_COLORS } from '../models/label'
 import { useUserMsgStore } from '../store/user-msg.store'
 import { errorService } from './error.service'
 
@@ -29,6 +32,12 @@ function getFitCount(itemWidths: number[], rowWidth: number, gap: number, moreWi
     if (usedWidth + reservedWidth > rowWidth) return i
   }
   return itemWidths.length
+}
+
+// A label's colors as the --label-bg / --label-fg custom properties its pill SCSS reads
+function getLabelStyle(label: CatLabel) {
+  const { bg, fg } = LABEL_COLORS[label]
+  return { '--label-bg': bg, '--label-fg': fg } as CSSProperties
 }
 
 // The first word of a full name, for short greetings: 'Ori Sason' → 'Ori'
@@ -68,6 +77,7 @@ export const utilService = {
   formatPrice,
   formatDate,
   getFitCount,
+  getLabelStyle,
   getFirstName,
   getFirstLetter,
   toActionError,
