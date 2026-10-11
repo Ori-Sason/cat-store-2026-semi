@@ -6,7 +6,7 @@ The roadmap gives the shape of the project, not a literal script.
 This file covers **what** gets built, **in what order**, and how far along it is.
 Stack, dependencies and the **why** behind decisions live in `architecture.md`.
 
-**Current:** Parts 1–4 and the App header are done. Part 5 is next.
+**Current:** Parts 1–4 and the App header are done. Part 5 is in progress (5A: reviews).
 
 ## Part 1: DB + backend + frontend skeleton (CRUD over cats)
 
@@ -135,7 +135,7 @@ shows buttons that fail with 403. After 3, the UI matches the backend. 4 proves 
 
 ## Part 5: Reviews + user page
 
-- [ ] 1. `reviews` collection: `{ _id, userId, catId, content, createdAt, updatedAt }`.
+- [x] 1. `reviews` collection: `{ _id, userId, catId, content, createdAt, updatedAt }`.
 - [ ] 2. An aggregation (`$lookup`) that joins review + cat + user into one shape.
 - [ ] 3. On `cat-details`: a list of that cat's reviews plus a form to add one.
 - [ ] 4. Rules for reviews:

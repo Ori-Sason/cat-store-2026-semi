@@ -1,10 +1,9 @@
 import { ObjectId, type Sort } from 'mongodb'
-import type { SortByDirection } from '@cat-store/shared'
+import { sharedUtilService, type SortByDirection } from '@cat-store/shared'
 
-// null for a malformed id, so the caller answers 404 instead of new ObjectId() throwing a 500.
-// Didn't use ObjectId.isValid: it also accepts any 12-character string, e.g. "twelve chars"
+// null for a malformed id, so the caller answers 404 instead of new ObjectId() throwing a 500
 function toObjectId(id: string): ObjectId | null {
-  return /^[0-9a-f]{24}$/i.test(id) ? new ObjectId(id) : null
+  return sharedUtilService.getObjectIdRegex().test(id) ? new ObjectId(id) : null
 }
 
 function escapeRegex(str: string): string {

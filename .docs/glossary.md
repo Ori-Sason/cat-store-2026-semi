@@ -20,6 +20,11 @@
 	- Rule: `catPermissionService` (`shared/`) holds the cat rules. The FE hides what fails
 	  them. The BE checks edit / delete through it (`requireCatOwner`), and add with `requireAuth`.
 	- Avoid: `seller`, `creator`, `createdBy`, `userId` (on a cat).
+- review (`reviews`, `Review`, `reviewService`)
+	- Canonical meaning: one user's written text about one cat. Its author is `userId`
+	  (server-set from the verified user, never from the body) and its cat is `catId`.
+	- Rule: a review stays on its cat. An edit changes `content` only.
+	- Avoid: `comment`, `feedback`, `rating` (there's no score), `author` as a field name.
 - label (`labels`, `CatLabel`, `CAT_LABELS`)
 	- Canonical meaning: one of a fixed set of descriptors attached to a cat.
 	  A cat can have several. Used for filtering cats and for dashboard stats.
@@ -47,6 +52,14 @@
 	  inferred from `userSchema`. `UserDoc` is the backend-only DB shape, with `password` as the bcrypt hash.
 	- Rule: `isAdmin` is never client-set. `userSchema` leaves it out, so Zod strips it.
 	- Avoid: `UserDto`, `NewUser`, `Credentials` (for the signup body).
+
+- `Review` vs `ReviewInput` vs `ReviewContentInput` vs `ReviewDoc`
+	- Canonical meaning: `Review` is a stored review as the API returns it (with `_id`,
+	  `userId` and the timestamps). `ReviewInput` is what adding one sends (`catId`, `content`),
+	  inferred from `reviewSchema`. `ReviewContentInput` is what editing one sends (`content`
+	  only), inferred from `reviewContentSchema`. `ReviewDoc` is the backend-only DB shape,
+	  with `userId` / `catId` as `ObjectId`.
+	- Avoid: `ReviewDto`, `NewReview`, `ReviewUpdate`.
 
 - `SignupInput` / `LoginInput`
 	- Canonical meaning: the request bodies of `POST /api/auth/signup` and `/login`.

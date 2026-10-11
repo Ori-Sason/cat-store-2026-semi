@@ -1,6 +1,7 @@
 import type { Db, Document, Collection, IndexSpecification, CreateIndexesOptions } from 'mongodb'
 import { MongoClient } from 'mongodb'
 import { config } from '../config/index.ts'
+import { REVIEW_COLLECTION } from '../models/review.ts'
 import { USER_COLLECTION } from '../models/user.ts'
 
 interface IndexDef {
@@ -12,6 +13,10 @@ interface IndexDef {
 const INDEXES: IndexDef[] = [
   // userSchema lowercases usernames, so a plain unique index is enough for case-insensitive uniqueness
   { collection: USER_COLLECTION, key: { username: 1 }, options: { unique: true } },
+  // A cat's / a user's reviews, newest first. The compound key serves the sort from the index
+  // (a plain { catId: 1 } would sort in memory), and its prefix serves deleteMany({ catId })
+  { collection: REVIEW_COLLECTION, key: { catId: 1, createdAt: -1 } },
+  { collection: REVIEW_COLLECTION, key: { userId: 1, createdAt: -1 } },
 ]
 
 let client: MongoClient | null = null
