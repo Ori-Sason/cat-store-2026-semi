@@ -75,3 +75,29 @@
         expect.objectContaining({ url: '/api/cats', params: { name: 'Mitzi' } }),
       )
       ```
+
+* Faking the clock with `vi.useFakeTimers` — [review.routes.test.ts](/backend/api/review/review.routes.test.ts)
+  * **Why:** the server sets `createdAt` / `updatedAt` from `new Date()`. A real clock gives a different value on every run, so the test can't assert an exact date. Freezing the clock makes it predictable:
+    ```ts
+    const NOW = new Date('2026-01-01T00:00:00Z')
+
+    vi.useFakeTimers({ toFake: ['Date'] })
+    vi.setSystemTime(NOW)
+
+    new Date()   // → 2026-01-01T00:00:00Z, every time
+    Date.now()   // → same moment
+    ```
+    Now the test can check `expect(res.body.createdAt).toBe(NOW.toISOString())`.
+  * `useFakeTimers` swaps the clock. `setSystemTime(NOW)` picks the frozen moment. The clock doesn't tick on its own after that.
+  * **Why fake only `Date`:** by default it also fakes `setTimeout`, `setInterval`, `setImmediate`, etc. Those timers then fire only when the test moves time forward by hand (`vi.advanceTimersByTime`). Supertest and the Mongo driver use real timers inside, so with everything faked the request just hangs → test timeout. `toFake: ['Date']` freezes the date and leaves the timers alone.
+  * When you **do** want fake `setTimeout`: testing a debounce ([use-debounced-callback.test.ts](/frontend/src/hooks/use-debounced-callback.test.ts)). There `vi.useFakeTimers()` fakes everything, and `vi.advanceTimersByTime(300)` skips the wait instead of really sleeping.
+  * **Restore with `vi.useRealTimers()` in `afterEach`.** Fake timers are global. Without restoring, the frozen clock leaks into the next tests and they get a wrong "now".
+    ```ts
+    beforeEach(() => {
+      vi.useFakeTimers({ toFake: ['Date'] })
+      vi.setSystemTime(NOW)
+    })
+    afterEach(() => {
+      vi.useRealTimers()
+    })
+    ```
