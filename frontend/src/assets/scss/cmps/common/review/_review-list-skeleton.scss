@@ -1,0 +1,27 @@
+@use 'setup' as *;
+
+.review-list-skeleton {
+  display: grid;
+
+  li {
+    display: grid;
+    gap: $space-2;
+    padding: $space-3 0;
+  }
+
+  .skel {
+    @include skeleton-shimmer;
+  }
+
+  .line {
+    height: 12px;
+
+    &.author {
+      width: 30%;
+    }
+
+    &.short {
+      width: 60%;
+    }
+  }
+}

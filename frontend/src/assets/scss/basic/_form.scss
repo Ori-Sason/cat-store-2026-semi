@@ -1,6 +1,7 @@
 @use '../setup/' as *;
 
-input[aria-invalid='true'] {
+input[aria-invalid='true'],
+textarea[aria-invalid='true'] {
   border-color: $clr-danger;
 }
 

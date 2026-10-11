@@ -16,6 +16,7 @@ import { Home } from './pages/home/home'
 import { homeLoader } from './pages/home/home.loader'
 import { LoginSignup } from './pages/login-signup/login-signup'
 import { loginSignupAction } from './pages/login-signup/login-signup.action'
+import { reviewAction } from './pages/review/review.action'
 
 // Just the routes. main.tsx creates the router after loading the logged-in user, since
 // createBrowserRouter runs the first page's loaders right away, and the cat-edit loader reads the user
@@ -67,6 +68,14 @@ export const routes: RouteObject[] = [
                 element: <CatDetails />,
               },
               {
+                // Action-only: the review fetchers on cat-details post here. A typed-in visit
+                // runs the loader, which 404s instead of showing an empty page. Fetchers never
+                // run it: after their action, react-router reloads the current page's loaders
+                path: '/review',
+                loader: _notFoundLoader,
+                action: reviewAction,
+              },
+              {
                 path: '/cat/new',
                 loader: catEditLoader,
                 action: catEditAction,
@@ -92,9 +101,7 @@ export const routes: RouteObject[] = [
               },
               {
                 path: '*',
-                loader: () => {
-                  throw data(null, { status: 404 })
-                },
+                loader: _notFoundLoader,
               },
             ],
           },
@@ -103,3 +110,7 @@ export const routes: RouteObject[] = [
     ],
   },
 ]
+
+function _notFoundLoader(): never {
+  throw data(null, { status: 404 })
+}

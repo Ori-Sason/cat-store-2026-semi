@@ -61,6 +61,12 @@ Env: `node --env-file=.env.local`, no dotenv. Prod needs `JWT_SECRET`, Mongo URL
   Why: the router already holds and revalidates the data, and a store copy would go stale.
   Data a page can render without (e.g. the home page's newest cats) is returned un-awaited and
   resolved in its own `<Suspense>` + `<Await>`, so it doesn't block the page or break the route.
+- **Mutations shared by several pages post to an action-only route.** Review add / edit / delete
+  go through fetchers to `/review` and `/review/:id` (no element, and a loader that 404s a
+  typed-in visit), and the action switches on
+  `request.method`, 1:1 with `POST` / `PUT` / `DELETE /api/reviews`.
+  Why: one action serves every page that shows reviews. After a fetcher action, react-router
+  reloads the loaders of the page the fetcher is on, so each page refreshes its own data.
 - **Server-set timestamps:** every doc (cats, users, reviews) has `createdAt`/`updatedAt`, set
   by the server with `Date.now()`. `updatedAt` changes on every update. Client-sent values are
   stripped by Zod.

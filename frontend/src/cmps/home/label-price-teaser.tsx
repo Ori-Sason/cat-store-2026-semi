@@ -4,7 +4,7 @@ import { Await, Link } from 'react-router'
 import type { CatLabelStats } from '@cat-store/shared'
 import { LABEL_COLORS } from '../../models/label'
 import { utilService } from '../../services/util.service'
-import { HomeSectionError } from './home-section-error'
+import { SectionError } from '../common/util/section-error'
 import { LabelPriceTeaserSkeleton } from './label-price-teaser-skeleton'
 import { pickPriceTeaserRows } from './label-price-teaser.util'
 
@@ -24,7 +24,7 @@ export const LabelPriceTeaser: React.FC<LabelPriceTeaserProps> = ({ labelStats }
       </div>
 
       <Suspense fallback={<LabelPriceTeaserSkeleton />}>
-        <Await resolve={labelStats} errorElement={<HomeSectionError />}>
+        <Await resolve={labelStats} errorElement={<SectionError />}>
           {(stats) => {
             const rows = pickPriceTeaserRows(stats)
             if (!rows.length) return <p className="empty">No labelled cats yet</p>

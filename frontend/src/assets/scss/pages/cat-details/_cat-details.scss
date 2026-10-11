@@ -104,13 +104,4 @@
     gap: $space-2;
     margin-top: $space-2;
   }
-
-  .placeholder {
-    grid-column: 1 / -1;
-    padding: $space-5;
-    border: 2px dashed $primary-clr-300;
-    border-radius: $radius-md;
-    text-align: center;
-    color: $primary-clr-850;
-  }
 }

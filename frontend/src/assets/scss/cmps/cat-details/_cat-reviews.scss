@@ -1,0 +1,33 @@
+@use 'setup' as *;
+
+// Its own card under the cat panel, with the same frame
+.cat-reviews {
+  display: grid;
+  gap: $space-4;
+  padding: $space-4;
+  border: 1px solid rgba($primary-clr-900, 0.08);
+  border-radius: $radius-lg;
+  background-color: $clr-white;
+
+  @include from($bp-md) {
+    padding: $space-5;
+  }
+
+  h2 {
+    font-size: 1.2rem;
+    color: $primary-clr-900;
+  }
+
+  .login-prompt {
+    color: $primary-clr-850;
+
+    a {
+      font-weight: 700;
+      color: $primary-clr-600;
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+  }
+}

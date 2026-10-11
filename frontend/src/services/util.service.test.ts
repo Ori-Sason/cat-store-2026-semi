@@ -79,6 +79,17 @@ describe('utilService.toActionError', () => {
   })
 })
 
+describe('utilService.withSilentReject', () => {
+  it('returns the same promise, still rejecting for <Await>', async () => {
+    const promise = Promise.reject(new Error('down'))
+
+    const result = utilService.withSilentReject(promise)
+
+    expect(result).toBe(promise)
+    await expect(result).rejects.toThrow('down')
+  })
+})
+
 describe('utilService.getFirstName', () => {
   it('returns the first word', () => {
     expect(utilService.getFirstName('Ori Sason')).toBe('Ori')

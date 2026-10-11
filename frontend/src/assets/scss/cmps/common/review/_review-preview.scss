@@ -1,0 +1,30 @@
+@use 'setup' as *;
+
+.review-preview {
+  display: grid;
+  gap: $space-1;
+  padding: $space-3 0;
+
+  header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: $space-2;
+  }
+
+  .author {
+    font-weight: 700;
+    color: $primary-clr-900;
+  }
+
+  time {
+    font-size: 0.8rem;
+    color: $primary-clr-850;
+  }
+
+  // Keeps the line breaks typed in the textarea. Long words wrap instead of overflowing
+  .content {
+    white-space: pre-line;
+    overflow-wrap: anywhere;
+  }
+}

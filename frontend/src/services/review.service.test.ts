@@ -1,5 +1,5 @@
 import Axios from 'axios'
-import type { ReviewWithRefs } from '@cat-store/shared'
+import type { Review, ReviewWithRefs } from '@cat-store/shared'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { ApiError } from '../models/api-error'
 import { httpService } from './http.service'
@@ -45,6 +45,23 @@ describe('reviewService', () => {
       vi.mocked(httpService.get).mockRejectedValue(err)
 
       await expect(reviewService.query({ catId: 'nope' })).rejects.toBe(err)
+    })
+  })
+
+  describe('add', () => {
+    it('posts the review and returns the stored one', async () => {
+      const input = { catId: 'cat-1', content: 'Sweet and calm' }
+      const saved: Review = {
+        ...input,
+        _id: 'review-1',
+        userId: 'user-1',
+        createdAt: 1,
+        updatedAt: 1,
+      }
+      vi.mocked(httpService.post).mockResolvedValue(saved)
+
+      expect(await reviewService.add(input)).toEqual(saved)
+      expect(httpService.post).toHaveBeenCalledWith(_ENDPOINT, input)
     })
   })
 })

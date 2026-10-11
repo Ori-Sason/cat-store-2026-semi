@@ -1,0 +1,41 @@
+@use 'setup' as *;
+
+.review-edit {
+  display: grid;
+  // minmax(0, 1fr): an auto track can't shrink below the textarea's built-in width (cols)
+  grid-template-columns: minmax(0, 1fr);
+  gap: $space-1;
+
+  label {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: $primary-clr-900;
+  }
+
+  textarea {
+    resize: vertical;
+  }
+
+  // The error on the left, the counter pinned right even when there's no error
+  .foot {
+    display: flex;
+    gap: $space-3;
+    font-size: 0.8rem;
+  }
+
+  .hint {
+    margin-inline-start: auto;
+    font-variant-numeric: tabular-nums;
+    color: $primary-clr-850;
+  }
+
+  .main-btn {
+    justify-self: start;
+    margin-top: $space-2;
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: default;
+    }
+  }
+}

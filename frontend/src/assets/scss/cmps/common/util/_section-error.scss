@@ -1,6 +1,6 @@
 @use 'setup' as *;
 
-.home-section-error {
+.section-error {
   padding: $space-5 $space-4;
   text-align: center;
   // getErrorMsg puts the "Ref: <id>" on its own line

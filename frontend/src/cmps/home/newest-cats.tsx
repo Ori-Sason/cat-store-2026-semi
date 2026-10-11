@@ -3,7 +3,7 @@ import { Suspense } from 'react'
 import { Await, Link } from 'react-router'
 import type { Cat } from '@cat-store/shared'
 import { CatPreview } from '../common/cat/cat-preview'
-import { HomeSectionError } from './home-section-error'
+import { SectionError } from '../common/util/section-error'
 import { NewestCatsSkeleton } from './newest-cats-skeleton'
 
 interface NewestCatsProps {
@@ -23,7 +23,7 @@ export const NewestCats: React.FC<NewestCatsProps> = ({ cats }) => {
       </div>
 
       <Suspense fallback={<NewestCatsSkeleton />}>
-        <Await resolve={cats} errorElement={<HomeSectionError />}>
+        <Await resolve={cats} errorElement={<SectionError />}>
           {(cats) =>
             cats.length ? (
               <ul className="cat-list clean-list">

@@ -49,6 +49,15 @@ function getFirstLetter(str: string) {
   return str.trim().charAt(0).toUpperCase()
 }
 
+// For a loader's un-awaited promise. Only <Await> attaches a rejection handler, and only once
+// it renders. If the user leaves before the page mounts, a failed call would log
+// "Uncaught (in promise)". The no-op catch is a second listener: the same promise is returned,
+// so <Await> still gets the rejection
+function withSilentReject<T>(promise: Promise<T>): Promise<T> {
+  promise.catch(() => {})
+  return promise
+}
+
 // A failed route action: show the error, stay on the page.
 // An error status skips the loader reload, so a failing server can't swap the page for RouteError
 function toActionError(err: unknown) {
@@ -80,6 +89,7 @@ export const utilService = {
   getLabelStyle,
   getFirstName,
   getFirstLetter,
+  withSilentReject,
   toActionError,
   getSafeRedirectTo,
 }

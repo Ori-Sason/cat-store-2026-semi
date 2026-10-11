@@ -2,6 +2,7 @@ import type React from 'react'
 import { useState } from 'react'
 import { Link, useFetcher, useLoaderData, useLocation } from 'react-router'
 import { catPermissionService } from '@cat-store/shared'
+import { CatReviews } from '../../cmps/cat-details/cat-reviews'
 import { CatImg } from '../../cmps/common/cat/cat-img'
 import { LabelChip } from '../../cmps/common/cat/label-chip'
 import { ConfirmModal } from '../../cmps/common/util/confirm-modal'
@@ -11,7 +12,7 @@ import { useLoggedInUserStore } from '../../store/logged-in-user.store'
 import type { catDetailsLoader } from './cat-details.loader'
 
 export const CatDetails: React.FC = () => {
-  const { cat } = useLoaderData<typeof catDetailsLoader>()
+  const { cat, reviews } = useLoaderData<typeof catDetailsLoader>()
   const location = useLocation()
   const listSearch = (location.state as CatListLocationState | null)?.listSearch ?? ''
   const fetcher = useFetcher()
@@ -67,8 +68,9 @@ export const CatDetails: React.FC = () => {
             </div>
           )}
         </div>
-        <div className="placeholder">Reviews and chat are coming soon</div>
       </article>
+
+      <CatReviews catId={cat._id} reviews={reviews} />
 
       <ConfirmModal
         isOpen={isConfirmOpen}
