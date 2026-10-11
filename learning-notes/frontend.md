@@ -255,3 +255,49 @@
   * In React, each menu instance needs its own `id` and anchor name, so we build both from `useId()`.
 
   **Bottom line:** open/close, click-outside, `Escape` and focus return come for free. That's the code you'd usually write by hand for a dropdown.
+* React Router `index: true`  
+  **`index: true` defines an index route: the default child a parent renders in its `<Outlet />` when the URL is exactly the parent's path.** Example: [router.tsx](/frontend/src/router.tsx), the `/cat/:id` route.
+  ```tsx
+  // router.tsx
+  {
+    path: '/cat/:id',
+    loader: catDetailsLoader,                                // the cat only
+    action: catDetailsAction,                                // the cat delete
+    shouldRevalidate: utilService.skipReloadOnActionAt('/review'),  // see "Why is it needed?"
+    element: <CatDetails />,
+    children: [
+      { index: true, loader: (args) => reviewLoader(args, 'catId'), element: <CatReviews /> },
+    ],
+  }
+
+  // cat-details.tsx - the parent renders the child where the reviews go
+  <article className="panel">...the cat...</article>
+  <Outlet />   // → <CatReviews />
+  ```
+  * No `path` on the child: it matches `/cat/123` itself. With `path: 'reviews'` instead, the reviews would only show at `/cat/123/reviews`.
+  * The parent stays on screen (the cat panel), and the child fills the slot under it. The user page (Part 5B) will use the same shape for its tabs: the cats tab as the index child, the reviews tab as `path: 'reviews'`.
+
+  **Why is it needed?**
+  Not for the URL: the reviews could just as well live in the parent's loader and component, which is how they started. The reason is that **each route has its own loader, and React Router decides per route whether to reload it.**
+  * After any action, React Router reloads every loader on the current page by default. When both cat and reviews came from one loader, adding a review fetched the cat again too.
+  * Split into two routes, the parent can opt out with `shouldRevalidate`, and the reviews child still reloads:
+    ```ts
+    // util.service.ts - builds a shouldRevalidate for a given action path
+    function skipReloadOnActionAt(actionPath: string): ShouldRevalidateFunction {
+      return ({ formAction, defaultShouldRevalidate }) => {
+        if (formAction === actionPath || formAction?.startsWith(`${actionPath}/`)) return false
+        return defaultShouldRevalidate // anything else: the default behavior
+      }
+    }
+    ```
+    `skipReloadOnActionAt('/review')` skips after `/review` and `/review/:id` (add, edit, delete).
+  * If you'll check the Network tab (devTools) after adding a review: only `GET /api/reviews?catId=…`, no `GET /api/cats/:id`.
+
+  **How it renders**, when a user visits `/cat/42`:
+  1. The router matches both the parent `/cat/:id` and its index child.
+  2. It runs both loaders **in parallel**: the child uses `params.id` too, so it doesn't wait for the cat.
+  3. Once `catDetailsLoader` resolves, it renders `<CatDetails />`, and `<CatReviews />` goes into its `<Outlet />`. `reviewLoader` returns its promise un-awaited, so the reviews show a skeleton until they arrive.
+
+  **Gotcha: which action does a submit hit?** A submit to `/cat/42` matches both routes, and only the parent has an action. React Router sends it to the parent, unless the URL has `?index`, which targets the index route. So the cat delete fetcher in `<CatDetails />` still reaches `catDetailsAction`.
+
+  **Bottom line:** an index child gives a section its own loader with no change to the URL, so a mutation can reload just that section.

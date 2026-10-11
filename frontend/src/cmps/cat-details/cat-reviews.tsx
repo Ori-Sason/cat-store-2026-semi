@@ -1,23 +1,24 @@
 import type React from 'react'
 import { Suspense, useState } from 'react'
-import { Await, Link, useFetcher, useLocation } from 'react-router'
-import type { ReviewContentInput, ReviewWithRefs } from '@cat-store/shared'
+import { Await, Link, useFetcher, useLoaderData, useLocation, useParams } from 'react-router'
+import type { ReviewContentInput } from '@cat-store/shared'
 import type { reviewAction } from '../../pages/review/review.action'
+import type { reviewLoader } from '../../pages/review/review.loader'
 import { useLoggedInUserStore } from '../../store/logged-in-user.store'
 import { ReviewEdit } from '../common/review/review-edit'
 import { ReviewList } from '../common/review/review-list'
 import { ReviewListSkeleton } from '../common/review/review-list-skeleton'
 import { SectionError } from '../common/util/section-error'
 
-interface CatReviewsProps {
-  catId: string
-  reviews: Promise<ReviewWithRefs[]> // from the cat-details loader, un-awaited
-}
+// The reviews child route of /cat/:id, rendered through cat-details' <Outlet>. Its own route,
+// so a review action reloads only the reviews (reviewLoader), not the cat.
 
 // The heading and the add form render right away. Only the list waits on the API.
 // This owns the add fetcher, not ReviewList: the form sits outside <Await>, and the user
 // page reuses ReviewList with no form
-export const CatReviews: React.FC<CatReviewsProps> = ({ catId, reviews }) => {
+export const CatReviews: React.FC = () => {
+  const { reviews } = useLoaderData<typeof reviewLoader>()
+  const catId = useParams().id!
   const loggedInUser = useLoggedInUserStore((state) => state.loggedInUser)
   const location = useLocation()
   const fetcher = useFetcher<typeof reviewAction>()

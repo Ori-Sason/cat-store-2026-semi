@@ -1,3 +1,4 @@
+import type { ShouldRevalidateFunctionArgs } from 'react-router'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { ApiError } from '../models/api-error'
 import { useUserMsgStore } from '../store/user-msg.store'
@@ -87,6 +88,28 @@ describe('utilService.withSilentReject', () => {
 
     expect(result).toBe(promise)
     await expect(result).rejects.toThrow('down')
+  })
+})
+
+describe('utilService.skipReloadOnActionAt', () => {
+  const shouldRevalidate = utilService.skipReloadOnActionAt('/review')
+
+  // Only the fields it reads: the rest of the args don't change the answer
+  function _argsFor(formAction: string | undefined, defaultShouldRevalidate = true) {
+    return { formAction, defaultShouldRevalidate } as ShouldRevalidateFunctionArgs
+  }
+
+  it.each(['/review', '/review/review-1'])('skips the reload after an action on %s', (path) => {
+    expect(shouldRevalidate(_argsFor(path))).toBe(false)
+  })
+
+  it.each([
+    ['another action', '/cat/cat-1'],
+    ['a look-alike path', '/reviews-export'],
+    ['a navigation (no action)', undefined],
+  ])('keeps the default after %s', (_, formAction) => {
+    expect(shouldRevalidate(_argsFor(formAction, true))).toBe(true)
+    expect(shouldRevalidate(_argsFor(formAction, false))).toBe(false)
   })
 })
 

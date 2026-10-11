@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react'
-import { data } from 'react-router'
+import { data, type ShouldRevalidateFunction } from 'react-router'
 import type { CatLabel } from '@cat-store/shared'
 import { ApiError } from '../models/api-error'
 import { LABEL_COLORS } from '../models/label'
@@ -66,6 +66,18 @@ function toActionError(err: unknown) {
   return data(null, { status })
 }
 
+// Builds a route's shouldRevalidate that skips its reload after an action on actionPath or
+// below it. By default, any action reloads every loader on the page. When a section has its own
+// child route (e.g. the reviews on cat-details), an action on that section changes only the
+// child's data: the parent opts out and the child still reloads. Everything else keeps the
+// default. '/review' matches /review and /review/:id, not a look-alike such as /reviews-export
+function skipReloadOnActionAt(actionPath: string): ShouldRevalidateFunction {
+  return ({ formAction, defaultShouldRevalidate }) => {
+    if (formAction === actionPath || formAction?.startsWith(`${actionPath}/`)) return false
+    return defaultShouldRevalidate
+  }
+}
+
 // Where to go after login / signup, given the ?redirectTo= value. Only same-site paths pass:
 // '/cat/1' is fine, but '//evil.com' (protocol-relative) and 'https://evil.com' would
 // leave the site - an open redirect a phishing link could abuse.
@@ -91,5 +103,6 @@ export const utilService = {
   getFirstLetter,
   withSilentReject,
   toActionError,
+  skipReloadOnActionAt,
   getSafeRedirectTo,
 }

@@ -68,6 +68,12 @@ Env: `node --env-file=.env.local`, no dotenv. Prod needs `JWT_SECRET`, Mongo URL
   `request.method`, 1:1 with `POST` / `PUT` / `DELETE /api/reviews`.
   Why: one action serves every page that shows reviews. After a fetcher action, react-router
   reloads the loaders of the page the fetcher is on, so each page refreshes its own data.
+- **A page's reviews are a child route with their own loader.** `/cat/:id` has an index child
+  (`reviewLoader(args, 'catId')`) rendered through `<Outlet>`, and the parent's
+  `shouldRevalidate` (`utilService.skipReloadOnActionAt('/review')`) skips its reload after a
+  `/review` or `/review/:id` action. The user page follows the same shape.
+  Why: a review action changes only the reviews, so the cat isn't fetched again. Both loaders
+  still run in parallel on a visit.
 - **Server-set timestamps:** every doc (cats, users, reviews) has `createdAt`/`updatedAt`, set
   by the server with `Date.now()`. `updatedAt` changes on every update. Client-sent values are
   stripped by Zod.

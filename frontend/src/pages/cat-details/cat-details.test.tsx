@@ -10,10 +10,13 @@ import { catService } from '../../services/cat.service'
 import { reviewService } from '../../services/review.service'
 import { useLoggedInUserStore } from '../../store/logged-in-user.store'
 import { useUserMsgStore } from '../../store/user-msg.store'
+import { utilService } from '../../services/util.service'
+import { CatReviews } from '../../cmps/cat-details/cat-reviews'
 import { CatDetails } from './cat-details'
 import { catDetailsAction } from './cat-details.action'
 import { catDetailsLoader } from './cat-details.loader'
 import { reviewAction } from '../review/review.action'
+import { reviewLoader } from '../review/review.loader'
 
 vi.mock('../../services/cat.service')
 vi.mock('../../services/review.service')
@@ -61,17 +64,33 @@ function _renderAt(path: string, state?: CatListLocationState) {
           {
             errorElement: <RouteError />,
             children: [
+              // Like the app: the reviews are a child route, and review actions skip the cat
               {
                 path: '/cat/:id',
                 loader: catDetailsLoader,
                 action: catDetailsAction,
+                shouldRevalidate: utilService.skipReloadOnActionAt('/review'),
                 element: <CatDetails />,
+                children: [
+                  {
+                    index: true,
+                    loader: (args) => reviewLoader(args, 'catId'),
+                    element: <CatReviews />,
+                  },
+                ],
               },
-              // Like the app: a loader that 404s a typed-in visit. Fetchers must never run it
+              // Like the app: loaders that 404 a typed-in visit. Fetchers must never run them
               {
                 path: '/review',
                 loader: () => {
                   throw new Error('the /review loader ran')
+                },
+                action: reviewAction,
+              },
+              {
+                path: '/review/:id',
+                loader: () => {
+                  throw new Error('the /review/:id loader ran')
                 },
                 action: reviewAction,
               },
@@ -273,6 +292,9 @@ describe('CatDetails reviews', () => {
     // A fresh form: the empty field doesn't show "Review is required" from the last submit
     expect(screen.queryByText('Review is required')).not.toBeInTheDocument()
     expect(useUserMsgStore.getState().msg).toMatchObject({ txt: 'Review added' })
+    // Only the reviews reload: the cat didn't change
+    expect(reviewService.query).toHaveBeenCalledTimes(2)
+    expect(catService.getById).toHaveBeenCalledOnce()
   })
 
   it('keeps the typed text when the add fails', async () => {
@@ -290,5 +312,55 @@ describe('CatDetails reviews', () => {
     expect(screen.getByLabelText('Your review')).toHaveValue('Purrfect')
     // An error status skips the reload
     expect(reviewService.query).toHaveBeenCalledOnce()
+  })
+
+  describe('as the review author', () => {
+    const OWN_REVIEW: ReviewWithRefs = {
+      ..._buildReview('review-1', 'non-owner', 'Such a sweet cat'),
+      user: { _id: NON_CAT_OWNER_USER._id, fullname: 'non-owner' },
+    }
+
+    async function _openReviewMenu(option: 'Edit' | 'Delete') {
+      const review = (await screen.findByText('Such a sweet cat')).closest('article')!
+      await userEvent.click(within(review).getByRole('button', { name: 'Review actions' }))
+      await userEvent.click(within(review).getByRole('button', { name: option }))
+      return review
+    }
+
+    beforeEach(() => {
+      vi.mocked(reviewService.query).mockResolvedValue([OWN_REVIEW])
+    })
+
+    it('edits a review and reloads only the reviews, not the cat', async () => {
+      vi.mocked(reviewService.update).mockResolvedValue({} as Review)
+      _renderAt('/cat/cat-1')
+      const review = await _openReviewMenu('Edit')
+      vi.mocked(reviewService.query).mockResolvedValue([{ ...OWN_REVIEW, content: 'So calm' }])
+
+      const field = within(review).getByLabelText('Edit your review')
+      await userEvent.clear(field)
+      await userEvent.type(field, 'So calm')
+      await userEvent.click(within(review).getByRole('button', { name: 'Save' }))
+
+      expect(await screen.findByText('So calm')).toBeInTheDocument()
+      expect(reviewService.update).toHaveBeenCalledWith('review-1', { content: 'So calm' })
+      expect(reviewService.query).toHaveBeenCalledTimes(2)
+      expect(catService.getById).toHaveBeenCalledOnce()
+    })
+
+    it('deletes a review and reloads only the reviews, not the cat', async () => {
+      vi.mocked(reviewService.remove).mockResolvedValue()
+      _renderAt('/cat/cat-1')
+      await _openReviewMenu('Delete')
+      vi.mocked(reviewService.query).mockResolvedValue([])
+
+      const dialog = screen.getByRole('dialog', { name: 'Delete this review?' })
+      await userEvent.click(within(dialog).getByRole('button', { name: 'Delete' }))
+
+      expect(await screen.findByText('No reviews yet')).toBeInTheDocument()
+      expect(reviewService.remove).toHaveBeenCalledWith('review-1')
+      expect(reviewService.query).toHaveBeenCalledTimes(2)
+      expect(catService.getById).toHaveBeenCalledOnce()
+    })
   })
 })

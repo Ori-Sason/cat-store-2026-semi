@@ -1,6 +1,7 @@
 import { data, type RouteObject } from 'react-router'
 import { LayoutApp } from './cmps/layout/layout-app'
 import { LayoutRoot } from './cmps/layout/layout-root'
+import { CatReviews } from './cmps/cat-details/cat-reviews'
 import { RouteError } from './cmps/common/util/route-error'
 import { CatApp } from './pages/cat-app/cat-app'
 import { catAppLoader } from './pages/cat-app/cat-app.loader'
@@ -17,6 +18,8 @@ import { homeLoader } from './pages/home/home.loader'
 import { LoginSignup } from './pages/login-signup/login-signup'
 import { loginSignupAction } from './pages/login-signup/login-signup.action'
 import { reviewAction } from './pages/review/review.action'
+import { reviewLoader } from './pages/review/review.loader'
+import { utilService } from './services/util.service'
 
 // Just the routes. main.tsx creates the router after loading the logged-in user, since
 // createBrowserRouter runs the first page's loaders right away, and the cat-edit loader reads the user
@@ -65,10 +68,22 @@ export const routes: RouteObject[] = [
                 path: '/cat/:id',
                 loader: catDetailsLoader,
                 action: catDetailsAction,
+                // A review action reloads only the reviews child below, not the cat
+                shouldRevalidate: utilService.skipReloadOnActionAt('/review'),
                 element: <CatDetails />,
+                children: [
+                  // The reviews section, with its own loader so it can reload alone.
+                  // The cat delete fetcher still hits the parent's action: a submit to
+                  // /cat/:id without ?index targets the parent, not this index route
+                  {
+                    index: true,
+                    loader: (args) => reviewLoader(args, 'catId'),
+                    element: <CatReviews />,
+                  },
+                ],
               },
               {
-                // Action-only: the review fetchers on cat-details post here. A typed-in visit
+                // Action-only: the review fetchers post here. A typed-in visit
                 // runs the loader, which 404s instead of showing an empty page. Fetchers never
                 // run it: after their action, react-router reloads the current page's loaders
                 path: '/review',
