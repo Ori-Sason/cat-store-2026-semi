@@ -15,7 +15,7 @@ describe('routes', () => {
     vi.spyOn(console, 'warn').mockImplementation(() => {})
   })
 
-  it.each(['/review', '/no-such-page'])(
+  it.each(['/review', '/review/review-1', '/no-such-page'])(
     'shows "Page not found" for a visit to %s',
     async (path) => {
       _renderAt(path)

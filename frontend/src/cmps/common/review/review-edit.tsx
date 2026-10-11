@@ -1,5 +1,5 @@
 import type React from 'react'
-import { useState } from 'react'
+import { useId, useState } from 'react'
 import {
   REVIEW_CONTENT_MAX_LENGTH,
   reviewContentSchema,
@@ -11,14 +11,27 @@ import { FieldError } from '../util/field-error'
 interface ReviewEditProps {
   isSaving: boolean
   onSave: (input: ReviewContentInput) => void
+  // Edit mode: prefilled, with Save and Cancel. Without them it's the empty add form
+  initialContent?: string
+  onCancel?: () => void
 }
 
 // Content only: the caller knows which cat the review is on. To clear it after a save, the
 // caller remounts it with a new key - that also resets the touched / submitted state
-export const ReviewEdit: React.FC<ReviewEditProps> = ({ isSaving, onSave }) => {
-  const [content, setContent] = useState('')
-  const formValidation = useFormValidation(reviewContentSchema, { content }, 'review')
+export const ReviewEdit: React.FC<ReviewEditProps> = ({
+  isSaving,
+  onSave,
+  initialContent = '',
+  onCancel,
+}) => {
+  const [content, setContent] = useState(initialContent)
+  // The add form and any open edit forms share a page, so each needs its own ids
+  const idPrefix = useId()
+  const formValidation = useFormValidation(reviewContentSchema, { content }, idPrefix)
   const { formParseResult } = formValidation
+  const fieldProps = formValidation.getFieldProps('content', `${idPrefix}-hint`)
+  const isEdit = !!onCancel
+  const [submitTxt, savingTxt] = isEdit ? ['Save', 'Saving…'] : ['Post review', 'Posting…']
 
   function onSubmit(ev: React.SubmitEvent<HTMLFormElement>) {
     ev.preventDefault()
@@ -28,25 +41,32 @@ export const ReviewEdit: React.FC<ReviewEditProps> = ({ isSaving, onSave }) => {
 
   return (
     <form className="review-edit" noValidate onSubmit={onSubmit}>
-      <label htmlFor="review-content">Your review</label>
+      <label htmlFor={fieldProps.id}>{isEdit ? 'Edit your review' : 'Your review'}</label>
       <textarea
         rows={3}
         value={content}
         onChange={(ev) => setContent(ev.target.value)}
-        {...formValidation.getFieldProps('content', 'review-content-hint')}
+        {...fieldProps}
       />
       <div className="foot">
         <FieldError
           errorId={formValidation.getErrorId('content')}
           errorTxt={formValidation.getError('content')}
         />
-        <p id="review-content-hint" className="hint">
+        <p id={`${idPrefix}-hint`} className="hint">
           {content.length} / {REVIEW_CONTENT_MAX_LENGTH}
         </p>
       </div>
-      <button type="submit" className="main-btn" disabled={isSaving}>
-        {isSaving ? 'Posting…' : 'Post review'}
-      </button>
+      <div className="actions">
+        <button type="submit" className="main-btn" disabled={isSaving}>
+          {isSaving ? savingTxt : submitTxt}
+        </button>
+        {isEdit && (
+          <button type="button" className="sub-btn" disabled={isSaving} onClick={onCancel}>
+            Cancel
+          </button>
+        )}
+      </div>
     </form>
   )
 }

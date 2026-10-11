@@ -27,4 +27,16 @@
     white-space: pre-line;
     overflow-wrap: anywhere;
   }
+
+  .actions {
+    display: flex;
+    gap: $space-2;
+    margin-top: $space-1;
+    font-size: 0.85rem;
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: default;
+    }
+  }
 }

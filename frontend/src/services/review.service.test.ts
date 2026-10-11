@@ -64,4 +64,38 @@ describe('reviewService', () => {
       expect(httpService.post).toHaveBeenCalledWith(_ENDPOINT, input)
     })
   })
+
+  describe('update', () => {
+    it('puts the content to the review and returns the stored one', async () => {
+      const saved: Review = {
+        _id: 'review-1',
+        catId: 'cat-1',
+        userId: 'user-1',
+        content: 'Even sweeter',
+        createdAt: 1,
+        updatedAt: 2,
+      }
+      vi.mocked(httpService.put).mockResolvedValue(saved)
+
+      expect(await reviewService.update('review-1', { content: 'Even sweeter' })).toEqual(saved)
+      expect(httpService.put).toHaveBeenCalledWith(`${_ENDPOINT}/review-1`, {
+        content: 'Even sweeter',
+      })
+    })
+  })
+
+  describe('remove', () => {
+    it('deletes the review by id', async () => {
+      await reviewService.remove('review-1')
+
+      expect(httpService.delete).toHaveBeenCalledWith(`${_ENDPOINT}/review-1`)
+    })
+
+    it('passes an ApiError through untouched', async () => {
+      const err = new ApiError(403, 'FORBIDDEN', 'Forbidden')
+      vi.mocked(httpService.delete).mockRejectedValue(err)
+
+      await expect(reviewService.remove('review-1')).rejects.toBe(err)
+    })
+  })
 })

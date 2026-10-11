@@ -76,6 +76,12 @@ export const routes: RouteObject[] = [
                 action: reviewAction,
               },
               {
+                // Action-only, like /review: a review's edit (PUT) and delete (DELETE)
+                path: '/review/:id',
+                loader: _notFoundLoader,
+                action: reviewAction,
+              },
+              {
                 path: '/cat/new',
                 loader: catEditLoader,
                 action: catEditAction,
