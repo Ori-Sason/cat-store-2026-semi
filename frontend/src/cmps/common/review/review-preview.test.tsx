@@ -66,6 +66,12 @@ async function _findReview() {
   return screen.findByRole('article')
 }
 
+// Opens the ⋮ menu, then picks an option (test-setup emulates the popover)
+async function _choose(review: HTMLElement, option: 'Edit' | 'Delete') {
+  await userEvent.click(within(review).getByRole('button', { name: 'Review actions' }))
+  await userEvent.click(within(review).getByRole('button', { name: option }))
+}
+
 describe('ReviewPreview', () => {
   beforeEach(() => {
     vi.resetAllMocks()
@@ -73,7 +79,7 @@ describe('ReviewPreview', () => {
     vi.mocked(reviewService.query).mockResolvedValue([REVIEW])
   })
 
-  describe('who sees Edit / Delete', () => {
+  describe('who sees the actions menu', () => {
     it.each([
       ['the author', AUTHOR],
       ['an admin', ADMIN],
@@ -81,8 +87,7 @@ describe('ReviewPreview', () => {
       _render(user)
       const review = await _findReview()
 
-      expect(within(review).getByRole('button', { name: 'Edit' })).toBeInTheDocument()
-      expect(within(review).getByRole('button', { name: 'Delete' })).toBeInTheDocument()
+      expect(within(review).getByRole('button', { name: 'Review actions' })).toBeInTheDocument()
     })
 
     it.each([
@@ -96,16 +101,40 @@ describe('ReviewPreview', () => {
     })
   })
 
+  describe('the You chip', () => {
+    it("marks the viewer's own review", async () => {
+      _render(AUTHOR)
+      const review = await _findReview()
+
+      expect(within(review).getByText('You')).toBeInTheDocument()
+    })
+
+    it.each([
+      ['an admin', ADMIN],
+      ['another user', OTHER_USER],
+      ['a guest', null],
+    ])('is not on the review for %s', async (_, user) => {
+      _render(user)
+      const review = await _findReview()
+
+      expect(within(review).queryByText('You')).not.toBeInTheDocument()
+    })
+  })
+
   describe('edit', () => {
     it('opens the form prefilled and cancels back to the text', async () => {
       _render(AUTHOR)
       const review = await _findReview()
 
-      await userEvent.click(within(review).getByRole('button', { name: 'Edit' }))
+      await _choose(review, 'Edit')
       expect(within(review).getByLabelText('Edit your review')).toHaveValue('Such a sweet cat')
+      expect(
+        within(review).queryByRole('button', { name: 'Review actions' }),
+      ).not.toBeInTheDocument()
 
       await userEvent.click(within(review).getByRole('button', { name: 'Cancel' }))
       expect(within(review).queryByRole('textbox')).not.toBeInTheDocument()
+      expect(within(review).getByRole('button', { name: 'Review actions' })).toBeInTheDocument()
       expect(within(review).getByText('Such a sweet cat')).toBeInTheDocument()
       expect(reviewService.update).not.toHaveBeenCalled()
     })
@@ -115,7 +144,7 @@ describe('ReviewPreview', () => {
       _render(AUTHOR)
       const review = await _findReview()
 
-      await userEvent.click(within(review).getByRole('button', { name: 'Edit' }))
+      await _choose(review, 'Edit')
       const field = within(review).getByLabelText('Edit your review')
       await userEvent.clear(field)
       await userEvent.type(field, 'Even sweeter')
@@ -134,7 +163,7 @@ describe('ReviewPreview', () => {
       _render(AUTHOR)
       const review = await _findReview()
 
-      await userEvent.click(within(review).getByRole('button', { name: 'Edit' }))
+      await _choose(review, 'Edit')
       const field = within(review).getByLabelText('Edit your review')
       await userEvent.type(field, '!')
       await userEvent.click(within(review).getByRole('button', { name: 'Save' }))
@@ -152,7 +181,7 @@ describe('ReviewPreview', () => {
       _render(AUTHOR)
       const review = await _findReview()
 
-      await userEvent.click(within(review).getByRole('button', { name: 'Delete' }))
+      await _choose(review, 'Delete')
       const dialog = screen.getByRole('dialog', { name: 'Delete this review?' })
       await userEvent.click(within(dialog).getByRole('button', { name: 'Cancel' }))
 
@@ -165,7 +194,7 @@ describe('ReviewPreview', () => {
       _render(ADMIN)
       const review = await _findReview()
 
-      await userEvent.click(within(review).getByRole('button', { name: 'Delete' }))
+      await _choose(review, 'Delete')
       vi.mocked(reviewService.query).mockResolvedValue([])
       const dialog = screen.getByRole('dialog', { name: 'Delete this review?' })
       await userEvent.click(within(dialog).getByRole('button', { name: 'Delete' }))
@@ -182,12 +211,12 @@ describe('ReviewPreview', () => {
       _render(AUTHOR)
       const review = await _findReview()
 
-      await userEvent.click(within(review).getByRole('button', { name: 'Delete' }))
+      await _choose(review, 'Delete')
       const dialog = screen.getByRole('dialog', { name: 'Delete this review?' })
       await userEvent.click(within(dialog).getByRole('button', { name: 'Delete' }))
 
       await waitFor(() => expect(useUserMsgStore.getState().msg).toMatchObject({ type: 'error' }))
-      expect(within(review).getByRole('button', { name: 'Delete' })).toBeEnabled()
+      expect(within(review).getByRole('button', { name: 'Review actions' })).toBeEnabled()
       expect(within(review).getByText('Such a sweet cat')).toBeInTheDocument()
     })
   })

@@ -1,0 +1,72 @@
+@use 'setup' as *;
+
+.review-actions-menu {
+  .menu-btn {
+    display: grid;
+    place-items: center;
+    // About one text line tall, so the ⋮ doesn't make its header row taller than the others
+    width: 1.5rem;
+    height: 1.5rem;
+    font-size: 1.2rem;
+    line-height: 1;
+    color: $primary-clr-850;
+    border-radius: 50%;
+
+    &:hover:not(:disabled) {
+      background-color: $primary-clr-100;
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: default;
+    }
+  }
+
+  // A popover in the top layer, anchored to its ⋮ button: below it and aligned to its right
+  // edge, flipped above it when there's no room below
+  .menu {
+    inset: auto;
+    margin: $space-1 0;
+    position-area: bottom span-left;
+    position-try-fallbacks: flip-block;
+    min-width: 8rem;
+    padding: $space-1;
+    border: 1px solid rgba($primary-clr-900, 0.08);
+    border-radius: $radius-md;
+    background-color: $clr-white;
+    box-shadow: $shadow-md;
+
+    &:popover-open {
+      display: grid;
+      opacity: 1;
+      transition: opacity 0.15s ease;
+
+      @starting-style {
+        opacity: 0;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      &:popover-open {
+        transition: none;
+      }
+    }
+
+    button {
+      padding: $space-2;
+      font-size: 0.9rem;
+      text-align: start;
+      color: $primary-clr-900;
+      border-radius: $radius-sm;
+
+      &:hover,
+      &:focus-visible {
+        background-color: $primary-clr-100;
+      }
+
+      &.danger {
+        color: $clr-danger;
+      }
+    }
+  }
+}

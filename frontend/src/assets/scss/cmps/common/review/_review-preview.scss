@@ -1,15 +1,42 @@
 @use 'setup' as *;
 
+// The ⋮ menu (only on editable reviews) sits right after the header's date. Everything else spans the full width
 .review-preview {
   display: grid;
-  gap: $space-1;
+  grid-template-columns: minmax(0, max-content) 1fr;
+  align-items: center;
+  column-gap: $space-1;
+  row-gap: $space-1;
   padding: $space-3 0;
 
+  > * {
+    grid-column: 1 / -1;
+  }
+
   header {
+    grid-column: 1;
     display: flex;
     flex-wrap: wrap;
     align-items: baseline;
     gap: $space-2;
+  }
+
+  .review-actions-menu {
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: start;
+  }
+
+  .you-chip {
+    align-self: center;
+    padding: 1px 8px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: $primary-clr-800;
+    border-radius: 99px;
+    background-color: $primary-clr-200;
   }
 
   .author {
@@ -26,17 +53,9 @@
   .content {
     white-space: pre-line;
     overflow-wrap: anywhere;
-  }
 
-  .actions {
-    display: flex;
-    gap: $space-2;
-    margin-top: $space-1;
-    font-size: 0.85rem;
-
-    button:disabled {
-      opacity: 0.6;
-      cursor: default;
+    &.is-deleting {
+      opacity: 0.5;
     }
   }
 }

@@ -228,3 +228,30 @@
   ```tsx
   { element: <LayoutRoot />, HydrateFallback: () => null, children: [...] }
   ```
+* HTML `popover`  
+  A built-in way to show a floating box (menu, tooltip, dialog-ish) with no JS state. Example: [review-actions-menu.tsx](/frontend/src/cmps/common/review/review-actions-menu.tsx).
+  ```html
+  <button popovertarget="menu">⋮</button>
+  <div id="menu" popover="auto">
+    <button>Edit</button>
+    <button>Delete</button>
+  </div>
+  ```
+  * `popovertarget="menu"` → clicking the button toggles the element with `id="menu"`. No `useState`, no `onClick`.
+  * The popover renders in the **top layer**, above everything. A parent's `overflow: hidden` or `z-index` can't clip or hide it.
+  * `popover="auto"` → the browser closes it on click-outside and on `Escape`, and opening one auto popover closes the others. `popover="manual"` → only your code closes it.
+  * JS API when you need it: `el.showPopover()`, `el.hidePopover()`, `el.togglePopover()`. We call `hidePopover()` after a menu choice.
+  * Style the open state with `:popover-open`. Use `@starting-style` to fade it in from `opacity: 0`.
+  * Positioning: the top layer drops it out of the page flow, so it centers by default. CSS anchor positioning attaches it to the button ([_review-actions-menu.scss](/frontend/src/assets/scss/cmps/common/review/_review-actions-menu.scss)):
+    ```css
+    button { anchor-name: --menu-btn; }
+    #menu {
+      position-anchor: --menu-btn;
+      inset: auto;                           /* drop the default centering */
+      position-area: bottom span-left;       /* below the button, aligned to its right edge */
+      position-try-fallbacks: flip-block;    /* flip above when there's no room below */
+    }
+    ```
+  * In React, each menu instance needs its own `id` and anchor name, so we build both from `useId()`.
+
+  **Bottom line:** open/close, click-outside, `Escape` and focus return come for free. That's the code you'd usually write by hand for a dropdown.

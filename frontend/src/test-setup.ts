@@ -39,3 +39,25 @@ HTMLDialogElement.prototype.close ??= function (this: HTMLDialogElement) {
   this.open = false
   this.dispatchEvent(new Event('close'))
 }
+
+// jsdom has no Popover API, and its default stylesheet hides every [popover] (it never matches
+// :popover-open). Emulate what the popover menus use: show / hide / toggle flip an inline
+// display, and a click on a popovertarget button toggles its popover, as a browser does
+function _setPopoverOpen(el: HTMLElement, isOpen: boolean) {
+  el.style.display = isOpen ? 'block' : ''
+  return isOpen
+}
+HTMLElement.prototype.showPopover ??= function (this: HTMLElement) {
+  _setPopoverOpen(this, true)
+}
+HTMLElement.prototype.hidePopover ??= function (this: HTMLElement) {
+  _setPopoverOpen(this, false)
+}
+HTMLElement.prototype.togglePopover ??= function (this: HTMLElement) {
+  return _setPopoverOpen(this, this.style.display !== 'block')
+}
+document.addEventListener('click', (ev) => {
+  const invoker = (ev.target as Element).closest('button[popovertarget]') as HTMLButtonElement
+  if (!invoker || invoker.disabled) return
+  document.getElementById(invoker.getAttribute('popovertarget')!)?.togglePopover()
+})
