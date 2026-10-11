@@ -1,13 +1,14 @@
 import { Collection, ObjectId, type Document } from 'mongodb'
 import request from 'supertest'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import type { ReviewWithRefs } from '@cat-store/shared'
+import type { ReviewInput, ReviewWithRefs } from '@cat-store/shared'
 import { app } from '../../app.ts'
 import { CAT_COLLECTION, type CatDoc } from '../../models/cat.ts'
 import { REVIEW_COLLECTION, type ReviewDoc } from '../../models/review.ts'
 import { USER_COLLECTION, type UserDoc } from '../../models/user.ts'
 import { mongoService } from '../../services/mongodb.service.ts'
 import { setupTestDb } from '../../test/test-db.helper.ts'
+import { authService } from '../auth/auth.service.ts'
 
 setupTestDb()
 
@@ -71,6 +72,12 @@ function _toJson(review: ReviewDoc): ReviewWithRefs {
     user: { _id: user._id.toHexString(), fullname: user.fullname },
     cat: { _id: cat._id.toHexString(), name: cat.name, imgUrl: cat.imgUrl },
   }
+}
+
+// A signed loginToken cookie, the same one login sets
+function _loginCookie({ _id, username, fullname, isAdmin }: UserDoc): string {
+  const loggedInUser = { _id: _id.toHexString(), username, fullname, isAdmin }
+  return `loginToken=${authService.createLoginToken(loggedInUser, false)}`
 }
 
 describe('GET /api/reviews', () => {
@@ -180,5 +187,113 @@ describe('GET /api/reviews', () => {
     expect(plan).toContain('"IXSCAN"')
     expect(plan).toContain(`"${index}"`)
     expect(plan).not.toContain('"SORT"')
+  })
+})
+
+describe('POST /api/reviews', () => {
+  const NOW = 50_000
+  const INPUT: ReviewInput = { catId: MITZI._id.toHexString(), content: 'Such a sweet cat' }
+
+  beforeEach(async () => {
+    const users = await mongoService.getCollection<UserDoc>(USER_COLLECTION)
+    await users.insertMany([MAYA, ADMIN])
+    const cats = await mongoService.getCollection<CatDoc>(CAT_COLLECTION)
+    await cats.insertOne(MITZI)
+    // only Date is faked - Supertest and the Mongo driver still need real timers
+    vi.useFakeTimers({ toFake: ['Date'] })
+    vi.setSystemTime(NOW)
+    vi.spyOn(console, 'warn').mockImplementation(() => {})
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+    vi.restoreAllMocks()
+  })
+
+  async function _countReviews() {
+    const reviews = await mongoService.getCollection<ReviewDoc>(REVIEW_COLLECTION)
+    return reviews.countDocuments()
+  }
+
+  it('creates the review, written by the logged-in user, and returns 201 with server-set fields', async () => {
+    const res = await request(app)
+      .post('/api/reviews')
+      .set('Cookie', _loginCookie(MAYA))
+      .send(INPUT)
+
+    expect(res.status).toBe(201)
+    expect(res.body).toEqual({
+      ...INPUT,
+      _id: expect.any(String),
+      userId: MAYA._id.toHexString(),
+      createdAt: NOW,
+      updatedAt: NOW,
+    })
+    const reviews = await mongoService.getCollection<ReviewDoc>(REVIEW_COLLECTION)
+    const saved = await reviews.findOne({ _id: new ObjectId(res.body._id as string) })
+    expect(saved).toMatchObject({ content: INPUT.content, catId: MITZI._id, userId: MAYA._id })
+  })
+
+  it('ignores a client-sent _id, userId, createdAt and updatedAt', async () => {
+    const clientId = new ObjectId().toHexString()
+    const res = await request(app)
+      .post('/api/reviews')
+      .set('Cookie', _loginCookie(MAYA))
+      .send({
+        ...INPUT,
+        _id: clientId,
+        userId: ADMIN._id.toHexString(),
+        createdAt: 1,
+        updatedAt: 1,
+      })
+
+    expect(res.status).toBe(201)
+    expect(res.body._id).not.toBe(clientId)
+    expect(res.body).toMatchObject({
+      userId: MAYA._id.toHexString(),
+      createdAt: NOW,
+      updatedAt: NOW,
+    })
+  })
+
+  it('stores the content trimmed', async () => {
+    const res = await request(app)
+      .post('/api/reviews')
+      .set('Cookie', _loginCookie(MAYA))
+      .send({ ...INPUT, content: '  Purrfect  ' })
+
+    expect(res.status).toBe(201)
+    expect(res.body.content).toBe('Purrfect')
+  })
+
+  it('returns 401 UNAUTHORIZED for a guest and saves nothing', async () => {
+    const res = await request(app).post('/api/reviews').send(INPUT)
+
+    expect(res.status).toBe(401)
+    expect(res.body).toMatchObject({ code: 'UNAUTHORIZED' })
+    expect(await _countReviews()).toBe(0)
+  })
+
+  it('returns 400 VALIDATION_FAILED with fieldErrors and saves nothing', async () => {
+    const res = await request(app)
+      .post('/api/reviews')
+      .set('Cookie', _loginCookie(MAYA))
+      .send({ catId: 'nope', content: '   ' })
+
+    expect(res.status).toBe(400)
+    expect(res.body.code).toBe('VALIDATION_FAILED')
+    expect(Object.keys(res.body.fieldErrors).sort()).toEqual(['catId', 'content'])
+    expect(await _countReviews()).toBe(0)
+  })
+
+  it('returns 404 CAT_NOT_FOUND for a cat that does not exist, and saves nothing', async () => {
+    const res = await request(app)
+      .post('/api/reviews')
+      .set('Cookie', _loginCookie(MAYA))
+      .send({ ...INPUT, catId: new ObjectId().toHexString() })
+
+    expect(res.status).toBe(404)
+    expect(res.body).toMatchObject({ code: 'CAT_NOT_FOUND' })
+    expect(await _countReviews()).toBe(0)
   })
 })

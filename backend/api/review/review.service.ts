@@ -1,10 +1,11 @@
 import { ObjectId, type Filter } from 'mongodb'
-import type { ReviewFilter } from '@cat-store/shared'
+import type { ReviewFilter, ReviewInput } from '@cat-store/shared'
 import { CAT_COLLECTION, CAT_REF_FIELDS } from '../../models/cat.ts'
 import { REVIEW_COLLECTION, type ReviewDoc, type ReviewJoinedDoc } from '../../models/review.ts'
 import { USER_COLLECTION, USER_REF_FIELDS } from '../../models/user.ts'
 import { mongoService } from '../../services/mongodb.service.ts'
 import { utilService } from '../../services/util.service.ts'
+import { catService } from '../cat/cat.service.ts'
 
 // A cat's or a user's reviews, newest first, each joined with its author and its cat.
 // Stage order matters:
@@ -30,6 +31,24 @@ async function query(filterBy: ReviewFilter): Promise<ReviewJoinedDoc[]> {
     .toArray()
 }
 
+// The cat must exist: getById throws 404 CAT_NOT_FOUND, so a review can't point at nothing.
+// A cat deleted between the check and the insert leaves an orphan, which query's $unwind hides
+async function add(input: ReviewInput, userId: string): Promise<ReviewDoc> {
+  await catService.getById(input.catId)
+  const now = Date.now()
+  const review: ReviewDoc = {
+    _id: new ObjectId(),
+    content: input.content,
+    catId: new ObjectId(input.catId),
+    userId: new ObjectId(userId),
+    createdAt: now,
+    updatedAt: now,
+  }
+  const collection = await mongoService.getCollection<ReviewDoc>(REVIEW_COLLECTION)
+  await collection.insertOne(review)
+  return review
+}
+
 // The ids are already checked by reviewFilterSchema, so new ObjectId() can't throw here
 function _buildCriteria({ catId, userId }: ReviewFilter): Filter<ReviewDoc> {
   const criteria: Filter<ReviewDoc> = {}
@@ -40,4 +59,5 @@ function _buildCriteria({ catId, userId }: ReviewFilter): Filter<ReviewDoc> {
 
 export const reviewService = {
   query,
+  add,
 }
