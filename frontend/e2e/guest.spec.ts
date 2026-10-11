@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import { NEWEST_CATS_LIMIT } from '../src/models/home.ts'
 import { signUpViaApi } from './helpers/auth.helper.ts'
 
 // Guest smoke flow: home → browse → filter → details → back, over the seed data in
@@ -6,8 +7,10 @@ import { signUpViaApi } from './helpers/auth.helper.ts'
 test('guest browses, filters and opens a cat', async ({ page }) => {
   await page.goto('/')
   await expect(page.getByRole('heading', { level: 1 })).toContainText('Meet your next cat')
-  // The lazy sections load through the real API: limit=4 on the cats, label stats for the bars
-  await expect(page.locator('.newest-cats .cat-preview')).toHaveCount(4)
+  // The lazy sections load through the real API: the newest-cats limit, label stats for the bars.
+  // The limit comes from the app's constant, so a change to it doesn't break this spec. Narrow
+  // screens hide some cards with CSS, but they're all in the DOM
+  await expect(page.locator('.newest-cats .cat-preview')).toHaveCount(NEWEST_CATS_LIMIT)
   await expect(page.locator('.label-price-teaser .bars .bar-row')).toHaveCount(5)
   await page.locator('.home-hero').getByRole('link', { name: 'Browse cats' }).click()
   await expect(page).toHaveURL(/\/cat$/)
