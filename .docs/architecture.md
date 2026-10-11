@@ -11,7 +11,7 @@ prod: browser ──▶ Express (static FE + /api + socket.io) ──▶ MongoDB
 
 ## Components
 - `shared/` (`@cat-store/shared`) — wire contract: types, Zod schemas, constants,
-  `catFilterService`, `catPermissionService`, `reviewPermissionService`. No build step, erasable TS only, no DOM/Node/mongodb imports.
+  `catFilterService`, `catPermissionService`, `reviewPermissionService`, `sharedUtilService`. No build step, erasable TS only, no DOM/Node/mongodb imports.
 - `frontend/` — Vite + React SPA. Routes and data loading via `react-router`, client state
   in Zustand, HTTP via axios with relative URLs only (`/api/...`).
 - `backend/` — Express 5, route → controller → service layers, native `mongodb`

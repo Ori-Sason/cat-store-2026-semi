@@ -29,7 +29,8 @@ for one file's own logic stay in it, as `_` functions. Each package's rule lists
   reports. Gitignored and user-managed: never put handoffs in memory, and leave cleanup
   to the user.
 - `shared/` — `@cat-store/shared`, the wire contract: types, Zod schemas, constants,
-  `catFilterService`, `catPermissionService`, `reviewPermissionService`. No build step.
+  `catFilterService`, `catPermissionService`, `reviewPermissionService`, `sharedUtilService`.
+  No build step.
 - `frontend/` — Vite + React + TS SPA. `react-router` v8, Zustand, axios, SCSS.
   Not Next.js.
 - `backend/` — Express 5 + native `mongodb` driver (no Mongoose). Node runs `.ts`
