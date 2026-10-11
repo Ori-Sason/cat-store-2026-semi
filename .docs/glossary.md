@@ -67,11 +67,12 @@
 - `ReviewWithRefs` vs `ReviewJoinedDoc`
 	- Canonical meaning: a review joined with its author and its cat, as `GET /api/reviews`
 	  returns it: `{ _id, content, createdAt, updatedAt, user: { _id, fullname },
-	  cat: { _id, name, imgUrl } }`, with no `userId` / `catId`. `ReviewWithRefs` is the wire
+	  cat: { _id, name, imgUrl, ownerId } }`, with no `userId` / `catId`. `ReviewWithRefs` is the wire
 	  type (`shared/`, string ids). `ReviewJoinedDoc` is the backend-only aggregation output
 	  (`ObjectId` ids). Same split as `Cat` / `CatDoc`.
 	- Rule: the joined `user` is an allow-list (`_id`, `fullname`), so `password` and `isAdmin`
 	  never leave the DB. One shape serves both pages: each ignores the side it already knows.
+	  `cat.ownerId` marks a review written by the cat's owner (the Owner chip), on any page.
 	- Avoid: `ReviewJoined` (for the wire type), `PopulatedReview`, `ReviewDetails`.
 
 - `ReviewFilter`

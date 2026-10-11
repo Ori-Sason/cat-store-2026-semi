@@ -71,7 +71,12 @@ function _toJson(review: ReviewDoc): ReviewWithRefs {
     createdAt: review.createdAt,
     updatedAt: review.updatedAt,
     user: { _id: user._id.toHexString(), fullname: user.fullname },
-    cat: { _id: cat._id.toHexString(), name: cat.name, imgUrl: cat.imgUrl },
+    cat: {
+      _id: cat._id.toHexString(),
+      name: cat.name,
+      imgUrl: cat.imgUrl,
+      ownerId: cat.ownerId.toHexString(),
+    },
   }
 }
 

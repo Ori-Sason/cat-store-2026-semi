@@ -27,7 +27,8 @@
     justify-self: start;
   }
 
-  .you-chip {
+  // You (the viewer's own review) and Owner (written by the cat's owner)
+  .chip {
     align-self: center;
     padding: 1px 8px;
     font-size: 0.7rem;
@@ -35,8 +36,13 @@
     letter-spacing: 0.05em;
     text-transform: uppercase;
     color: $primary-clr-800;
-    border-radius: 99px;
+    border-radius: $radius-pill;
     background-color: $primary-clr-200;
+
+    &.owner {
+      color: $clr-black;
+      background-color: $clr-pink;
+    }
   }
 
   .author {

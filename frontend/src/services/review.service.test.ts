@@ -15,7 +15,7 @@ const _REVIEW: ReviewWithRefs = {
   createdAt: 1,
   updatedAt: 1,
   user: { _id: 'user-1', fullname: 'Maya Levi' },
-  cat: { _id: 'cat-1', name: 'Mitzi', imgUrl: '' },
+  cat: { _id: 'cat-1', name: 'Mitzi', imgUrl: '', ownerId: 'user-2' },
 }
 
 describe('reviewService', () => {

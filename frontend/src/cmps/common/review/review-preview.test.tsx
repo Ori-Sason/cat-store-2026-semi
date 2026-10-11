@@ -14,6 +14,7 @@ vi.mock('../../../services/review.service')
 
 const AUTHOR: LoggedInUser = { _id: 'user-1', username: 'maya', fullname: 'Maya', isAdmin: false }
 const OTHER_USER: LoggedInUser = { ...AUTHOR, _id: 'user-2', username: 'noam' }
+const CAT_OWNER: LoggedInUser = { ...AUTHOR, _id: 'owner-1', username: 'dana' }
 const ADMIN: LoggedInUser = { _id: 'admin-1', username: 'admin', fullname: 'A', isAdmin: true }
 
 const REVIEW: ReviewWithRefs = {
@@ -22,7 +23,7 @@ const REVIEW: ReviewWithRefs = {
   createdAt: Date.UTC(2026, 9, 9, 12),
   updatedAt: Date.UTC(2026, 9, 9, 12),
   user: { _id: AUTHOR._id, fullname: 'Maya Levi' },
-  cat: { _id: 'cat-1', name: 'Mitzi', imgUrl: '' },
+  cat: { _id: 'cat-1', name: 'Mitzi', imgUrl: '', ownerId: CAT_OWNER._id },
 }
 
 const STORED: Review = {
@@ -118,6 +119,36 @@ describe('ReviewPreview', () => {
       const review = await _findReview()
 
       expect(within(review).queryByText('You')).not.toBeInTheDocument()
+    })
+  })
+
+  describe('the Owner chip', () => {
+    it("marks a review by the cat's owner, for everyone", async () => {
+      vi.mocked(reviewService.query).mockResolvedValue([
+        { ...REVIEW, user: { _id: CAT_OWNER._id, fullname: 'Dana Katz' } },
+      ])
+      _render(null)
+      const review = await _findReview()
+
+      expect(within(review).getByText('Owner')).toBeInTheDocument()
+    })
+
+    it('shows both chips when the owner views their own review', async () => {
+      vi.mocked(reviewService.query).mockResolvedValue([
+        { ...REVIEW, user: { _id: CAT_OWNER._id, fullname: 'Dana Katz' } },
+      ])
+      _render(CAT_OWNER)
+      const review = await _findReview()
+
+      expect(within(review).getByText('Owner')).toBeInTheDocument()
+      expect(within(review).getByText('You')).toBeInTheDocument()
+    })
+
+    it('is not on a review by someone else, even when the owner views it', async () => {
+      _render(CAT_OWNER)
+      const review = await _findReview()
+
+      expect(within(review).queryByText('Owner')).not.toBeInTheDocument()
     })
   })
 

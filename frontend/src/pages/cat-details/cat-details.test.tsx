@@ -41,7 +41,7 @@ function _buildReview(_id: string, fullname: string, content: string): ReviewWit
     createdAt: Date.UTC(2026, 9, 9, 12),
     updatedAt: Date.UTC(2026, 9, 9, 12),
     user: { _id: `${_id}-author`, fullname },
-    cat: { _id: CAT._id, name: CAT.name, imgUrl: CAT.imgUrl },
+    cat: { _id: CAT._id, name: CAT.name, imgUrl: CAT.imgUrl, ownerId: CAT.ownerId },
   }
 }
 

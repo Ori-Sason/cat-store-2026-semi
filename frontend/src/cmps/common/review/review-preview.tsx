@@ -12,12 +12,14 @@ export const ReviewPreview: React.FC<ReviewPreviewProps> = ({ review }) => {
   const loggedInUser = useLoggedInUserStore((state) => state.loggedInUser)
   const isCanEdit = reviewPermissionService.canEditReview({ userId: review.user._id }, loggedInUser)
   const isOwnReview = review.user._id === loggedInUser?._id
+  const isByCatOwner = review.user._id === review.cat.ownerId
 
   return (
     <article className="review-preview">
       <header>
         <span className="author">{review.user.fullname}</span>
-        {isOwnReview && <span className="you-chip">You</span>}
+        {isByCatOwner && <span className="chip owner">Owner</span>}
+        {isOwnReview && <span className="chip">You</span>}
         <time dateTime={new Date(review.createdAt).toISOString()}>
           {utilService.formatDate(review.createdAt)}
         </time>

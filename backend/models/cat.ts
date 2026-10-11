@@ -9,6 +9,11 @@ export interface CatDoc extends Omit<Cat, '_id' | 'ownerId'> {
 }
 
 // The cat fields a joined doc (e.g. a review's cat) carries, besides `_id`
-export const CAT_REF_FIELDS = ['name', 'imgUrl'] as const satisfies readonly (keyof CatDoc)[]
+// ownerId lets a review show an Owner chip when the cat's owner wrote it
+export const CAT_REF_FIELDS = [
+  'name',
+  'imgUrl',
+  'ownerId',
+] as const satisfies readonly (keyof CatDoc)[]
 
 export type CatRefDoc = Pick<CatDoc, '_id' | (typeof CAT_REF_FIELDS)[number]>

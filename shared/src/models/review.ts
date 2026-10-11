@@ -46,7 +46,7 @@ export interface Review extends ReviewInput {
 // by the slim `user` / `cat`, and the user side never carries password or isAdmin
 export interface ReviewWithRefs extends Omit<Review, 'userId' | 'catId'> {
   user: Pick<User, '_id' | 'fullname'>
-  cat: Pick<Cat, '_id' | 'name' | 'imgUrl'>
+  cat: Pick<Cat, '_id' | 'name' | 'imgUrl' | 'ownerId'>
 }
 
 // Which reviews GET /api/reviews returns. Both → AND
