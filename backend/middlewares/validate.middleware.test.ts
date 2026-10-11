@@ -24,6 +24,15 @@ function _createApp() {
   app.get('/echo', validateQuery(_querySchema), (req, res) => {
     res.json(req.query)
   })
+  // Two query validators in a row: the second must be able to replace the first one's value
+  app.get(
+    '/echo-twice',
+    validateQuery(_querySchema),
+    validateQuery(z.object({ a: z.string().transform(Number) })),
+    (req, res) => {
+      res.json(req.query)
+    },
+  )
   app.use(errorHandler)
   return app
 }
@@ -97,5 +106,12 @@ describe('validateQuery', () => {
 
     expect(res.status).toBe(400)
     expect(res.body.fieldErrors).toHaveProperty('a')
+  })
+
+  it('lets a second validateQuery replace the parsed query', async () => {
+    const res = await request(app).get('/echo-twice?a=1')
+
+    expect(res.status).toBe(200)
+    expect(res.body).toEqual({ a: 1 })
   })
 })
