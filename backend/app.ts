@@ -10,6 +10,7 @@ import { errorHandler } from './middlewares/error.middleware.ts'
 
 import { authRoutes } from './api/auth/auth.routes.ts'
 import { catRoutes } from './api/cat/cat.routes.ts'
+import { reviewRoutes } from './api/review/review.routes.ts'
 
 // The Express app alone - no DB connect, no listen. server.ts boots it,
 // and tests hand it to Supertest directly
@@ -30,6 +31,7 @@ app.use(attachTokenUser)
 /* ROUTES */
 app.use('/api/auth', authRoutes)
 app.use('/api/cats', catRoutes)
+app.use('/api/reviews', reviewRoutes)
 
 app.use('/api', (req) => {
   throw new HttpError(

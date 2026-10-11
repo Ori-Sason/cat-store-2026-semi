@@ -65,6 +65,15 @@ Env: `node --env-file=.env.local`, no dotenv. Prod needs `JWT_SECRET`, Mongo URL
   by the server with `Date.now()`. `updatedAt` changes on every update. Client-sent values are
   stripped by Zod.
   Why: the client clock and the client itself aren't trusted.
+- **Reviews are one flat route, filtered by a required query param.** `GET /api/reviews?catId=…`
+  or `?userId=…` (both → AND), not `/api/cats/:id/reviews` + `/api/users/:id/reviews`. No filter → 400.
+  Why: one router serves both pages (cat-details, the user's reviews tab), and the required filter
+  enforces "no system-wide reviews list" at the API, not only in the UI.
+- **Joins use `$lookup` with an allow-list `$project` inside it** (`utilService.buildLookup`).
+  Only `_id` plus the listed fields (`USER_REF_FIELDS`, `CAT_REF_FIELDS`) leave the foreign
+  collection.
+  Why: `password` / `isAdmin` never enter the pipeline, and a field added to `users` later stays
+  out by default. An exclusion (`{ password: 0 }`) would leak it.
 - **No CORS. Use the Vite dev proxy** (`/api` → `:8000`), and the FE uses only
   relative URLs.
   Why:

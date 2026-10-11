@@ -1,5 +1,7 @@
 import { z } from 'zod'
 import { sharedUtilService } from '../services/util.service.ts'
+import type { Cat } from './cat.ts'
+import type { User } from './user.ts'
 
 export const REVIEW_CONTENT_MAX_LENGTH = 500
 
@@ -11,12 +13,18 @@ const _content = z
     error: `Review must be at most ${REVIEW_CONTENT_MAX_LENGTH} characters`,
   })
 
+// A 24-hex id string - the same check as the backend's toObjectId. A query param that's
+// repeated (?catId=a&catId=b) arrives as an array and fails here too
+function _objectId(invalidError: string, requiredError = invalidError) {
+  return z
+    .string({ error: requiredError })
+    .regex(sharedUtilService.getObjectIdRegex(), { error: invalidError })
+}
+
 // What adding a review sends. `userId` is left out on purpose: the server sets it from the
 // verified user, and Zod strips unknown keys, so a client can't post as someone else
 export const reviewSchema = z.object({
-  catId: z
-    .string({ error: 'Cat is required' })
-    .regex(sharedUtilService.getObjectIdRegex(), { error: 'Invalid cat' }),
+  catId: _objectId('Invalid cat', 'Cat is required'),
   content: _content,
 })
 
@@ -33,3 +41,22 @@ export interface Review extends ReviewInput {
   createdAt: number
   updatedAt: number
 }
+
+// A review joined with its author and its cat (GET /api/reviews). userId / catId are replaced
+// by the slim `user` / `cat`, and the user side never carries password or isAdmin
+export interface ReviewWithRefs extends Omit<Review, 'userId' | 'catId'> {
+  user: Pick<User, '_id' | 'fullname'>
+  cat: Pick<Cat, '_id' | 'name' | 'imgUrl'>
+}
+
+// Which reviews GET /api/reviews returns. Both → AND
+export const reviewFilterSchema = z
+  .object({
+    catId: _objectId('Invalid cat').optional(),
+    userId: _objectId('Invalid user').optional(),
+  })
+  .refine(({ catId, userId }) => catId !== undefined || userId !== undefined, {
+    error: 'Filter by catId or userId',
+  })
+
+export type ReviewFilter = z.infer<typeof reviewFilterSchema>

@@ -1,0 +1,43 @@
+import { ObjectId, type Filter } from 'mongodb'
+import type { ReviewFilter } from '@cat-store/shared'
+import { CAT_COLLECTION, CAT_REF_FIELDS } from '../../models/cat.ts'
+import { REVIEW_COLLECTION, type ReviewDoc, type ReviewJoinedDoc } from '../../models/review.ts'
+import { USER_COLLECTION, USER_REF_FIELDS } from '../../models/user.ts'
+import { mongoService } from '../../services/mongodb.service.ts'
+import { utilService } from '../../services/util.service.ts'
+
+// A cat's or a user's reviews, newest first, each joined with its author and its cat.
+// Stage order matters:
+// - $match + $sort come first, so Mongo runs them as one query on the
+//   { catId / userId: 1, createdAt: -1 } index, with no in-memory sort. No _id tiebreak:
+//   it isn't in the index, so it would bring the in-memory sort back.
+// - Mongo 8.0 doesn't move a $match from after a $lookup to before it, so it has to be
+//   written first.
+// - $unwind is an inner join: a review whose user or cat is gone drops out.
+async function query(filterBy: ReviewFilter): Promise<ReviewJoinedDoc[]> {
+  const collection = await mongoService.getCollection<ReviewDoc>(REVIEW_COLLECTION)
+  return collection
+    .aggregate<ReviewJoinedDoc>([
+      { $match: _buildCriteria(filterBy) },
+      { $sort: { createdAt: -1 } },
+      utilService.buildLookup(USER_COLLECTION, 'userId', 'user', USER_REF_FIELDS),
+      { $unwind: '$user' },
+      utilService.buildLookup(CAT_COLLECTION, 'catId', 'cat', CAT_REF_FIELDS),
+      { $unwind: '$cat' },
+      // Inclusion again: drops userId / catId (the refs replace them) and anything added later
+      { $project: { content: 1, createdAt: 1, updatedAt: 1, user: 1, cat: 1 } },
+    ])
+    .toArray()
+}
+
+// The ids are already checked by reviewFilterSchema, so new ObjectId() can't throw here
+function _buildCriteria({ catId, userId }: ReviewFilter): Filter<ReviewDoc> {
+  const criteria: Filter<ReviewDoc> = {}
+  if (catId) criteria.catId = new ObjectId(catId)
+  if (userId) criteria.userId = new ObjectId(userId)
+  return criteria
+}
+
+export const reviewService = {
+  query,
+}

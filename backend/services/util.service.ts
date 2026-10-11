@@ -1,4 +1,4 @@
-import { ObjectId, type Sort } from 'mongodb'
+import { ObjectId, type Document, type Sort } from 'mongodb'
 import { sharedUtilService, type SortByDirection } from '@cat-store/shared'
 
 // null for a malformed id, so the caller answers 404 instead of new ObjectId() throwing a 500
@@ -25,8 +25,27 @@ function buildSort<TDoc>({
   return { [sortBy]: sortDir === 'asc' ? 1 : -1, _id: 1 }
 }
 
+// A $lookup stage that joins one doc by its _id (the default index serves it) and keeps
+// only `fields` plus _id. The $project runs inside the foreign collection, so nothing outside
+// the allow-list ever enters the pipeline. Inclusion only, never { password: 0 }: an exclusion
+// would let a field added later through by default.
+// `as` is still an array (0 or 1 docs): the caller picks $unwind (drop the doc when the ref is
+// gone) or $first (keep it, with null)
+function buildLookup(
+  from: string,
+  localField: string,
+  as: string,
+  fields: readonly string[],
+): Document {
+  const projection = Object.fromEntries(fields.map((field) => [field, 1]))
+  return {
+    $lookup: { from, localField, foreignField: '_id', as, pipeline: [{ $project: projection }] },
+  }
+}
+
 export const utilService = {
   toObjectId,
   escapeRegex,
   buildSort,
+  buildLookup,
 }

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   REVIEW_CONTENT_MAX_LENGTH,
   reviewContentSchema,
+  reviewFilterSchema,
   reviewSchema,
   type ReviewInput,
 } from './review.ts'
@@ -87,5 +88,35 @@ describe('reviewContentSchema', () => {
 
   it('applies the same content rules', () => {
     expect(reviewContentSchema.safeParse({ content: '   ' }).success).toBe(false)
+  })
+})
+
+describe('reviewFilterSchema', () => {
+  const catId = validReview.catId
+  const userId = '652f1c2e9b1e8a3d4c5b6a80'
+
+  it.each([
+    ['catId', { catId }],
+    ['userId', { userId }],
+    ['both', { catId, userId }],
+  ])('accepts a filter by %s', (_, filter) => {
+    expect(reviewFilterSchema.parse(filter)).toEqual(filter)
+  })
+
+  it('strips unknown params', () => {
+    expect(reviewFilterSchema.parse({ catId, sortBy: 'content' })).toEqual({ catId })
+  })
+
+  it('rejects an empty filter, so there is no system-wide list', () => {
+    expect(reviewFilterSchema.safeParse({}).success).toBe(false)
+  })
+
+  it.each([
+    ['a malformed catId', { catId: 'nope' }],
+    ['a malformed userId', { catId, userId: 'twelve chars' }],
+    // a repeated query param (?catId=a&catId=b) arrives as an array
+    ['a repeated catId', { catId: [catId, catId] }],
+  ])('rejects %s', (_, filter) => {
+    expect(reviewFilterSchema.safeParse(filter).success).toBe(false)
   })
 })

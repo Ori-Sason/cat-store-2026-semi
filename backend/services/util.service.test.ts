@@ -44,3 +44,17 @@ describe('utilService.buildSort', () => {
     })
   })
 })
+
+describe('utilService.buildLookup', () => {
+  it('joins on _id and projects only the listed fields', () => {
+    expect(utilService.buildLookup('users', 'userId', 'user', ['fullname'])).toEqual({
+      $lookup: {
+        from: 'users',
+        localField: 'userId',
+        foreignField: '_id',
+        as: 'user',
+        pipeline: [{ $project: { fullname: 1 } }],
+      },
+    })
+  })
+})

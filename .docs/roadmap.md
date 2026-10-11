@@ -136,7 +136,7 @@ shows buttons that fail with 403. After 3, the UI matches the backend. 4 proves 
 ## Part 5: Reviews + user page
 
 - [x] 1. `reviews` collection: `{ _id, userId, catId, content, createdAt, updatedAt }`.
-- [ ] 2. An aggregation (`$lookup`) that joins review + cat + user into one shape.
+- [x] 2. An aggregation (`$lookup`) that joins review + cat + user into one shape.
 - [ ] 3. On `cat-details`: a list of that cat's reviews plus a form to add one.
 - [ ] 4. Rules for reviews:
 
