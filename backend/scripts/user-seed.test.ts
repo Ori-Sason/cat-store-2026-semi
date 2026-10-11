@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest'
 import { USER_COLLECTION, type UserDoc } from '../models/user.ts'
 import { mongoService } from '../services/mongodb.service.ts'
 import { setupTestDb } from '../test/test-db.helper.ts'
-import { seedUsers } from './user-seed.ts'
+import { SEED_CAT_OWNER_USERNAMES, SEED_USERS, seedUsers } from './user-seed.ts'
 
 setupTestDb()
 
@@ -16,23 +16,38 @@ async function _getUsers() {
 }
 
 describe('seedUsers', () => {
-  it('creates user and admin with a hashed password, and returns them', async () => {
+  it('creates every seed user with a hashed password, and returns them in SEED_USERS order', async () => {
     const before = Date.now()
     const seededUsers = await seedUsers(PASSWORD)
 
-    const [admin, user] = await _getUsers()
-    expect(seededUsers).toEqual([
-      { _id: user!._id, username: 'user', isAdmin: false, isCreated: true },
-      { _id: admin!._id, username: 'admin', isAdmin: true, isCreated: true },
-    ])
-    expect(admin).toMatchObject({ username: 'admin', fullname: 'Admin User', isAdmin: true })
-    expect(user).toMatchObject({ username: 'user', fullname: 'Regular User', isAdmin: false })
-    for (const doc of [admin!, user!]) {
+    const users = await _getUsers()
+    const _getId = (username: string) => users.find((user) => user.username === username)!._id
+    expect(seededUsers).toEqual(
+      SEED_USERS.map(({ username, isAdmin }) => ({
+        _id: _getId(username),
+        username,
+        isAdmin,
+        isCreated: true,
+      })),
+    )
+    expect(users).toHaveLength(SEED_USERS.length)
+    for (const seedUser of SEED_USERS) {
+      expect(users.find((user) => user.username === seedUser.username)).toMatchObject(seedUser)
+    }
+    for (const doc of users) {
       expect(doc.password).not.toBe(PASSWORD)
       expect(await bcrypt.compare(PASSWORD, doc.password)).toBe(true)
       expect(doc.createdAt).toBeGreaterThanOrEqual(before)
       expect(doc.updatedAt).toBe(doc.createdAt)
     }
+  })
+
+  it('has exactly one admin, and every cat owner is a seed user', () => {
+    expect(SEED_USERS.filter((user) => user.isAdmin).map((user) => user.username)).toEqual([
+      'admin',
+    ])
+    const usernames = SEED_USERS.map((user) => user.username)
+    for (const username of SEED_CAT_OWNER_USERNAMES) expect(usernames).toContain(username)
   })
 
   it('keeps existing users as they are on a re-run, and still returns their ids', async () => {
@@ -45,14 +60,14 @@ describe('seedUsers', () => {
     expect(await _getUsers()).toEqual(before)
   })
 
-  it('creates only the missing user, and returns both in SEED_USERS order', async () => {
-    const [, firstAdmin] = await seedUsers(PASSWORD)
+  it('creates only the missing user, and returns all of them in SEED_USERS order', async () => {
+    const [, ...firstOthers] = await seedUsers(PASSWORD)
     const collection = await mongoService.getCollection<UserDoc>(USER_COLLECTION)
     await collection.deleteOne({ username: 'user' })
 
-    const [user, admin] = await seedUsers(PASSWORD)
+    const [user, ...others] = await seedUsers(PASSWORD)
     expect(user).toMatchObject({ username: 'user', isCreated: true })
-    expect(admin).toEqual({ ...firstAdmin, isCreated: false })
+    expect(others).toEqual(firstOthers.map((other) => ({ ...other, isCreated: false })))
   })
 
   it('throws on a password mismatch, naming the users and leaving them untouched', async () => {
@@ -60,7 +75,7 @@ describe('seedUsers', () => {
     const before = await _getUsers()
 
     await expect(seedUsers('Other-pass1')).rejects.toThrow(
-      "SEED_USERS_PASSWORD doesn't match the stored password for: user, admin",
+      "SEED_USERS_PASSWORD doesn't match the stored password for: user, admin, maya, noam, dana",
     )
     expect(await _getUsers()).toEqual(before)
   })
@@ -71,7 +86,9 @@ describe('seedUsers', () => {
     const collection = await mongoService.getCollection<UserDoc>(USER_COLLECTION)
     await collection.deleteOne({ username: 'user' })
 
-    await expect(seedUsers('Other-pass1')).rejects.toThrow('stored password for: admin')
+    await expect(seedUsers('Other-pass1')).rejects.toThrow(
+      'stored password for: admin, maya, noam, dana',
+    )
     expect(await collection.findOne({ username: 'user' })).toBeNull()
   })
 

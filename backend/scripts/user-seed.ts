@@ -7,7 +7,14 @@ import { userService } from '../api/user/user.service.ts'
 export const SEED_USERS = [
   { username: 'user', fullname: 'Regular User', isAdmin: false },
   { username: 'admin', fullname: 'Admin User', isAdmin: true },
+  // Reviewers only: they add reviews in the seed but own no cats
+  { username: 'maya', fullname: 'Maya Levi', isAdmin: false },
+  { username: 'noam', fullname: 'Noam Cohen', isAdmin: false },
+  { username: 'dana', fullname: 'Dana Katz', isAdmin: false },
 ]
+
+// The seed users who own the seeded cats. The rest only review
+export const SEED_CAT_OWNER_USERNAMES = ['user', 'admin']
 
 export interface SeededUser {
   _id: ObjectId
