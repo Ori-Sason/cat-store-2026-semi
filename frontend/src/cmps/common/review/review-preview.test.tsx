@@ -159,6 +159,8 @@ describe('ReviewPreview', () => {
 
       await _choose(review, 'Edit')
       expect(within(review).getByLabelText('Edit your review')).toHaveValue('Such a sweet cat')
+      // The menu unmounts, so focus moves to the form instead of dropping to <body>
+      expect(within(review).getByLabelText('Edit your review')).toHaveFocus()
       expect(
         within(review).queryByRole('button', { name: 'Review actions' }),
       ).not.toBeInTheDocument()

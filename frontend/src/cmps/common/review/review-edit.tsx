@@ -46,6 +46,9 @@ export const ReviewEdit: React.FC<ReviewEditProps> = ({
         rows={3}
         value={content}
         onChange={(ev) => setContent(ev.target.value)}
+        // Edit mode opens from the ⋮ menu, which unmounts: without this, focus drops to <body>.
+        // The add form sits on the page from the start, so it doesn't grab focus
+        autoFocus={isEdit}
         {...fieldProps}
       />
       <div className="foot">

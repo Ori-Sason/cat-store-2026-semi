@@ -20,7 +20,8 @@ export const ReviewActionsMenu: React.FC<ReviewActionsMenuProps> = ({
   const menuId = useId()
   const anchorName = `--review-actions${menuId}`
 
-  // A choice closes the menu first. Focus then returns to the ⋮ button
+  // A choice closes the menu first. On Delete, focus returns to the ⋮ button. Edit unmounts
+  // the menu, so the edit form takes focus instead (ReviewEdit's autoFocus)
   function onChoose(action: () => void) {
     popoverRef.current?.hidePopover()
     action()
