@@ -8,6 +8,7 @@ const ERROR_MSG_MAP: Record<ClientErrorCode, string> = {
   ROUTE_NOT_FOUND: GENERIC_MSG, // FE called an endpoint that doesn't exist - a bug, not the user's fault
 
   CAT_NOT_FOUND: "Cat doesn't exist (anymore).",
+  REVIEW_NOT_FOUND: "Review doesn't exist (anymore).",
 
   INVALID_CREDENTIALS: 'Wrong username or password.', // deliberately vague - don't reveal which one was wrong
   USERNAME_TAKEN: 'This username is already taken.',

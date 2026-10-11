@@ -24,6 +24,9 @@
 	- Canonical meaning: one user's written text about one cat. Its author is `userId`
 	  (server-set from the verified user, never from the body) and its cat is `catId`.
 	- Rule: a review stays on its cat. An edit changes `content` only.
+	- Rule: `reviewPermissionService` (`shared/`) holds the review rules. Any logged-in user can
+	  add one (on their own cat too). Only the author (or an admin) can edit or delete it: the BE
+	  checks that through `requireReviewOwner`, and add with `requireAuth`.
 	- Avoid: `comment`, `feedback`, `rating` (there's no score), `author` as a field name.
 - label (`labels`, `CatLabel`, `CAT_LABELS`)
 	- Canonical meaning: one of a fixed set of descriptors attached to a cat.
@@ -107,6 +110,8 @@
 	  (`tokenUser`, `verifiedUser`).
 	- Avoid: `currentUser`, `authUser`, `sessionUser`, `me`. (`me` only
 	  appears in the route `GET /api/auth/me`.)
+	- `LoggedInUserOrGuest`: what the permission services take. `_id` and `isAdmin`, or
+	  `null` for a guest.
 - token user (`tokenUser`)
 	- Canonical meaning: the `LoggedInUser` decoded from the `loginToken`, with no DB read.
 	  `attachTokenUser` puts it in the ALS store on every request. It can be up to 7 days stale

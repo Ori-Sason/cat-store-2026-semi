@@ -86,6 +86,9 @@ export interface User extends Omit<UserInput, 'password'> {
 
 export type LoggedInUser = Pick<User, '_id' | 'username' | 'fullname' | 'isAdmin'>
 
+// What a permission check needs to know about the current user. null = a guest
+export type LoggedInUserOrGuest = Pick<LoggedInUser, '_id' | 'isAdmin'> | null
+
 // TextEncoder would do this, but shared/ has no platform globals (lib: esnext only).
 // for...of walks code points: 1 byte up to U+007F, 2 up to U+07FF, 3 up to U+FFFF, else 4
 function _utf8ByteLength(text: string): number {

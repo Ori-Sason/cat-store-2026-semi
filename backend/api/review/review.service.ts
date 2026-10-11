@@ -1,6 +1,7 @@
 import { ObjectId, type Filter } from 'mongodb'
-import type { ReviewFilter, ReviewInput } from '@cat-store/shared'
+import type { ReviewContentInput, ReviewFilter, ReviewInput } from '@cat-store/shared'
 import { CAT_COLLECTION, CAT_REF_FIELDS } from '../../models/cat.ts'
+import { HttpError } from '../../models/http-error.ts'
 import { REVIEW_COLLECTION, type ReviewDoc, type ReviewJoinedDoc } from '../../models/review.ts'
 import { USER_COLLECTION, USER_REF_FIELDS } from '../../models/user.ts'
 import { mongoService } from '../../services/mongodb.service.ts'
@@ -49,6 +50,36 @@ async function add(input: ReviewInput, userId: string): Promise<ReviewDoc> {
   return review
 }
 
+async function getById(reviewId: string): Promise<ReviewDoc> {
+  const _id = utilService.toObjectId(reviewId)
+  const collection = await mongoService.getCollection<ReviewDoc>(REVIEW_COLLECTION)
+  const review = _id && (await collection.findOne({ _id }))
+  if (!review) throw _reviewNotFound(reviewId)
+  return review
+}
+
+async function update(reviewId: string, input: ReviewContentInput): Promise<ReviewDoc> {
+  const _id = utilService.toObjectId(reviewId)
+  const collection = await mongoService.getCollection<ReviewDoc>(REVIEW_COLLECTION)
+  // $set touches only content and updatedAt - catId, userId and createdAt stay as they are
+  const review =
+    _id &&
+    (await collection.findOneAndUpdate(
+      { _id },
+      { $set: { content: input.content, updatedAt: Date.now() } },
+      { returnDocument: 'after' },
+    ))
+  if (!review) throw _reviewNotFound(reviewId)
+  return review
+}
+
+async function remove(reviewId: string): Promise<void> {
+  const _id = utilService.toObjectId(reviewId)
+  const collection = await mongoService.getCollection<ReviewDoc>(REVIEW_COLLECTION)
+  const result = _id && (await collection.deleteOne({ _id }))
+  if (!result?.deletedCount) throw _reviewNotFound(reviewId)
+}
+
 // The ids are already checked by reviewFilterSchema, so new ObjectId() can't throw here
 function _buildCriteria({ catId, userId }: ReviewFilter): Filter<ReviewDoc> {
   const criteria: Filter<ReviewDoc> = {}
@@ -57,7 +88,14 @@ function _buildCriteria({ catId, userId }: ReviewFilter): Filter<ReviewDoc> {
   return criteria
 }
 
+function _reviewNotFound(reviewId: string): HttpError {
+  return new HttpError(404, 'REVIEW_NOT_FOUND', `Review ${reviewId} not found`)
+}
+
 export const reviewService = {
   query,
   add,
+  getById,
+  update,
+  remove,
 }

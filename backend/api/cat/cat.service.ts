@@ -2,6 +2,7 @@ import { ObjectId, type Filter } from 'mongodb'
 import { CAT_LABELS, type CatFilter, type CatInput, type CatLabelStats } from '@cat-store/shared'
 import { CAT_COLLECTION, type CatDoc } from '../../models/cat.ts'
 import { HttpError } from '../../models/http-error.ts'
+import { REVIEW_COLLECTION, type ReviewDoc } from '../../models/review.ts'
 import { mongoService } from '../../services/mongodb.service.ts'
 import { utilService } from '../../services/util.service.ts'
 
@@ -52,11 +53,20 @@ async function update(catId: string, input: CatInput): Promise<CatDoc> {
   return cat
 }
 
+// Deletes the cat, then its reviews. Two plain deletes, since the local Mongo is a standalone
+// server and transactions need a replica set. Cat first: if the reviews delete fails, the
+// leftovers are orphans that reviewService.query's $unwind hides. The other order could wipe
+// the reviews of a cat that's still there.
+// The reviews collection is hit directly, not through reviewService: reviewService already
+// imports catService, and this keeps the two modules from importing each other
 async function remove(catId: string): Promise<void> {
   const _id = utilService.toObjectId(catId)
   const collection = await mongoService.getCollection<CatDoc>(CAT_COLLECTION)
   const result = _id && (await collection.deleteOne({ _id }))
-  if (!result?.deletedCount) throw _catNotFound(catId)
+  // !_id is already covered by !result, but TS needs it spelled out to narrow _id for deleteMany
+  if (!_id || !result?.deletedCount) throw _catNotFound(catId)
+  const reviews = await mongoService.getCollection<ReviewDoc>(REVIEW_COLLECTION)
+  await reviews.deleteMany({ catId: _id }) // served by the { catId: 1, createdAt: -1 } index prefix
 }
 
 // One row per label, over the whole catalog. A cat counts once in each of its labels,

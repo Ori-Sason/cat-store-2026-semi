@@ -1,5 +1,5 @@
 import type { Request, Response } from 'express'
-import type { ReviewFilter, ReviewInput } from '@cat-store/shared'
+import type { ReviewContentInput, ReviewFilter, ReviewInput } from '@cat-store/shared'
 import { alsService } from '../../services/als.service.ts'
 import { reviewService } from './review.service.ts'
 
@@ -17,4 +17,18 @@ export async function addReview(req: Request<object, unknown, ReviewInput>, res:
   const verifiedUserId = alsService.getVerifiedUser()._id
   const review = await reviewService.add(req.body, verifiedUserId)
   res.status(201).json(review) // 201 Created
+}
+
+// req.body is already parsed by validateBody(reviewContentSchema): content only
+export async function updateReview(
+  req: Request<{ id: string }, unknown, ReviewContentInput>,
+  res: Response,
+) {
+  const review = await reviewService.update(req.params.id, req.body)
+  res.json(review)
+}
+
+export async function removeReview(req: Request<{ id: string }>, res: Response) {
+  await reviewService.remove(req.params.id)
+  res.sendStatus(204) // 204 No Content
 }

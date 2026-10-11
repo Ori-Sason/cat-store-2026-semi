@@ -10,6 +10,7 @@ import {
 } from '@cat-store/shared'
 import { app } from '../../app.ts'
 import { CAT_COLLECTION, type CatDoc } from '../../models/cat.ts'
+import { REVIEW_COLLECTION, type ReviewDoc } from '../../models/review.ts'
 import { USER_COLLECTION, type UserDoc } from '../../models/user.ts'
 import { mongoService } from '../../services/mongodb.service.ts'
 import { setupTestDb } from '../../test/test-db.helper.ts'
@@ -281,6 +282,31 @@ describe('DELETE /api/cats/:id', () => {
     expect(res.status).toBe(204)
     expect(res.body).toEqual({})
     expect(await collection.findOne({ _id: cat._id })).toBeNull()
+  })
+
+  it("deletes the cat's reviews with it, and only those", async () => {
+    const cat = _buildCat({ name: 'Mitzi' })
+    const otherCat = _buildCat({ name: 'Tom' })
+    const collection = await _insertCat(cat)
+    await collection.insertOne(otherCat)
+    const reviews = await mongoService.getCollection<ReviewDoc>(REVIEW_COLLECTION)
+    const _buildReview = (catId: ObjectId): ReviewDoc => ({
+      _id: new ObjectId(),
+      userId: NON_CAT_OWNER_USER._id,
+      catId,
+      content: 'So fluffy',
+      createdAt: 1_000,
+      updatedAt: 1_000,
+    })
+    const otherCatReview = _buildReview(otherCat._id)
+    await reviews.insertMany([_buildReview(cat._id), _buildReview(cat._id), otherCatReview])
+
+    const res = await request(app)
+      .delete(`/api/cats/${cat._id.toHexString()}`)
+      .set('Cookie', _loginCookie(CAT_OWNER))
+
+    expect(res.status).toBe(204)
+    expect(await reviews.find().toArray()).toEqual([otherCatReview])
   })
 
   it('returns 401 UNAUTHORIZED for a guest and keeps the cat', async () => {

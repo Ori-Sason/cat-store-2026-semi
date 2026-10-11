@@ -1,7 +1,7 @@
 import { Collection, ObjectId, type Document } from 'mongodb'
 import request from 'supertest'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import type { ReviewInput, ReviewWithRefs } from '@cat-store/shared'
+import type { Review, ReviewContentInput, ReviewInput, ReviewWithRefs } from '@cat-store/shared'
 import { app } from '../../app.ts'
 import { CAT_COLLECTION, type CatDoc } from '../../models/cat.ts'
 import { REVIEW_COLLECTION, type ReviewDoc } from '../../models/review.ts'
@@ -50,6 +50,7 @@ function _buildReview(user: UserDoc, cat: CatDoc, createdAt: number): ReviewDoc 
 }
 
 const MAYA = _buildUser('maya', false)
+const NOAM = _buildUser('noam', false) // never writes a review here: the non-author
 const ADMIN = _buildUser('admin', true)
 const MITZI = _buildCat('Mitzi')
 const TOM = _buildCat('Tom')
@@ -295,5 +296,192 @@ describe('POST /api/reviews', () => {
     expect(res.status).toBe(404)
     expect(res.body).toMatchObject({ code: 'CAT_NOT_FOUND' })
     expect(await _countReviews()).toBe(0)
+  })
+})
+
+// PUT and DELETE share the setup: MAYA wrote MAYA_ON_MITZI, NOAM is a user who didn't
+async function _insertForEdit() {
+  const users = await mongoService.getCollection<UserDoc>(USER_COLLECTION)
+  await users.insertMany([MAYA, NOAM, ADMIN])
+  const cats = await mongoService.getCollection<CatDoc>(CAT_COLLECTION)
+  await cats.insertOne(MITZI)
+  const reviews = await mongoService.getCollection<ReviewDoc>(REVIEW_COLLECTION)
+  await reviews.insertOne(MAYA_ON_MITZI)
+  return reviews
+}
+
+// The stored review as the API sends it (not joined): ObjectIds become hex strings
+function _toStoredJson(review: ReviewDoc): Review {
+  return {
+    ...review,
+    _id: review._id.toHexString(),
+    userId: review.userId.toHexString(),
+    catId: review.catId.toHexString(),
+  }
+}
+
+describe('PUT /api/reviews/:id', () => {
+  const NOW = 50_000
+  const INPUT: ReviewContentInput = { content: 'Even sweeter on a second visit' }
+  const URL = `/api/reviews/${MAYA_ON_MITZI._id.toHexString()}`
+
+  beforeEach(() => {
+    // only Date is faked - Supertest and the Mongo driver still need real timers
+    vi.useFakeTimers({ toFake: ['Date'] })
+    vi.setSystemTime(NOW)
+    vi.spyOn(console, 'warn').mockImplementation(() => {})
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+    vi.restoreAllMocks()
+  })
+
+  it.each([
+    ['the author', MAYA],
+    ["an admin, on a review they didn't write", ADMIN],
+  ])('lets %s update the content, keeping createdAt and bumping updatedAt', async (_, user) => {
+    const reviews = await _insertForEdit()
+
+    const res = await request(app).put(URL).set('Cookie', _loginCookie(user)).send(INPUT)
+
+    const expected = { ...MAYA_ON_MITZI, content: INPUT.content, updatedAt: NOW }
+    expect(res.status).toBe(200)
+    expect(res.body).toEqual(_toStoredJson(expected))
+    expect(await reviews.findOne({ _id: MAYA_ON_MITZI._id })).toEqual(expected)
+  })
+
+  // An admin edit must not make the review the admin's: userId stays the author's
+  it('ignores a client-sent catId, userId, _id, createdAt and updatedAt', async () => {
+    const reviews = await _insertForEdit()
+
+    const res = await request(app)
+      .put(URL)
+      .set('Cookie', _loginCookie(ADMIN))
+      .send({
+        ...INPUT,
+        _id: new ObjectId().toHexString(),
+        catId: TOM._id.toHexString(),
+        userId: ADMIN._id.toHexString(),
+        createdAt: 1,
+        updatedAt: 1,
+      })
+
+    expect(res.status).toBe(200)
+    expect(await reviews.findOne({ _id: MAYA_ON_MITZI._id })).toEqual({
+      ...MAYA_ON_MITZI,
+      content: INPUT.content,
+      updatedAt: NOW,
+    })
+  })
+
+  it('returns 400 VALIDATION_FAILED for empty content and keeps the review', async () => {
+    const reviews = await _insertForEdit()
+
+    const res = await request(app)
+      .put(URL)
+      .set('Cookie', _loginCookie(MAYA))
+      .send({ content: '   ' })
+
+    expect(res.status).toBe(400)
+    expect(res.body).toMatchObject({ code: 'VALIDATION_FAILED' })
+    expect(res.body.fieldErrors).toHaveProperty('content')
+    expect(await reviews.findOne({ _id: MAYA_ON_MITZI._id })).toEqual(MAYA_ON_MITZI)
+  })
+
+  it('returns 401 UNAUTHORIZED for a guest and keeps the review', async () => {
+    const reviews = await _insertForEdit()
+
+    const res = await request(app).put(URL).send(INPUT)
+
+    expect(res.status).toBe(401)
+    expect(res.body).toMatchObject({ code: 'UNAUTHORIZED' })
+    expect(await reviews.findOne({ _id: MAYA_ON_MITZI._id })).toEqual(MAYA_ON_MITZI)
+  })
+
+  // The ownership check runs before validation, so even a bad body gets 403, not 400
+  it("returns 403 FORBIDDEN for a user who didn't write the review, before validating the body", async () => {
+    const reviews = await _insertForEdit()
+
+    const res = await request(app)
+      .put(URL)
+      .set('Cookie', _loginCookie(NOAM))
+      .send({ content: '   ' })
+
+    expect(res.status).toBe(403)
+    expect(res.body).toMatchObject({ code: 'FORBIDDEN' })
+    expect(await reviews.findOne({ _id: MAYA_ON_MITZI._id })).toEqual(MAYA_ON_MITZI)
+  })
+
+  it.each([
+    ['a review that does not exist', new ObjectId().toHexString()],
+    ['a malformed id', 'nope'],
+  ])('returns 404 REVIEW_NOT_FOUND for %s, not 403 or 500', async (_, id) => {
+    await _insertForEdit()
+
+    const res = await request(app)
+      .put(`/api/reviews/${id}`)
+      .set('Cookie', _loginCookie(NOAM))
+      .send(INPUT)
+
+    expect(res.status).toBe(404)
+    expect(res.body).toMatchObject({ code: 'REVIEW_NOT_FOUND' })
+  })
+})
+
+describe('DELETE /api/reviews/:id', () => {
+  const URL = `/api/reviews/${MAYA_ON_MITZI._id.toHexString()}`
+
+  beforeEach(() => {
+    vi.spyOn(console, 'warn').mockImplementation(() => {})
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  it.each([
+    ['the author', MAYA],
+    ["an admin, on a review they didn't write", ADMIN],
+  ])('lets %s delete the review, with 204', async (_, user) => {
+    const reviews = await _insertForEdit()
+
+    const res = await request(app).delete(URL).set('Cookie', _loginCookie(user))
+
+    expect(res.status).toBe(204)
+    expect(res.body).toEqual({})
+    expect(await reviews.findOne({ _id: MAYA_ON_MITZI._id })).toBeNull()
+  })
+
+  it('returns 401 UNAUTHORIZED for a guest and keeps the review', async () => {
+    const reviews = await _insertForEdit()
+
+    const res = await request(app).delete(URL)
+
+    expect(res.status).toBe(401)
+    expect(res.body).toMatchObject({ code: 'UNAUTHORIZED' })
+    expect(await reviews.findOne({ _id: MAYA_ON_MITZI._id })).toEqual(MAYA_ON_MITZI)
+  })
+
+  it("returns 403 FORBIDDEN for a user who didn't write the review, and keeps it", async () => {
+    const reviews = await _insertForEdit()
+
+    const res = await request(app).delete(URL).set('Cookie', _loginCookie(NOAM))
+
+    expect(res.status).toBe(403)
+    expect(res.body).toMatchObject({ code: 'FORBIDDEN' })
+    expect(await reviews.findOne({ _id: MAYA_ON_MITZI._id })).toEqual(MAYA_ON_MITZI)
+  })
+
+  it.each([
+    ['a review that does not exist', new ObjectId().toHexString()],
+    ['a malformed id', 'nope'],
+  ])('returns 404 REVIEW_NOT_FOUND for %s, not 403 or 500', async (_, id) => {
+    await _insertForEdit()
+
+    const res = await request(app).delete(`/api/reviews/${id}`).set('Cookie', _loginCookie(NOAM))
+
+    expect(res.status).toBe(404)
+    expect(res.body).toMatchObject({ code: 'REVIEW_NOT_FOUND' })
   })
 })
