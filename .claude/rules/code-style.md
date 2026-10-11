@@ -10,5 +10,7 @@ Applies to every JavaScript and TypeScript file in this repository.
 - Comment where it helps a later reader: a decision, a constraint, a non-obvious flow.
   The user edits or removes comments they don't want. That's their review pass, not a
   signal to write fewer, so don't infer comment density from the existing files.
+- Comments state the reason itself. Never cite what lives only in `.handoffs/` (stop numbers,
+  research ids like "R3", sub-part names): handoffs get deleted. `.docs/` is fine to cite.
 
 Match the surrounding code for everything this file does not cover.
