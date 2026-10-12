@@ -17,7 +17,10 @@ export function setupTestDb() {
     await _clearDb()
   })
 
+  // Wipe after the file too: the E2E seed shares catsTest, and a test's leftover users (e.g. an
+  // `admin` with a fake password hash) make it refuse to start
   afterAll(async () => {
+    await _clearDb()
     await mongoService.close()
   })
 }
