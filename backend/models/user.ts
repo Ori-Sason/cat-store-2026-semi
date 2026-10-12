@@ -9,9 +9,10 @@ export interface UserDoc extends Omit<User, '_id'> {
   password: string
 }
 
-// The user fields a joined doc (e.g. a review's author) may carry, besides `_id`. An allow-list,
-// so a field added to users later (a secret, say) stays out of every join by default
-export const USER_REF_FIELDS = ['fullname'] as const satisfies readonly (keyof UserDoc)[]
+// The user fields a joined doc (e.g. a review's author) may carry, besides `_id` (UserRef). An
+// allow-list, so a field added to users later (a secret, say) stays out of every join by default.
+// isAdmin is in on purpose, like in PublicUser: the UI marks staff
+export const USER_REF_FIELDS = ['fullname', 'isAdmin'] as const satisfies readonly (keyof UserDoc)[]
 
 // The fields GET /api/users/:id returns, besides `_id` (PublicUser). An allow-list, like the refs:
 // no username (half a login) and never the password

@@ -85,7 +85,7 @@ Env: `node --env-file=.env.local`, no dotenv. Prod needs `JWT_SECRET`, Mongo URL
 - **Joins use `$lookup` with an allow-list `$project` inside it** (`utilService.buildLookup`).
   Only `_id` plus the listed fields (`USER_REF_FIELDS`, `CAT_REF_FIELDS`) leave the foreign
   collection.
-  Why: `password` / `isAdmin` never enter the pipeline, and a field added to `users` later stays
+  Why: `password` / `username` never enter the pipeline, and a field added to `users` later stays
   out by default. An exclusion (`{ password: 0 }`) would leak it.
 - **No CORS. Use the Vite dev proxy** (`/api` → `:8000`), and the FE uses only
   relative URLs.

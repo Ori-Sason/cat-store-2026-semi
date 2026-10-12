@@ -14,7 +14,7 @@ const _REVIEW: ReviewWithRefs = {
   content: 'Sweet and calm',
   createdAt: 1,
   updatedAt: 1,
-  user: { _id: 'user-1', fullname: 'Maya Levi' },
+  user: { _id: 'user-1', fullname: 'Maya Levi', isAdmin: false },
   cat: { _id: 'cat-1', name: 'Mitzi', imgUrl: '', ownerId: 'user-2' },
 }
 

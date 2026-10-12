@@ -51,11 +51,11 @@
 
 - `CatWithRefs` vs `CatJoinedDoc`
 	- Canonical meaning: a cat joined with its owner, as `GET /api/cats/:id` returns it: a `Cat`
-	  with `owner: { _id, fullname }` in place of `ownerId` (the ref replaces it, like a
+	  with `owner` (a `UserRef`) in place of `ownerId` (the ref replaces it, like a
 	  review's refs replace `userId` / `catId`). `CatWithRefs` is the wire type (`shared/`, string ids). `CatJoinedDoc` is the
 	  backend-only aggregation output (`ObjectId` ids). Same split as `ReviewWithRefs` /
 	  `ReviewJoinedDoc`.
-	- Rule: `owner` is an allow-list (`_id`, `fullname`), like a review's `user`. A cat whose
+	- Rule: `owner` is a `UserRef`, like a review's `user`. A cat whose
 	  owner's user doc is gone isn't returned (an inner join), so `owner` is never null.
 	  Permission checks take the id alone: `canEditCat(cat.owner._id, …)`.
 	- Avoid: `CatWithOwner`, `PopulatedCat`, `CatDetails` (the page's name).
@@ -75,6 +75,13 @@
 	  (`PUBLIC_USER_FIELDS`), like the join refs.
 	- Avoid: `UserProfile`, `Profile` (the page's name), `UserSummary`.
 
+- `UserRef`
+	- Canonical meaning: a user as a join carries them: `{ _id, fullname, isAdmin }`. A review's
+	  `user` and a cat's `owner` are both `UserRef`s. A subset of `PublicUser`.
+	- Rule: built from an allow-list (`USER_REF_FIELDS`), so `password` and `username` never
+	  leave the DB. `isAdmin` is in on purpose, like in `PublicUser`: the Admin chip on reviews.
+	- Avoid: `UserSummary`, `Author` (for the type), `PopulatedUser`.
+
 - `Review` vs `ReviewInput` vs `ReviewContentInput` vs `ReviewDoc`
 	- Canonical meaning: `Review` is a stored review as the API returns it (with `_id`,
 	  `userId` and the timestamps). `ReviewInput` is what adding one sends (`catId`, `content`),
@@ -85,12 +92,11 @@
 
 - `ReviewWithRefs` vs `ReviewJoinedDoc`
 	- Canonical meaning: a review joined with its author and its cat, as `GET /api/reviews`
-	  returns it: `{ _id, content, createdAt, updatedAt, user: { _id, fullname },
+	  returns it: `{ _id, content, createdAt, updatedAt, user: { _id, fullname, isAdmin },
 	  cat: { _id, name, imgUrl, ownerId } }`, with no `userId` / `catId`. `ReviewWithRefs` is the wire
 	  type (`shared/`, string ids). `ReviewJoinedDoc` is the backend-only aggregation output
 	  (`ObjectId` ids). Same split as `Cat` / `CatDoc`.
-	- Rule: the joined `user` is an allow-list (`_id`, `fullname`), so `password` and `isAdmin`
-	  never leave the DB. One shape serves both pages: each ignores the side it already knows.
+	- Rule: the joined `user` is a `UserRef`. One shape serves both pages: each ignores the side it already knows.
 	  `cat.ownerId` marks a review written by the cat's owner (the Owner chip), on any page.
 	- Avoid: `ReviewJoined` (for the wire type), `PopulatedReview`, `ReviewDetails`.
 

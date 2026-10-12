@@ -88,6 +88,9 @@ export interface User extends Omit<UserInput, 'password'> {
 // password. isAdmin is public on purpose, so the UI can mark staff
 export type PublicUser = Pick<User, '_id' | 'fullname' | 'isAdmin' | 'createdAt'>
 
+// A user as a join carries them: a review's author, a cat's owner. A subset of PublicUser
+export type UserRef = Pick<User, '_id' | 'fullname' | 'isAdmin'>
+
 export type LoggedInUser = Pick<User, '_id' | 'username' | 'fullname' | 'isAdmin'>
 
 // What a permission check needs to know about the current user. null = a guest

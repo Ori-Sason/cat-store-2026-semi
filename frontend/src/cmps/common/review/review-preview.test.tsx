@@ -23,7 +23,7 @@ const REVIEW: ReviewWithRefs = {
   content: 'Such a sweet cat',
   createdAt: Date.UTC(2026, 9, 9, 12),
   updatedAt: Date.UTC(2026, 9, 9, 12),
-  user: { _id: AUTHOR._id, fullname: 'Maya Levi' },
+  user: { _id: AUTHOR._id, fullname: 'Maya Levi', isAdmin: false },
   cat: { _id: 'cat-1', name: 'Mitzi', imgUrl: '', ownerId: CAT_OWNER._id },
 }
 
@@ -126,7 +126,7 @@ describe('ReviewPreview', () => {
   describe('the Owner chip', () => {
     it("marks a review by the cat's owner, for everyone", async () => {
       vi.mocked(reviewService.query).mockResolvedValue([
-        { ...REVIEW, user: { _id: CAT_OWNER._id, fullname: 'Dana Katz' } },
+        { ...REVIEW, user: { _id: CAT_OWNER._id, fullname: 'Dana Katz', isAdmin: false } },
       ])
       _render(null)
       const review = await _findReview()
@@ -136,7 +136,7 @@ describe('ReviewPreview', () => {
 
     it('shows both chips when the owner views their own review', async () => {
       vi.mocked(reviewService.query).mockResolvedValue([
-        { ...REVIEW, user: { _id: CAT_OWNER._id, fullname: 'Dana Katz' } },
+        { ...REVIEW, user: { _id: CAT_OWNER._id, fullname: 'Dana Katz', isAdmin: false } },
       ])
       _render(CAT_OWNER)
       const review = await _findReview()
@@ -186,7 +186,7 @@ describe('ReviewPreview', () => {
 
     it('keeps the Owner chip on a review of their own cat', async () => {
       vi.mocked(reviewService.query).mockResolvedValue([
-        { ...REVIEW, user: { _id: CAT_OWNER._id, fullname: 'Dana Katz' } },
+        { ...REVIEW, user: { _id: CAT_OWNER._id, fullname: 'Dana Katz', isAdmin: false } },
       ])
       _render(CAT_OWNER, 'user')
       const review = await _findReview()

@@ -51,7 +51,7 @@ const MAYA_REVIEW: ReviewWithRefs = {
   content: 'Such a sweet cat',
   createdAt: Date.UTC(2026, 9, 9, 12),
   updatedAt: Date.UTC(2026, 9, 9, 12),
-  user: { _id: MAYA._id, fullname: MAYA.fullname },
+  user: { _id: MAYA._id, fullname: MAYA.fullname, isAdmin: false },
   cat: { _id: 'cat-2', name: 'Luna', imgUrl: '', ownerId: NOAM._id },
 }
 

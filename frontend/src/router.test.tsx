@@ -45,7 +45,7 @@ describe('routes', () => {
       _id: 'cat-1',
       name: 'Mitzi',
       labels: [],
-      owner: { _id: 'user-2', fullname: 'O' },
+      owner: { _id: 'user-2', fullname: 'O', isAdmin: false },
     } as unknown as CatWithRefs)
     vi.mocked(reviewService.query).mockResolvedValue([])
     _renderAt('/cat/cat-1')
@@ -63,7 +63,7 @@ describe('routes', () => {
       _id: 'cat-1',
       name: 'Mitzi',
       labels: [],
-      owner: { _id: 'user-2', fullname: 'O' },
+      owner: { _id: 'user-2', fullname: 'O', isAdmin: false },
     } as unknown as CatWithRefs)
     vi.mocked(reviewService.query).mockResolvedValue([])
     vi.mocked(reviewService.add).mockResolvedValue({ _id: 'review-1' } as Review)
@@ -75,7 +75,7 @@ describe('routes', () => {
         content: 'Purrfect',
         createdAt: Date.UTC(2026, 9, 9),
         updatedAt: Date.UTC(2026, 9, 9),
-        user: { _id: user._id, fullname: user.fullname },
+        user: { _id: user._id, fullname: user.fullname, isAdmin: false },
         cat: { _id: 'cat-1', name: 'Mitzi', imgUrl: '', ownerId: 'user-2' },
       } satisfies ReviewWithRefs,
     ])
@@ -105,7 +105,7 @@ describe('routes', () => {
         content: 'Purrfect',
         createdAt: Date.UTC(2026, 9, 9),
         updatedAt: Date.UTC(2026, 9, 9),
-        user: { _id: user._id, fullname: user.fullname },
+        user: { _id: user._id, fullname: user.fullname, isAdmin: false },
         cat: { _id: 'cat-1', name: 'Mitzi', imgUrl: '', ownerId: 'user-2' },
       } satisfies ReviewWithRefs,
     ])

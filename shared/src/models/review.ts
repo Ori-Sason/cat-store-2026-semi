@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { sharedUtilService } from '../services/util.service.ts'
 import type { Cat } from './cat.ts'
-import type { User } from './user.ts'
+import type { UserRef } from './user.ts'
 
 export const REVIEW_CONTENT_MAX_LENGTH = 500
 
@@ -43,9 +43,9 @@ export interface Review extends ReviewInput {
 }
 
 // A review joined with its author and its cat (GET /api/reviews). userId / catId are replaced
-// by the slim `user` / `cat`, and the user side never carries password or isAdmin
+// by the slim `user` / `cat`, and the user side never carries the password or username
 export interface ReviewWithRefs extends Omit<Review, 'userId' | 'catId'> {
-  user: Pick<User, '_id' | 'fullname'>
+  user: UserRef
   cat: Pick<Cat, '_id' | 'name' | 'imgUrl' | 'ownerId'>
 }
 

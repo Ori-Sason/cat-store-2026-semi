@@ -61,7 +61,7 @@ const ADMIN_ON_MITZI = _buildReview(ADMIN, MITZI, 3_000)
 const MAYA_ON_TOM = _buildReview(MAYA, TOM, 2_000)
 
 // The review as the API sends it: the exact keys, so a projection bug (an extra field, a leaked
-// password / isAdmin, a leftover userId / catId) fails toEqual
+// password / username, a leftover userId / catId) fails toEqual. ADMIN's reviews pin isAdmin true
 function _toJson(review: ReviewDoc): ReviewWithRefs {
   const user = [MAYA, ADMIN].find(({ _id }) => _id.equals(review.userId))!
   const cat = [MITZI, TOM].find(({ _id }) => _id.equals(review.catId))!
@@ -70,7 +70,7 @@ function _toJson(review: ReviewDoc): ReviewWithRefs {
     content: review.content,
     createdAt: review.createdAt,
     updatedAt: review.updatedAt,
-    user: { _id: user._id.toHexString(), fullname: user.fullname },
+    user: { _id: user._id.toHexString(), fullname: user.fullname, isAdmin: user.isAdmin },
     cat: {
       _id: cat._id.toHexString(),
       name: cat.name,
@@ -126,12 +126,13 @@ describe('GET /api/reviews', () => {
   })
 
   // Belt and braces next to the exact toEqual above: the one thing that must never leak
-  it('never sends the password or isAdmin of an author', async () => {
+  // isAdmin is public on purpose (the Admin chip), the login fields are not
+  it('never sends the password or username of an author', async () => {
     const res = await request(app).get(`/api/reviews?catId=${MITZI._id.toHexString()}`)
 
     for (const review of res.body as ReviewWithRefs[]) {
       expect(review.user).not.toHaveProperty('password')
-      expect(review.user).not.toHaveProperty('isAdmin')
+      expect(review.user).not.toHaveProperty('username')
     }
   })
 

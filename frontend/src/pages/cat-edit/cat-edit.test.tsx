@@ -26,7 +26,7 @@ const _CAT = {
   imgUrl: '',
   createdAt: 1,
   updatedAt: 1,
-  owner: { _id: 'user-1', fullname: 'U' },
+  owner: { _id: 'user-1', fullname: 'U', isAdmin: false },
 } satisfies CatWithRefs
 
 function _renderAt(path: string, state?: CatListLocationState) {

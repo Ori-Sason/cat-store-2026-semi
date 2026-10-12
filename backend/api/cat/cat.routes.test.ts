@@ -253,17 +253,21 @@ describe('GET /api/cats/:id', () => {
     vi.restoreAllMocks()
   })
 
-  it('returns the cat with its owner, whose ref carries only _id and fullname', async () => {
+  it('returns the cat with its owner, whose ref carries only _id, fullname and isAdmin', async () => {
     const cat = _buildCat({ name: 'Mitzi' })
     await _insertCat(cat)
 
     const res = await request(app).get(`/api/cats/${cat._id.toHexString()}`)
 
     expect(res.status).toBe(200)
-    // toEqual, not toMatchObject: an extra key (ownerId, or the owner's password, isAdmin,
-    // username) fails the test
+    // toEqual, not toMatchObject: an extra key (ownerId, or the owner's password or username)
+    // fails the test
     expect(res.body).toEqual(
-      _toJsonWithRefs(cat, { _id: CAT_OWNER._id.toHexString(), fullname: CAT_OWNER.fullname }),
+      _toJsonWithRefs(cat, {
+        _id: CAT_OWNER._id.toHexString(),
+        fullname: CAT_OWNER.fullname,
+        isAdmin: CAT_OWNER.isAdmin,
+      }),
     )
   })
 
