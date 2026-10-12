@@ -186,7 +186,7 @@ describe('Home', () => {
     await _render()
 
     expect(
-      await within(_getSection('Newest cats')).findByText('No cats listed yet'),
+      await within(_getSection('Newest cats')).findByText('No cats listed yet.'),
     ).toBeInTheDocument()
   })
 })
