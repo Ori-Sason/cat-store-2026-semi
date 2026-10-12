@@ -200,10 +200,31 @@ describe('GET /api/cats', () => {
     expect(await _getNames('?limit=0')).toHaveLength(CATS.length)
   })
 
-  it("returns only one user's cats for ownerId", async () => {
-    await _insertCat(_buildCat({ name: 'Luna', ownerId: NON_CAT_OWNER_USER._id }))
+  describe('with ownerId', () => {
+    const OWNER_QUERY = `?ownerId=${NON_CAT_OWNER_USER._id.toHexString()}`
 
-    expect(await _getNames(`?ownerId=${NON_CAT_OWNER_USER._id.toHexString()}`)).toEqual(['Luna'])
+    // Two cats, so the sort after the ownerId match is pinned too
+    beforeEach(async () => {
+      await _insertCat(
+        _buildCat({ name: 'Luna', ownerId: NON_CAT_OWNER_USER._id, createdAt: 2_000 }),
+      )
+      await _insertCat(
+        _buildCat({
+          name: 'Oreo',
+          ownerId: NON_CAT_OWNER_USER._id,
+          createdAt: 3_000,
+          isInStock: false,
+        }),
+      )
+    })
+
+    it("returns only one user's cats, newest first", async () => {
+      expect(await _getNames(OWNER_QUERY)).toEqual(['Oreo', 'Luna'])
+    })
+
+    it('adds to the other filters instead of replacing them', async () => {
+      expect(await _getNames(`${OWNER_QUERY}&isInStock=false`)).toEqual(['Oreo'])
+    })
   })
 
   it('returns no cats for the ownerId of a user who has none', async () => {
