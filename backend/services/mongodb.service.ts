@@ -18,7 +18,9 @@ const INDEXES: IndexDef[] = [
   // (a plain { catId: 1 } would sort in memory), and its prefix serves deleteMany({ catId })
   { collection: REVIEW_COLLECTION, key: { catId: 1, createdAt: -1 } },
   { collection: REVIEW_COLLECTION, key: { userId: 1, createdAt: -1 } },
-  // A user's cats (the user page), in the default newest-first order
+  // A user's cats (the user page). Serves the ownerId match only, not the sort: buildSort adds
+  // an _id tiebreak that isn't in the key, so the newest-first order still sorts in memory.
+  // Fine at one user's cat count
   { collection: CAT_COLLECTION, key: { ownerId: 1, createdAt: -1 } },
 ]
 
