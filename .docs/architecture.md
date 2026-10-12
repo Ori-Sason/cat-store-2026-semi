@@ -69,11 +69,18 @@ Env: `node --env-file=.env.local`, no dotenv. Prod needs `JWT_SECRET`, Mongo URL
   Why: one action serves every page that shows reviews. After a fetcher action, react-router
   reloads the loaders of the page the fetcher is on, so each page refreshes its own data.
 - **A page's reviews are a child route with their own loader.** `/cat/:id` has an index child
-  (`reviewLoader(args, 'catId')`) rendered through `<Outlet>`, and the parent's
+  (`reviewLoader(args, 'catId')`), and `/user/:id` a `reviews` child
+  (`reviewLoader(args, 'userId')`), each rendered through `<Outlet>`. The parent's
   `shouldRevalidate` (`utilService.skipReloadOnActionAt('/review')`) skips its reload after a
-  `/review` or `/review/:id` action. The user page follows the same shape.
-  Why: a review action changes only the reviews, so the cat isn't fetched again. Both loaders
-  still run in parallel on a visit.
+  `/review` or `/review/:id` action.
+  Why: a review action changes only the reviews, so the cat or the user isn't fetched again.
+  The loaders still run in parallel on a visit.
+- **The user page's tabs are child routes.** `/user/:id` loads the user (awaited, a missing user
+  → the route error) and renders the header and tab nav. The cats tab is the index child
+  (`GET /api/cats?ownerId=…`, no user-specific cats route), the reviews tab is `reviews`. Each tab
+  loader is deferred, so a failed tab shows its own section error and the header stays.
+  Why: an index route instead of a redirect gives the cats tab one URL, and Back never bounces.
+  A tab switch runs only the new tab's loader.
 - **Server-set timestamps:** every doc (cats, users, reviews) has `createdAt`/`updatedAt`, set
   by the server with `Date.now()`. `updatedAt` changes on every update. Client-sent values are
   stripped by Zod.
@@ -87,6 +94,14 @@ Env: `node --env-file=.env.local`, no dotenv. Prod needs `JWT_SECRET`, Mongo URL
   collection.
   Why: `password` / `username` never enter the pipeline, and a field added to `users` later stays
   out by default. An exclusion (`{ password: 0 }`) would leak it.
+  Cats come back joined too: `GET /api/cats` and `GET /api/cats/:id` return `CatWithRefs` (the
+  owner as a `UserRef`). Only POST / PUT return a plain `Cat`.
+- **A user is public through an allow-list too.** `GET /api/users/:id` is open to anyone and returns
+  `PublicUser` (`_id` + `PUBLIC_USER_FIELDS`: `fullname`, `isAdmin`, `createdAt`), projected in
+  the DB read. Never `password`, and no `username` (half a login). `GET /api/auth/me` keeps
+  `LoggedInUser`, the same shape as the login response and the JWT payload.
+  Why: profiles are public (anyone sees anyone's cats and reviews), and `isAdmin` is public on
+  purpose, so the UI can mark staff whose edits leave no other trace.
 - **No CORS. Use the Vite dev proxy** (`/api` → `:8000`), and the FE uses only
   relative URLs.
   Why:
