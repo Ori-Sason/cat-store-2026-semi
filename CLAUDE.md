@@ -3,7 +3,7 @@
 A rebuild of cat-store (a reskin of the bootcamp "mister-toy" spec). This round,
 Claude writes the code via plan/auto mode. `.docs/roadmap.md` is the source of truth for
 scope, part order, and progress. Treat it as the shape of the project, not a literal
-script. Stack and decisions live in `.docs/architecture.md`.
+script. Stack and cross-cutting decisions live in `.docs/architecture.md`.
 
 ## Security
 - Never commit or expose secrets (JWT secret, Mongo credentials, `.env*` values).

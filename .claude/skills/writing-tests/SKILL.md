@@ -11,7 +11,7 @@ How to write tests. When to write them lives in `.claude/rules/testing.md`.
 - Domain logic: filtering, sorting, schema validation.
 - API request validation and error responses (`ApiErrorBody` shape, `code`, status).
 - Auth and ownership rules: guest / owner / admin on cats and reviews (Part 4 on).
-- Server-set fields: the client can't set `_id`, `createdAt`, `updatedAt` or `ownerId`.
+- Server-set fields: the client can't set `_id`, `createdAt`, `updatedAt`, `ownerId` or `userId`.
 - User-facing failure flows for key features.
 
 ## Reliability

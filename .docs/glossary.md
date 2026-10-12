@@ -49,7 +49,10 @@ don't assume it.
 | `*JoinedDoc` | the aggregation output behind a `*WithRefs` | `backend/models/` | `CatJoinedDoc`, `ReviewJoinedDoc` |
 
 Avoid for all of them: `*Dto`, `New*`, `*Payload`, `*ToSave`, `Populated*`, `*Summary`, and
-page names (`CatDetails`, `Profile`) as type names.
+page names (`CatDetails`, `Profile`, `ReviewDetails`) as type names. Also avoid:
+- `*With<Ref>` (`CatWithOwner`): use `*WithRefs`.
+- `ReviewJoined` for the wire type: that's `ReviewWithRefs`, and `*JoinedDoc` is backend-only.
+- `ReviewCat`, `Author` as type names: use `CatRef`, `UserRef`.
 
 The ones that don't follow the pattern:
 - `ReviewContentInput`: what editing a review sends, `content` only.

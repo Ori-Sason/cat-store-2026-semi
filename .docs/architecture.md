@@ -79,6 +79,9 @@ Env: `node --env-file=.env.local`, no dotenv. Prod needs `JWT_SECRET`, Mongo URL
   per database, each with `readWrite` on its own database only.
   Why: least privilege. And since tests wipe their database, a test config pointing at `cats`
   by mistake fails on auth instead of deleting dev data.
+- **E2E runs through the Playwright CLI, headless. No browser-driving MCP.**
+  Why: the CLI only reports pass/fail, while driving a browser step by step through an MCP
+  costs many tokens per run.
 
 ## Update Triggers
 - Update this file when the stack, auth boundaries, collections, or the dev/prod topology

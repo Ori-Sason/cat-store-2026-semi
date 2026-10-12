@@ -94,7 +94,8 @@ export const routes: RouteObject[] = [
                 shouldRevalidate: utilService.skipReloadOnActionAt('/review'),
                 element: <UserDetails />,
                 children: [
-                  // One child route per tab, each with its own loader. Only the open tab loads
+                  // One child route per tab, each with its own loader. Only the open tab loads.
+                  // The cats tab is an index route, not a redirect: it gets one URL, and Back never bounces
                   { index: true, loader: userCatsLoader, element: <UserCats /> },
                   {
                     path: 'reviews',

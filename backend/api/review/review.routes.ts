@@ -8,6 +8,8 @@ import { addReview, getReviews, removeReview, updateReview } from './review.cont
 export const reviewRoutes = Router()
 
 // One flat collection, filtered by ?catId= / ?userId=. The filter is required (400 without one)
+// Flat, not nested under cats/users, so one router serves both the cat page and the user's reviews tab.
+// The required filter enforces "no system-wide reviews list" at the API, not only in the UI
 reviewRoutes.get('/', validateQuery(reviewFilterSchema), getReviews)
 reviewRoutes.post('/', requireAuth, validateBody(reviewSchema), addReview)
 // requireReviewOwner (which includes requireAuth) runs before validateBody, so a non-author gets a 403, not a 400

@@ -192,7 +192,7 @@ Before the first real deploy. This turns into a `deploy` skill once Part 7 start
 
 ## Open questions
 
-Single home for open questions. Once one is decided, record the answer in `architecture.md` → Decisions and remove it here.
+Single home for open questions. Once one is decided, record the answer in `architecture.md` → Decisions if it's cross-cutting, otherwise in a code comment next to the code, and remove it here.
 
 - Deploy: Render build/start steps.
 - User delete / ban policy (Extras → User management): what happens to the user's cats and
