@@ -193,9 +193,9 @@ Single home for open questions. Once one is decided, record the answer in `archi
 
 - Deploy: Render build/start steps.
 - User delete / ban policy (Extras → User management): what happens to the user's cats and
-  reviews: keep them, remove them, or split by event (a self-delete vs a ban). Today the read
-  side disagrees: a review whose author is gone is hidden (`$unwind`), and a cat whose owner is
-  gone stays visible with `owner: null`. The decision settles both.
+  reviews: keep them, remove them, or split by event (a self-delete vs a ban). Until then, the
+  read side hides both: a review whose author is gone and a cat whose owner is gone (inner joins,
+  `$unwind`). They stay in the DB.
 
 ## Update Triggers
 - Mark an item `[x]` only when it's fully done, and update the **Current** line in the same change.

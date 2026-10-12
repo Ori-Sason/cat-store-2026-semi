@@ -135,14 +135,6 @@ describe('CatDetails', () => {
     expect(screen.queryByRole('link', { name: /Lior Ben-David/ })).not.toBeInTheDocument()
   })
 
-  it("shows no owner line when the owner's user is gone", async () => {
-    vi.mocked(catService.getById).mockResolvedValue({ ...CAT, owner: null })
-    _renderAt('/cat/cat-1')
-
-    expect(await screen.findByRole('heading', { name: 'Mitzi' })).toBeInTheDocument()
-    expect(screen.queryByText(/Owner:/)).not.toBeInTheDocument()
-  })
-
   it('goes back to the list with the filter it came from', async () => {
     _renderAt('/cat/cat-1', { listSearch: '?labels=Calm' })
 
@@ -208,19 +200,6 @@ describe('CatDetails', () => {
 
     expect(await screen.findByRole('link', { name: 'Edit' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Delete' })).toBeInTheDocument()
-  })
-
-  // canEditCat gets owner?._id ?? null, so an orphan cat stays manageable by an admin
-  it.each([
-    ['shows Edit to an admin', ADMIN, true],
-    ['hides Edit from a user', NON_CAT_OWNER_USER, false],
-  ])("%s when the owner's user is gone", async (_, loggedInUser, isEditShown) => {
-    vi.mocked(catService.getById).mockResolvedValue({ ...CAT, owner: null })
-    useLoggedInUserStore.setState({ loggedInUser })
-    _renderAt('/cat/cat-1')
-
-    await screen.findByRole('heading', { name: 'Mitzi' })
-    expect(!!screen.queryByRole('link', { name: 'Edit' })).toBe(isEditShown)
   })
 
   it.each([

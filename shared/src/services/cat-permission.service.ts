@@ -12,9 +12,8 @@ function canAddCat(loggedInUser: LoggedInUserOrGuest): boolean {
 }
 
 // Edit and delete: the cat's owner, or any admin. Takes the owner's id alone, so each caller
-// passes it from its own shape: a CatDoc's ownerId, or a CatWithRefs's owner._id.
-// null = the owner's user is gone, and then only an admin can edit the cat
-function canEditCat(catOwnerId: Cat['ownerId'] | null, loggedInUser: LoggedInUserOrGuest): boolean {
+// passes it from its own shape: a CatDoc's ownerId, or a CatWithRefs's owner._id
+function canEditCat(catOwnerId: Cat['ownerId'], loggedInUser: LoggedInUserOrGuest): boolean {
   if (!loggedInUser) return false
   return loggedInUser.isAdmin || catOwnerId === loggedInUser._id
 }

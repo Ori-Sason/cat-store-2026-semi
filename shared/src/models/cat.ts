@@ -53,9 +53,9 @@ export interface Cat extends CatInput {
 }
 
 // A cat joined with its owner, as GET /api/cats/:id returns it. The owner's ref replaces
-// ownerId, like a review's refs replace userId / catId. owner is null when the owner's user doc is gone
+// ownerId, like a review's refs replace userId / catId
 export interface CatWithRefs extends Omit<Cat, 'ownerId'> {
-  owner: Pick<User, '_id' | 'fullname'> | null
+  owner: Pick<User, '_id' | 'fullname'>
 }
 
 export interface CatLabelStats {

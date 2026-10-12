@@ -33,9 +33,4 @@ describe('catPermissionService.canEditCat', () => {
   it('blocks a guest', () => {
     expect(catPermissionService.canEditCat(CAT_OWNER_ID, null)).toBe(false)
   })
-
-  it("lets only an admin edit a cat whose owner's user is gone", () => {
-    expect(catPermissionService.canEditCat(null, ADMIN)).toBe(true)
-    expect(catPermissionService.canEditCat(null, NON_CAT_OWNER_USER)).toBe(false)
-  })
 })

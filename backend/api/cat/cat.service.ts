@@ -27,8 +27,7 @@ async function getById(catId: string): Promise<CatDoc> {
 
 // getById plus the owner's ref, for the details page only. getById stays plain: the owner check,
 // update and reviewService.add need the bare cat, and shouldn't pay for a join.
-// We use $first over $unwind because $unwind with preserveNullAndEmptyArrays would omit owner when
-// the user is gone, and the type promises null
+// $unwind is an inner join: a cat whose owner's user is gone is a 404, so the store hides it.
 async function getByIdWithOwner(catId: string): Promise<CatJoinedDoc> {
   const _id = utilService.toObjectId(catId)
   if (!_id) throw _catNotFound(catId)
@@ -37,7 +36,7 @@ async function getByIdWithOwner(catId: string): Promise<CatJoinedDoc> {
     .aggregate<CatJoinedDoc>([
       { $match: { _id } },
       utilService.buildLookup(USER_COLLECTION, 'ownerId', 'owner', USER_REF_FIELDS),
-      { $set: { owner: { $ifNull: [{ $first: '$owner' }, null] } } },
+      { $unwind: '$owner' },
       { $unset: 'ownerId' }, // the owner's ref replaces it
     ])
     .toArray()

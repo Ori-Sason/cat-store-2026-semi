@@ -253,14 +253,16 @@ describe('GET /api/cats/:id', () => {
     )
   })
 
-  it("returns owner: null, not a missing key, when the owner's user is gone", async () => {
+  // Hidden from the store, not deleted: until user management decides the policy
+  it("returns 404 CAT_NOT_FOUND for a cat whose owner's user is gone, and keeps it in the DB", async () => {
     const cat = _buildCat({ ownerId: new ObjectId() })
-    await _insertCat(cat)
+    const collection = await _insertCat(cat)
 
     const res = await request(app).get(`/api/cats/${cat._id.toHexString()}`)
 
-    expect(res.status).toBe(200)
-    expect(res.body).toEqual(_toJsonWithRefs(cat, null))
+    expect(res.status).toBe(404)
+    expect(res.body).toMatchObject({ code: 'CAT_NOT_FOUND' })
+    expect(await collection.countDocuments({ _id: cat._id })).toBe(1)
   })
 
   it('returns 404 CAT_NOT_FOUND for an id that does not exist', async () => {

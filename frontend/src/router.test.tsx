@@ -43,6 +43,7 @@ describe('routes', () => {
       _id: 'cat-1',
       name: 'Mitzi',
       labels: [],
+      owner: { _id: 'user-2', fullname: 'O' },
     } as unknown as CatWithRefs)
     vi.mocked(reviewService.query).mockResolvedValue([])
     _renderAt('/cat/cat-1')
@@ -60,6 +61,7 @@ describe('routes', () => {
       _id: 'cat-1',
       name: 'Mitzi',
       labels: [],
+      owner: { _id: 'user-2', fullname: 'O' },
     } as unknown as CatWithRefs)
     vi.mocked(reviewService.query).mockResolvedValue([])
     vi.mocked(reviewService.add).mockResolvedValue({ _id: 'review-1' } as Review)

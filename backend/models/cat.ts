@@ -23,5 +23,5 @@ export type CatRefDoc = Pick<CatDoc, '_id' | (typeof CAT_REF_FIELDS)[number]>
 // aggregate<T>() only asserts it, so the route tests pin the real keys
 export interface CatJoinedDoc extends Omit<CatWithRefs, '_id' | 'owner'> {
   _id: ObjectId
-  owner: UserRefDoc | null
+  owner: UserRefDoc
 }

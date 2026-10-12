@@ -19,7 +19,7 @@ export async function catEditLoader({
   if (!params.id) return { cat: null }
 
   const cat = await catService.getById(params.id)
-  if (!catPermissionService.canEditCat(cat.owner?._id ?? null, loggedInUser)) {
+  if (!catPermissionService.canEditCat(cat.owner._id, loggedInUser)) {
     throw new ApiError(403, 'FORBIDDEN', `Cat ${cat._id} isn't yours`)
   }
   return { cat }

@@ -51,13 +51,13 @@
 
 - `CatWithRefs` vs `CatJoinedDoc`
 	- Canonical meaning: a cat joined with its owner, as `GET /api/cats/:id` returns it: a `Cat`
-	  with `owner: { _id, fullname } | null` in place of `ownerId` (the ref replaces it, like a
+	  with `owner: { _id, fullname }` in place of `ownerId` (the ref replaces it, like a
 	  review's refs replace `userId` / `catId`). `CatWithRefs` is the wire type (`shared/`, string ids). `CatJoinedDoc` is the
 	  backend-only aggregation output (`ObjectId` ids). Same split as `ReviewWithRefs` /
 	  `ReviewJoinedDoc`.
-	- Rule: `owner` is an allow-list (`_id`, `fullname`), like a review's `user`. It's `null`,
-	  never missing, when the owner's user doc is gone. Permission checks take the id alone:
-	  `canEditCat(cat.owner?._id ?? null, …)`. With `null`, only an admin can edit.
+	- Rule: `owner` is an allow-list (`_id`, `fullname`), like a review's `user`. A cat whose
+	  owner's user doc is gone isn't returned (an inner join), so `owner` is never null.
+	  Permission checks take the id alone: `canEditCat(cat.owner._id, …)`.
 	- Avoid: `CatWithOwner`, `PopulatedCat`, `CatDetails` (the page's name).
 
 - `User` vs `UserInput` vs `UserDoc`
