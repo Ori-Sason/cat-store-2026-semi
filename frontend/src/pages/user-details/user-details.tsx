@@ -18,6 +18,7 @@ export const UserDetails: React.FC = () => {
         <NavLink to="." end>
           Cats
         </NavLink>
+        <NavLink to="reviews">Reviews</NavLink>
       </nav>
 
       {/* The tab: a child route with its own loader */}

@@ -6,7 +6,7 @@ The roadmap gives the shape of the project, not a literal script.
 This file covers **what** gets built, **in what order**, and how far along it is.
 Stack, dependencies and the **why** behind decisions live in `architecture.md`.
 
-**Current:** Parts 1–4 and the App header are done. Part 5 is in progress: items 1–4 (reviews on cat-details) and 5 (the cat's owner) are done.
+**Current:** Parts 1–4 and the App header are done. Part 5 is in progress: items 1–4 (reviews on cat-details), 5 (the cat's owner) and 6 (the user page) are done.
 
 ## Part 1: DB + backend + frontend skeleton (CRUD over cats)
 
@@ -148,7 +148,7 @@ shows buttons that fail with 403. After 3, the UI matches the backend. 4 proves 
 
 - [x] 5. Show each cat's owner (full name) on `cat-details`, linking to their `user-details` page.
    Likely through a `$lookup` on `users`, like item 2.
-- [ ] 6. `user-details` page with two sub-pages: the user's cats and the user's reviews.
+- [x] 6. `user-details` page with two sub-pages: the user's cats and the user's reviews.
    Anyone can open any user's profile. For example, user1 can see the cats and reviews user2 created.
    Show the Profile item in the header menu, linking to the logged-in user's page.
 - [ ] 7. Reviews show up in exactly two places: per cat on `cat-details`, and per user on the user's reviews sub-page. There's no system-wide reviews page.

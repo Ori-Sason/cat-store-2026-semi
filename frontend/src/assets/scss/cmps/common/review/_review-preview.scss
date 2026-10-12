@@ -27,7 +27,7 @@
     justify-self: start;
   }
 
-  // You (the viewer's own review) and Owner (written by the cat's owner)
+  // You (the viewer's own review, on a cat's page only) and Owner (written by the cat's owner)
   .chip {
     align-self: center;
     padding: 1px 8px;
@@ -48,6 +48,46 @@
   .author {
     font-weight: 700;
     color: $primary-clr-900;
+  }
+
+  // On a user's page: "On (thumb) Mitzi". The thumb is taller than the text line, so the
+  // header centers its items instead of lining them up on the text baseline
+  &.shown-on-user header {
+    align-items: center;
+  }
+
+  .cat-ref {
+    display: inline-flex;
+    align-items: center;
+    gap: $space-2;
+    color: $primary-clr-850;
+
+    // One link for the thumb and the name. Text color, underline on hover (no blue)
+    a {
+      display: inline-flex;
+      align-items: center;
+      gap: $space-2;
+      min-width: 0;
+
+      &:hover .cat-name {
+        text-decoration: underline;
+      }
+    }
+
+    // A ring, not a border, so the 32px stays 32px. Most cat images have a white background,
+    // so without it the circle blends into the white card
+    .cat-img {
+      flex-shrink: 0;
+      width: 32px;
+      border-radius: 50%;
+      box-shadow: 0 0 0 1px rgba($primary-clr-900, 0.2);
+    }
+
+    .cat-name {
+      font-weight: 700;
+      overflow-wrap: anywhere;
+      color: $primary-clr-900;
+    }
   }
 
   time {

@@ -51,4 +51,17 @@ describe('CatImg', () => {
 
     expect(screen.queryByRole('img', { name: 'Sold out' })).not.toBeInTheDocument()
   })
+
+  it('shows no badge for a cat ref without isInStock', () => {
+    render(<CatImg cat={{ name: 'Tom', imgUrl: '' }} />)
+
+    expect(screen.queryByRole('img', { name: 'Sold out' })).not.toBeInTheDocument()
+  })
+
+  it('takes an empty alt when the name is already shown next to it', () => {
+    render(<CatImg cat={_cat()} alt="" />)
+
+    // alt="" takes the photo out of the accessibility tree
+    expect(screen.queryByRole('img')).not.toBeInTheDocument()
+  })
 })

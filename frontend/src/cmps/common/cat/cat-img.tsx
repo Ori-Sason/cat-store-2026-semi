@@ -5,18 +5,21 @@ import defaultImg from '../../../assets/img/cat-default-bw.png'
 import soldOutImg from '../../../assets/img/sold-out.png'
 
 interface CatImgProps {
-  cat: Pick<Cat, 'name' | 'imgUrl' | 'isInStock'>
+  // isInStock is optional for a cat ref that doesn't carry it (a review's cat): no badge then
+  cat: Pick<Cat, 'name' | 'imgUrl'> & Partial<Pick<Cat, 'isInStock'>>
   isSoldOutShown?: boolean
+  // '' when the cat's name is already next to the image, so a screen reader doesn't read it twice
+  alt?: string
 }
 
-export const CatImg: React.FC<CatImgProps> = ({ cat, isSoldOutShown = true }) => {
+export const CatImg: React.FC<CatImgProps> = ({ cat, isSoldOutShown = true, alt = cat.name }) => {
   const [failedUrl, setFailedUrl] = useState<string | null>(null)
   const src = cat.imgUrl && cat.imgUrl !== failedUrl ? cat.imgUrl : defaultImg
-  const isSoldOut = isSoldOutShown && !cat.isInStock
+  const isSoldOut = isSoldOutShown && cat.isInStock === false
 
   return (
     <div className={`cat-img ${isSoldOut ? 'sold-out' : ''}`}>
-      <img className="photo" src={src} alt={cat.name} onError={() => setFailedUrl(cat.imgUrl)} />
+      <img className="photo" src={src} alt={alt} onError={() => setFailedUrl(cat.imgUrl)} />
       {isSoldOut && <img className="badge" src={soldOutImg} alt="Sold out" />}
     </div>
   )

@@ -9,6 +9,7 @@ import { reviewService } from '../../../services/review.service'
 import { useLoggedInUserStore } from '../../../store/logged-in-user.store'
 import { useUserMsgStore } from '../../../store/user-msg.store'
 import { ReviewList } from './review-list'
+import type { ReviewShownOn } from './review-preview'
 
 vi.mock('../../../services/review.service')
 
@@ -36,13 +37,13 @@ const STORED: Review = {
 }
 
 // A test-only page, not a `_` helper: hooks lint needs a PascalCase component name
-function ReviewsPage() {
-  return <ReviewList reviews={useLoaderData<ReviewWithRefs[]>()} />
+function ReviewsPage({ shownOn }: { shownOn?: ReviewShownOn }) {
+  return <ReviewList reviews={useLoaderData<ReviewWithRefs[]>()} shownOn={shownOn} />
 }
 
 // A page whose loader reads the reviews, plus the real action-only /review/:id route.
 // After an action, react-router reloads this page's loader, like on cat-details
-function _render(loggedInUser: LoggedInUser | null) {
+function _render(loggedInUser: LoggedInUser | null, shownOn?: ReviewShownOn) {
   useLoggedInUserStore.setState({ loggedInUser })
   const router = createMemoryRouter(
     [
@@ -52,7 +53,7 @@ function _render(loggedInUser: LoggedInUser | null) {
           {
             path: '/',
             loader: () => reviewService.query({ catId: 'cat-1' }),
-            element: <ReviewsPage />,
+            element: <ReviewsPage shownOn={shownOn} />,
           },
           { path: '/review/:id', action: reviewAction },
         ],
@@ -149,6 +150,48 @@ describe('ReviewPreview', () => {
       const review = await _findReview()
 
       expect(within(review).queryByText('Owner')).not.toBeInTheDocument()
+    })
+  })
+
+  it("names the author, not the cat, on a cat's page", async () => {
+    _render(null)
+    const review = await _findReview()
+
+    expect(within(review).getByText('Maya Levi')).toBeInTheDocument()
+    expect(within(review).queryByRole('link')).not.toBeInTheDocument()
+  })
+
+  // On a user's page the row names the cat, not the author
+  describe('on a user page', () => {
+    it('shows the cat as a link to its page, not the author', async () => {
+      _render(null, 'user')
+      const review = await _findReview()
+
+      expect(within(review).getByText('On')).toBeInTheDocument()
+      expect(within(review).getByRole('link', { name: 'Mitzi' })).toHaveAttribute(
+        'href',
+        '/cat/cat-1',
+      )
+      expect(within(review).queryByText('Maya Levi')).not.toBeInTheDocument()
+    })
+
+    it("leaves out the You chip on the viewer's own review", async () => {
+      _render(AUTHOR, 'user')
+      const review = await _findReview()
+
+      expect(within(review).queryByText('You')).not.toBeInTheDocument()
+      // Still editable: only the header differs
+      expect(within(review).getByRole('button', { name: 'Review actions' })).toBeInTheDocument()
+    })
+
+    it('keeps the Owner chip on a review of their own cat', async () => {
+      vi.mocked(reviewService.query).mockResolvedValue([
+        { ...REVIEW, user: { _id: CAT_OWNER._id, fullname: 'Dana Katz' } },
+      ])
+      _render(CAT_OWNER, 'user')
+      const review = await _findReview()
+
+      expect(within(review).getByText('Owner')).toBeInTheDocument()
     })
   })
 

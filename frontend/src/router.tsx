@@ -3,6 +3,7 @@ import { LayoutApp } from './cmps/layout/layout-app'
 import { LayoutRoot } from './cmps/layout/layout-root'
 import { CatReviews } from './cmps/cat-details/cat-reviews'
 import { UserCats } from './cmps/user-details/user-cats'
+import { UserReviews } from './cmps/user-details/user-reviews'
 import { RouteError } from './cmps/common/util/route-error'
 import { CatApp } from './pages/cat-app/cat-app'
 import { catAppLoader } from './pages/cat-app/cat-app.loader'
@@ -95,6 +96,11 @@ export const routes: RouteObject[] = [
                 children: [
                   // One child route per tab, each with its own loader. Only the open tab loads
                   { index: true, loader: userCatsLoader, element: <UserCats /> },
+                  {
+                    path: 'reviews',
+                    loader: (args) => reviewLoader(args, 'userId'),
+                    element: <UserReviews />,
+                  },
                 ],
               },
               {
