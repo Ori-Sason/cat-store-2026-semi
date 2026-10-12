@@ -49,7 +49,11 @@ How to write tests. When to write them lives in `.claude/rules/testing.md`.
   wipe it freely. Never point tests at the dev database.
 - Backend DB tests call `setupTestDb()` (`backend/test/test-db.helper.ts`) at the top level of
   the file. It refuses to run unless the DB is `catsTest`, empties every collection before
-  each test, and closes the client after the file. Files that don't touch the DB skip it.
+  each test and again after the file (so leftovers don't break the E2E seed), and closes the
+  client. Files that don't touch the DB skip it, and never connect.
+- Backend test files run one at a time (`fileParallelism: false`): they share `catsTest`, so a
+  parallel file's wipe would delete another file's data. If the suite gets slow, the fix is one
+  DB per worker, which needs the `catStoreTest` Mongo user widened.
 - Tooling is installed and configured. Don't reinstall or reconfigure it without a plan that
   calls for it.
 - E2E: Playwright starts its own backend (:8001, `catsTest`, re-seeded each run) and Vite

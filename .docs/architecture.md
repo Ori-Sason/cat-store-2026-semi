@@ -5,41 +5,43 @@ TypeScript monorepo (npm workspaces): `shared`, `frontend`, `backend`.
 One Express server serves both `/api` and the built FE in prod → same-origin, no CORS.
 
 ```
-dev:  browser ──▶ Vite :5173 ──(proxy /api)──▶ Express :8000 ──▶ MongoDB
+dev:  browser ──▶ Vite :5173 ──(proxy /api)──▶ Express :8000 ──▶ MongoDB `cats`
+test: Vitest + Supertest (in memory) ─────────────────────────▶ MongoDB `catsTest`
+e2e:  Playwright ──▶ Vite :5174 ──(proxy /api)──▶ Express :8001 ──▶ MongoDB `catsTest`
 prod: browser ──▶ Express (static FE + /api + socket.io) ──▶ MongoDB (Atlas)
 ```
 
 ## Components
-- `shared/` (`@cat-store/shared`) — wire contract: types, Zod schemas, constants,
-  `catFilterService`, `catPermissionService`, `reviewPermissionService`, `sharedUtilService`. No build step, erasable TS only, no DOM/Node/mongodb imports.
-- `frontend/` — Vite + React SPA. Routes and data loading via `react-router`, client state
+- `shared/` (`@cat-store/shared`) — the wire contract: types, Zod schemas, constants, and
+  the logic both sides must agree on (filter parsing, permission rules).
+- `frontend/` — Vite + React SPA. Routes and server data via `react-router`, client state
   in Zustand, HTTP via axios with relative URLs only (`/api/...`).
-- `backend/` — Express 5, route → controller → service layers, native `mongodb`
-  driver (no Mongoose). Node runs `.ts` directly (type stripping).
+- `backend/` — Express 5, route → controller → service layers, native `mongodb` driver.
 - Collections: `cats`, `users`, `reviews`. Every doc has server-set `createdAt`/`updatedAt`.
 
 ## Auth Boundary
 - JWT in an httpOnly cookie (`loginToken`): `sameSite: 'strict'`, `secure` in production.
   "Remember me" (`isRemembered`) → cookie and token last 7 days. Without it → a session cookie
-  (no `maxAge`) and a 1-day token.
-- `attachTokenUser` reads the token into the ALS store (`tokenUser`) on every request, without
-  the DB and without blocking. `GET /api/auth/me` re-reads the user from the DB.
+  and a 1-day token, so a browser that never closes doesn't keep the login forever.
+- `attachTokenUser` reads the token into the ALS store (`tokenUser`) on every request, with no
+  DB read and no blocking. `GET /api/auth/me` re-reads the user from the DB, and returns
+  `200 null` for a guest: the FE calls it on every app load, and a guest isn't an error.
 - `requireAuth` re-reads the user from the DB and sets `verifiedUser`, the only user permission
-  checks trust (via `alsService.getVerifiedUser()`). A `require*` that needs a user bundles it.
-- Backend middleware enforces guest / owner / admin rules on cats and reviews. The FE only hides UI.
-  For edit / delete, both check through the shared `catPermissionService` /
-  `reviewPermissionService`, so they agree on the rule.
-- `ownerId` / `userId` are set by the server, never accepted from the client.
+  checks trust. A deleted or demoted user is caught before their token expires.
+- The backend enforces guest / owner / admin rules on cats and reviews. The FE only hides UI.
+  Both check edit / delete through the shared permission services, so they agree on the rule.
+- `_id`, `ownerId`, `userId` and the timestamps are server-set. Zod strips them from the body.
+- Logout only clears the cookie. A copied token works until its `exp`. Revoking would need a
+  denylist checked on every request, which is a session store again.
 
 ## Stack
 Main libraries only. Exact versions and `@types/*` live in each `package.json`.
 - shared: zod. Its schemas are the validation for both FE and BE.
-- frontend: React, TypeScript, react-router 8, Zustand, axios, Vite, Sass, OpenLayers (`ol`,
-  about-page map).
+- frontend: React, TypeScript, react-router 8, Zustand, axios, Vite, Sass, OpenLayers (`ol`).
 - backend: Express 5, native `mongodb` driver. No Mongoose, no `ts-node`/`tsx`.
-- auth: jsonwebtoken, bcrypt, cookie-parser. Installed already, used from Part 3.
+- auth: jsonwebtoken, bcrypt, cookie-parser.
 - testing: Vitest everywhere, React Testing Library + jsdom (FE), Supertest (BE), Playwright (E2E).
-- tooling: oxlint, oxfmt.
+- tooling: oxlint, oxfmt, lefthook.
 - planned: socket.io + socket.io-client (Part 6).
 
 External services: MongoDB (local in dev, Atlas in prod), Render (hosting).
@@ -47,131 +49,42 @@ Env: `node --env-file=.env.local`, no dotenv. Prod needs `JWT_SECRET`, Mongo URL
 `NODE_ENV=production`.
 
 ## Decisions
-- **npm workspaces** (`shared`, `frontend`, `backend`): one root `node_modules`, one root
-  `package-lock.json`. Run scripts with `npm run <script> -w <pkg>`.
-  Why: the FE and BE need to share types and Zod schemas without publishing a package.
-- **`shared/` has no build step.** Its `exports` points at `.ts` files: Vite compiles them
-  for the FE, and Node strips the types for the BE.
-  Why: no build step means no stale build output and no watch process. The cost is
-  erasable-only TS syntax and no DOM/Node types in shared's tsconfig.
-- **The query-string → filter parsing lives in shared** (`catFilterService.paramsToFilter`),
-  and both the FE loader and the BE `GET /api/cats` controller call it.
-  Why: one parser, so the FE and BE can't disagree on what a URL means.
+- **npm workspaces, and `shared/` has no build step.** Its `exports` points at `.ts` files:
+  Vite compiles them for the FE, and Node strips the types for the BE.
+  Why: the FE and BE share types and schemas without publishing a package, and there's no
+  stale build output or watch process. The cost: erasable-only TS and no DOM/Node types in shared.
+- **One query-string parser, in shared.** `catFilterService.paramsToFilter` runs in both the FE
+  loader and the BE `GET /api/cats` controller.
+  Why: the FE and BE can't disagree on what a URL means.
 - **FE server data goes through react-router loaders and actions.** Zustand holds only client
-  state, with no cat store.
+  state, with no cat store. Mutations shared by several pages post to action-only routes
+  (`/review`, `/review/:id`), and a section that must reload alone is a child route with its
+  own loader.
   Why: the router already holds and revalidates the data, and a store copy would go stale.
-  Data a page can render without (e.g. the home page's newest cats) is returned un-awaited and
-  resolved in its own `<Suspense>` + `<Await>`, so it doesn't block the page or break the route.
-- **Mutations shared by several pages post to an action-only route.** Review add / edit / delete
-  go through fetchers to `/review` and `/review/:id` (no element, and a loader that 404s a
-  typed-in visit), and the action switches on
-  `request.method`, 1:1 with `POST` / `PUT` / `DELETE /api/reviews`.
-  Why: one action serves every page that shows reviews. After a fetcher action, react-router
-  reloads the loaders of the page the fetcher is on, so each page refreshes its own data.
-- **A page's reviews are a child route with their own loader.** `/cat/:id` has an index child
-  (`reviewLoader(args, 'catId')`), and `/user/:id` a `reviews` child
-  (`reviewLoader(args, 'userId')`), each rendered through `<Outlet>`. The parent's
-  `shouldRevalidate` (`utilService.skipReloadOnActionAt('/review')`) skips its reload after a
-  `/review` or `/review/:id` action.
-  Why: a review action changes only the reviews, so the cat or the user isn't fetched again.
-  The loaders still run in parallel on a visit.
-- **The user page's tabs are child routes.** `/user/:id` loads the user (awaited, a missing user
-  → the route error) and renders the header and tab nav. The cats tab is the index child
-  (`GET /api/cats?ownerId=…`, no user-specific cats route), the reviews tab is `reviews`. Each tab
-  loader is deferred, so a failed tab shows its own section error and the header stays.
-  Why: an index route instead of a redirect gives the cats tab one URL, and Back never bounces.
-  A tab switch runs only the new tab's loader.
-- **Server-set timestamps:** every doc (cats, users, reviews) has `createdAt`/`updatedAt`, set
-  by the server with `Date.now()`. `updatedAt` changes on every update. Client-sent values are
-  stripped by Zod.
-  Why: the client clock and the client itself aren't trusted.
-- **Reviews are one flat route, filtered by a required query param.** `GET /api/reviews?catId=…`
-  or `?userId=…` (both → AND), not `/api/cats/:id/reviews` + `/api/users/:id/reviews`. No filter → 400.
-  Why: one router serves both pages (cat-details, the user's reviews tab), and the required filter
-  enforces "no system-wide reviews list" at the API, not only in the UI.
-- **Joins use `$lookup` with an allow-list `$project` inside it** (`utilService.buildLookup`).
-  Only `_id` plus the listed fields (`USER_REF_FIELDS`, `CAT_REF_FIELDS`) leave the foreign
-  collection.
-  Why: `password` / `username` never enter the pipeline, and a field added to `users` later stays
-  out by default. An exclusion (`{ password: 0 }`) would leak it.
-  Cats come back joined too: `GET /api/cats` and `GET /api/cats/:id` return `CatWithRefs` (the
-  owner as a `UserRef`). Only POST / PUT return a plain `Cat`.
-- **A user is public through an allow-list too.** `GET /api/users/:id` is open to anyone and returns
-  `PublicUser` (`_id` + `PUBLIC_USER_FIELDS`: `fullname`, `isAdmin`, `createdAt`), projected in
-  the DB read. Never `password`, and no `username` (half a login). `GET /api/auth/me` keeps
-  `LoggedInUser`, the same shape as the login response and the JWT payload.
-  Why: profiles are public (anyone sees anyone's cats and reviews), and `isAdmin` is public on
-  purpose, so the UI can mark staff whose edits leave no other trace.
-- **No CORS. Use the Vite dev proxy** (`/api` → `:8000`), and the FE uses only
-  relative URLs.
-  Why:
-  - CORS is a browser rule. It only applies to browser requests to a *different origin*.
-  - With the proxy, the browser only talks to Vite's port. Vite forwards `/api` to Express
-    Node → Node, with no browser in that hop, so there's no CORS check.
-  - In prod, Express serves the FE and `/api` from one origin, so the proxy is dev-only.
-  - Same-origin cookies (auth from Part 3) need no `cors({ credentials })` / `withCredentials`.
-  - Socket.io (Part 6) needs its own proxy entry: `'/socket.io'` with `ws: true`. Its
-    default request path is `/socket.io/`, so `ws: true` on `/api` wouldn't catch it.
-  - CORS would only be needed for split hosting: FE on one domain, API on another.
-
-- **Tests: Vitest everywhere, one root run.** The root `vitest.config.ts` lists `shared`,
-  `frontend` and `backend` as projects, so `npm test` runs all three. Each package can still
-  run alone with `npm test -w <pkg>`. Unit tests sit next to their source as `*.test.ts(x)`.
-  Why: Vitest reuses the Vite config, so the FE tests get the same plugins and SCSS paths as
-  the app. It runs TS directly, matching the no-build-step setup.
-- **Backend tests hit a real MongoDB.** Same `db-local` container, separate database, set via
-  `backend/.env.test`. Supertest calls the Express app in memory.
-  Why: mocking the native driver tests the mock, not the queries. A second database is free,
-  so no extra container is needed.
-- **DB setup is opt-in per test file.** A file that touches Mongo calls `setupTestDb()`
-  (`backend/test/test-db.helper.ts`). It empties collections with `deleteMany` before each test,
-  and again after the file.
-  Why: files without DB work never connect. `deleteMany` keeps the indexes, which a drop would lose.
-  The wipe after the file is for the E2E seed, which shares `catsTest`: a test's leftover users
-  (e.g. an `admin` with a fake password hash) would make it refuse to start.
-- **Backend test files run one at a time** (`fileParallelism: false`).
-  Why: they share `catsTest`, so a parallel file's wipe would delete another file's data.
-  If the suite gets slow, move to one DB per worker. That needs the `catStoreTest` user widened.
+- **Data leaves the DB through allow-lists.** Joins use `$lookup` with an inclusion `$project`
+  inside it (`USER_REF_FIELDS`, `CAT_REF_FIELDS`), and `GET /api/users/:id` projects
+  `PUBLIC_USER_FIELDS`. Never `password`, and no `username` (half a login).
+  Why: an exclusion (`{ password: 0 }`) would let a field added later leak by default.
+  `isAdmin` is public on purpose, so the UI can mark staff whose edits leave no other trace.
+- **No CORS. The Vite dev proxy forwards `/api`** to Express, and the FE uses only relative URLs.
+  Why: CORS only applies to browser requests to a different origin. The browser only talks to
+  Vite, and the Vite → Express hop is Node → Node. In prod one Express serves both. Same-origin
+  cookies also need no `withCredentials`. CORS would only come back with split hosting.
+  Socket.io needs its own proxy entry (`'/socket.io'` with `ws: true`): its default path is
+  `/socket.io/`, so `ws: true` on `/api` wouldn't catch it.
+- **Tests hit a real MongoDB, never mocks of the driver.** A separate database (`catsTest`) in
+  the same `db-local` container serves the backend Vitest suite and E2E.
+  Why: mocking the driver tests the mock, not the queries. A second database is free.
 - **The app never connects as root.** `db-local/init/create-app-users.js` creates one user
-  per database, each with `readWrite` on its own database only (`cats` → dev, `catsTest` → tests).
+  per database, each with `readWrite` on its own database only.
   Why: least privilege. And since tests wipe their database, a test config pointing at `cats`
   by mistake fails on auth instead of deleting dev data.
-- **E2E with the Playwright CLI, from Part 3.** Headless Chromium on the VM, no browser-driving MCP.
-  Why: before auth there's no full flow worth covering end to end. The CLI only reports
-  pass/fail, while driving a browser step by step costs many tokens.
-- **E2E runs its own servers against `catsTest`.** `frontend/playwright.config.ts` starts the
-  backend on :8001 with `backend/.env.test` (re-seeding `catsTest` first) and Vite on :5174, with
-  the `/api` proxy pointed at :8001 via `API_PROXY_TARGET`. Specs run one at a time.
-  Why: a running `npm run dev` and the dev DB stay untouched, and no third Mongo user is needed.
-  The cost: E2E and the backend Vitest suite share `catsTest`, so don't run them at the same time.
-- **Seeded users are created if missing, never overwritten.** A password mismatch with
-  `SEED_USERS_PASSWORD` fails the seed.
-  Why: dev accounts survive re-seeds, and a drifted password fails loudly, not at login.
-- **About-page map: OpenLayers + OSM raster tiles, no React wrapper.**
-  Why: no API key or billing (Google Maps needs both). Compared with MapLibre, it's a
-  ~3–5x smaller bundle, has no Vite worker workaround, has a clean security record with rare
-  majors, and its tests run real map code in jsdom.
-
-- **`GET /api/auth/me` returns `200 null` for a guest**, not 401.
-  Why: the FE calls it on every app load, and a guest isn't an error.
-- **Login failures look the same.** An unknown username and a wrong password both get
-  `401 INVALID_CREDENTIALS`, and an unknown username still runs `bcrypt.compare` against a dummy hash.
-  Why: otherwise the message or the response time tells an attacker which usernames exist.
-- **A session cookie still has a token expiry** (1 day).
-  Why: "until the browser closes" can mean weeks for a browser that stays open, or one with
-  session restore. The JWT `exp` caps it.
-- **Logout doesn't revoke the token.** It only clears the cookie. A copied token keeps
-  working until its `exp` (1 or 7 days).
-  Why: the server keeps no token state, which is the point of a JWT. Revoking would need a
-  denylist checked on every request, which is a session store again. A deleted or demoted
-  user is still caught early, because `/me` and the guards read the user from the DB.
-
-Open questions live in `roadmap.md`. When one is decided, record it here.
 
 ## Update Triggers
 - Update this file when the stack, auth boundaries, collections, or the dev/prod topology
   change, or when an open question from `roadmap.md` is decided.
-- Not for: choices scoped to one feature or page (a library for one page, a UI behavior).
+- Not for: choices scoped to one module, page or library. Their why goes in a code comment
+  next to them, and test how-to goes in the `writing-tests` skill.
 - Add a Change Log line (date + one line) only when the architecture itself changes:
   components, how they connect (dev/prod topology), data flow, or the auth boundary.
   New decisions inside the same shape, config, and doc edits don't count.
@@ -181,3 +94,4 @@ Open questions live in `roadmap.md`. When one is decided, record it here.
 - 2026-10-04 — FE data flow: server data via react-router loaders/actions, Zustand for client state only.
 - 2026-10-06 — Auth boundary: `/api/auth/*` routes, the `loginToken` cookie and `attachTokenUser`.
 - 2026-10-11 — Collections: `reviews`, read with its author and cat joined via `$lookup`.
+- 2026-10-12 — Compacted to cross-cutting decisions (a major doc edit, so it gets a log line). Module-level decisions moved to code comments, test how-to to the `writing-tests` skill.

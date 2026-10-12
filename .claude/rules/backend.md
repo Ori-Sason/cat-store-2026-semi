@@ -10,6 +10,9 @@ paths:
   not in `shared/`.
 - `_id`, `createdAt`, `updatedAt` and `ownerId` are server-set. Never take them from the
   request body.
+- Joined docs and public users leave the DB through an inclusion projection only: `$lookup` via
+  `utilService.buildLookup` with `USER_REF_FIELDS` / `CAT_REF_FIELDS`, `PUBLIC_USER_FIELDS`
+  for a public user. Never an exclusion like `{ password: 0 }` (`.docs/architecture.md` → Decisions).
 - Permission checks and controllers read the user via `alsService.getVerifiedUser()`, never
   the ALS `tokenUser` (token-only, can be stale).
 - Expected failures throw `HttpError(status, code, message)`. The error middleware turns

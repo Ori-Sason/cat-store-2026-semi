@@ -1,4 +1,7 @@
 import { useEffect, useEffectEvent, useRef, useState, type RefObject } from 'react'
+// OpenLayers + OSM raster tiles, no React wrapper. No API key or billing (Google Maps needs
+// both). Against MapLibre: a ~3-5x smaller bundle, no Vite worker workaround, a clean security
+// record with rare majors, and its tests run real map code in jsdom
 // Per-module imports, never the `ol` barrel, so tree-shaking keeps only what's used
 import Feature from 'ol/Feature'
 import OlMap from 'ol/Map'
