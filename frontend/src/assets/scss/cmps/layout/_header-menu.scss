@@ -163,14 +163,7 @@
   }
 
   .admin-chip {
-    padding: 1px 8px;
-    font-size: 0.7rem;
-    font-weight: 700;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    color: $primary-clr-800;
-    border-radius: 99px;
-    background-color: $primary-clr-200;
+    @include admin-chip;
   }
 
   // Below $bp-md only. From $bp-md up the bar's nav shows the pages

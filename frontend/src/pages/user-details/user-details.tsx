@@ -9,7 +9,10 @@ export const UserDetails: React.FC = () => {
   return (
     <section className="user-details">
       <header className="profile-head">
-        <h1>{user.fullname}</h1>
+        <div className="name-row">
+          <h1>{user.fullname}</h1>
+          {user.isAdmin && <span className="admin-chip">Admin</span>}
+        </div>
         <p className="joined">Joined {utilService.formatDate(user.createdAt)}</p>
       </header>
 

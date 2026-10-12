@@ -113,6 +113,21 @@ describe('UserDetails', () => {
     expect(catService.query).toHaveBeenCalledWith(expect.objectContaining({ ownerId: 'user-1' }))
   })
 
+  it('marks an admin with an Admin chip in the header', async () => {
+    vi.mocked(userService.getById).mockResolvedValue({ ...MAYA, isAdmin: true })
+    _renderAt('/user/user-1')
+
+    const header = (await screen.findByRole('heading', { name: 'Maya Levi' })).closest('header')!
+    expect(within(header).getByText('Admin')).toBeInTheDocument()
+  })
+
+  it('shows no Admin chip for a regular user', async () => {
+    _renderAt('/user/user-1')
+
+    await screen.findByRole('heading', { name: 'Maya Levi' })
+    expect(screen.queryByText('Admin')).not.toBeInTheDocument()
+  })
+
   it('marks the cats tab as the current page', async () => {
     _renderAt('/user/user-1')
 

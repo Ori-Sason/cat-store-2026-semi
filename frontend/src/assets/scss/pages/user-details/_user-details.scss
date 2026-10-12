@@ -8,10 +8,21 @@
     display: grid;
     gap: $space-1;
 
+    .name-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: $space-2;
+    }
+
     h1 {
       font-size: 1.5rem;
       overflow-wrap: anywhere;
       color: $primary-clr-900;
+    }
+
+    .admin-chip {
+      @include admin-chip;
     }
 
     .joined {
