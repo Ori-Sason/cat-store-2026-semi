@@ -11,7 +11,9 @@ const _SORT_DIRS: readonly SortByDirection[] = ['asc', 'desc']
 
 // Query string → CatFilter. The FE loader and the BE controller both call this,
 // so the two sides can't disagree on what a URL means.
-// Softy on purpose: a hand-edited URL with a bad value falls back to the default instead of a 400
+// Softy on purpose: a hand-edited URL with a bad value falls back to the default instead of a 400.
+// ownerId is the exception: its default (null) means every cat, so a bad id stays as is and the
+// BE matches nothing with it
 function paramsToFilter(params: QueryParamsReader): CatFilter {
   return {
     txt: params.get('txt')?.trim() ?? DEFAULT_CAT_FILTER.txt,
@@ -20,6 +22,7 @@ function paramsToFilter(params: QueryParamsReader): CatFilter {
     sortBy: _pickOne(params.get('sortBy'), CAT_SORT_FIELDS) ?? DEFAULT_CAT_FILTER.sortBy,
     sortDir: _pickOne(params.get('sortDir'), _SORT_DIRS) ?? DEFAULT_CAT_FILTER.sortDir,
     limit: _parsePositiveInt(params.get('limit')) ?? DEFAULT_CAT_FILTER.limit,
+    ownerId: params.get('ownerId')?.trim() || DEFAULT_CAT_FILTER.ownerId,
   }
 }
 
@@ -36,6 +39,7 @@ function filterToParams(filter: CatFilter): [string, string][] {
   if (filter.sortBy !== DEFAULT_CAT_FILTER.sortBy) pairs.push(['sortBy', filter.sortBy])
   if (filter.sortDir !== DEFAULT_CAT_FILTER.sortDir) pairs.push(['sortDir', filter.sortDir])
   if (filter.limit !== null) pairs.push(['limit', String(filter.limit)])
+  if (filter.ownerId) pairs.push(['ownerId', filter.ownerId])
   return pairs
 }
 

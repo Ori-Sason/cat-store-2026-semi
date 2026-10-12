@@ -170,6 +170,20 @@ describe('GET /api/cats', () => {
   it('reads limit=0 as no limit, not as zero cats', async () => {
     expect(await _getNames('?limit=0')).toHaveLength(CATS.length)
   })
+
+  it("returns only one user's cats for ownerId", async () => {
+    await _insertCat(_buildCat({ name: 'Luna', ownerId: NON_CAT_OWNER_USER._id }))
+
+    expect(await _getNames(`?ownerId=${NON_CAT_OWNER_USER._id.toHexString()}`)).toEqual(['Luna'])
+  })
+
+  it('returns no cats for the ownerId of a user who has none', async () => {
+    expect(await _getNames(`?ownerId=${ADMIN._id.toHexString()}`)).toEqual([])
+  })
+
+  it('returns no cats for a malformed ownerId, not every cat', async () => {
+    expect(await _getNames('?ownerId=not-an-id')).toEqual([])
+  })
 })
 
 describe('GET /api/cats/stats', () => {

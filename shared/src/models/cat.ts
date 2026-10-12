@@ -83,6 +83,11 @@ export interface CatFilter {
   sortBy: CatSortField
   sortDir: SortByDirection
   limit: number | null // the first N after sorting. null = every match
+  // One user's cats (the user page). null = any owner.
+  // Not validated here: a malformed id stays as is, so the BE can
+  // answer "no cats" instead of dropping the filter
+  // (by dropping, it will return every cat)
+  ownerId: Cat['ownerId'] | null
 }
 
 export const DEFAULT_CAT_FILTER: CatFilter = {
@@ -92,4 +97,5 @@ export const DEFAULT_CAT_FILTER: CatFilter = {
   sortBy: 'createdAt',
   sortDir: 'desc',
   limit: null,
+  ownerId: null,
 }

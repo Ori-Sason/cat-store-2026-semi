@@ -2,6 +2,7 @@ import type { Db, Document, Collection, IndexSpecification, CreateIndexesOptions
 import { MongoClient } from 'mongodb'
 import { config } from '../config/index.ts'
 import { REVIEW_COLLECTION } from '../models/review.ts'
+import { CAT_COLLECTION } from '../models/cat.ts'
 import { USER_COLLECTION } from '../models/user.ts'
 
 interface IndexDef {
@@ -17,6 +18,8 @@ const INDEXES: IndexDef[] = [
   // (a plain { catId: 1 } would sort in memory), and its prefix serves deleteMany({ catId })
   { collection: REVIEW_COLLECTION, key: { catId: 1, createdAt: -1 } },
   { collection: REVIEW_COLLECTION, key: { userId: 1, createdAt: -1 } },
+  // A user's cats (the user page), in the default newest-first order
+  { collection: CAT_COLLECTION, key: { ownerId: 1, createdAt: -1 } },
 ]
 
 let client: MongoClient | null = null

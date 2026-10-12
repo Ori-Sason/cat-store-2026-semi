@@ -20,6 +20,7 @@ const _FULL_FILTER: CatFilter = {
   sortBy: 'price',
   sortDir: 'asc',
   limit: 4,
+  ownerId: 'u1',
 }
 
 describe('catFilterService.paramsToFilter', () => {
@@ -37,16 +38,10 @@ describe('catFilterService.paramsToFilter', () => {
         ['sortBy', 'price'],
         ['sortDir', 'asc'],
         ['limit', '4'],
+        ['ownerId', 'u1'],
       ),
     )
-    expect(filter).toEqual({
-      txt: 'tom',
-      isInStock: true,
-      labels: ['Kitten', 'Calm'],
-      sortBy: 'price',
-      sortDir: 'asc',
-      limit: 4,
-    })
+    expect(filter).toEqual(_FULL_FILTER)
   })
 
   it('trims txt', () => {
@@ -78,6 +73,19 @@ describe('catFilterService.paramsToFilter', () => {
     expect(filter).toEqual(DEFAULT_CAT_FILTER)
   })
 
+  // The one field with no soft fallback: null would mean every cat, so the BE gets the bad id
+  it('keeps a malformed ownerId as is, trimmed', () => {
+    expect(paramsToFilter(_params(['ownerId', ' not-an-id '])).ownerId).toBe('not-an-id')
+  })
+
+  it.each(['', '   '])('reads ownerId=%j as any owner', (value) => {
+    expect(paramsToFilter(_params(['ownerId', value])).ownerId).toBeNull()
+  })
+
+  it('takes the first ownerId when it repeats', () => {
+    expect(paramsToFilter(_params(['ownerId', 'u1'], ['ownerId', 'u2'])).ownerId).toBe('u1')
+  })
+
   it.each(['abc', '0', '-3', '2.5', '1e3', ' 4', '', '99999999999999999999'])(
     'reads limit=%j as no limit',
     (value) => {
@@ -100,6 +108,7 @@ describe('catFilterService.filterToParams', () => {
       ['sortBy', 'price'],
       ['sortDir', 'asc'],
       ['limit', '4'],
+      ['ownerId', 'u1'],
     ])
   })
 

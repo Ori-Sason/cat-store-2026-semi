@@ -8,9 +8,14 @@ import { mongoService } from '../../services/mongodb.service.ts'
 import { utilService } from '../../services/util.service.ts'
 
 async function query(filterBy: CatFilter): Promise<CatDoc[]> {
+  // A malformed ownerId can't own a cat, so the answer is "no cats". Returning early matters:
+  // dropping the bad id from the criteria would mean every cat
+  const ownerId = filterBy.ownerId ? utilService.toObjectId(filterBy.ownerId) : null
+  if (filterBy.ownerId && !ownerId) return []
+
   const collection = await mongoService.getCollection<CatDoc>(CAT_COLLECTION)
   return collection
-    .find(_buildCriteria(filterBy))
+    .find(_buildCriteria(filterBy, ownerId))
     .sort(utilService.buildSort<CatDoc>(filterBy))
     .collation({ locale: 'en' }) // case-insensitive string sort: "bella" sits next to "Bella"
     .limit(filterBy.limit ?? 0) // after the sort, so it keeps the first N in sort order. 0 = no limit
@@ -125,12 +130,17 @@ async function getLabelStats(): Promise<CatLabelStats[]> {
   return _fillAllLabels(rows)
 }
 
-function _buildCriteria({ txt, isInStock, labels }: CatFilter): Filter<CatDoc> {
+// ownerId comes in already converted: query() turns a malformed one into an early []
+function _buildCriteria(
+  { txt, isInStock, labels }: CatFilter,
+  ownerId: ObjectId | null,
+): Filter<CatDoc> {
   const criteria: Filter<CatDoc> = {}
   // escaped, so "." or "*" in the search box match literally instead of acting as regex
   if (txt) criteria.name = { $regex: utilService.escapeRegex(txt), $options: 'i' }
   if (isInStock !== null) criteria.isInStock = isInStock
   if (labels.length) criteria.labels = { $all: labels }
+  if (ownerId) criteria.ownerId = ownerId
   return criteria
 }
 
