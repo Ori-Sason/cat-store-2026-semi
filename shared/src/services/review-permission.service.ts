@@ -12,10 +12,11 @@ function canAddReview(loggedInUser: LoggedInUserOrGuest): boolean {
   return !!loggedInUser
 }
 
-// Edit and delete: the review's author, or any admin
-function canEditReview(review: Pick<Review, 'userId'>, loggedInUser: LoggedInUserOrGuest): boolean {
+// Edit and delete: the review's author, or any admin. Takes the author's id alone, so each
+// caller passes it from its own shape: a ReviewDoc's userId, or a ReviewWithRefs's user._id
+function canEditReview(reviewUserId: Review['userId'], loggedInUser: LoggedInUserOrGuest): boolean {
   if (!loggedInUser) return false
-  return loggedInUser.isAdmin || review.userId === loggedInUser._id
+  return loggedInUser.isAdmin || reviewUserId === loggedInUser._id
 }
 
 export const reviewPermissionService = {

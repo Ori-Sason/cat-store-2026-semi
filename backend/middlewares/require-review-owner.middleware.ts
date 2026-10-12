@@ -9,8 +9,7 @@ import { requireAuth } from './require-auth.middleware.ts'
 const _checkReviewOwner: RequestHandler<{ id: string }> = async (req, _res, next) => {
   const verifiedUser = alsService.getVerifiedUser()
   const review = await reviewService.getById(req.params.id)
-  const userId = review.userId.toHexString()
-  if (!reviewPermissionService.canEditReview({ userId }, verifiedUser)) {
+  if (!reviewPermissionService.canEditReview(review.userId.toHexString(), verifiedUser)) {
     throw new HttpError(403, 'FORBIDDEN', `Review ${req.params.id} isn't yours`) // 403 Forbidden
   }
   next()

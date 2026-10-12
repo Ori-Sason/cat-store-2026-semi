@@ -10,7 +10,7 @@ interface ReviewPreviewProps {
 
 export const ReviewPreview: React.FC<ReviewPreviewProps> = ({ review }) => {
   const loggedInUser = useLoggedInUserStore((state) => state.loggedInUser)
-  const isCanEdit = reviewPermissionService.canEditReview({ userId: review.user._id }, loggedInUser)
+  const isCanEdit = reviewPermissionService.canEditReview(review.user._id, loggedInUser)
   const isOwnReview = review.user._id === loggedInUser?._id
   const isByCatOwner = review.user._id === review.cat.ownerId
 
