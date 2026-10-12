@@ -105,7 +105,7 @@
 	  returns it: `{ _id, content, createdAt, updatedAt, user: { _id, fullname, isAdmin },
 	  cat: { _id, name, imgUrl, ownerId } }`, with no `userId` / `catId`. `ReviewWithRefs` is the wire
 	  type (`shared/`, string ids). `ReviewJoinedDoc` is the backend-only aggregation output
-	  (`ObjectId` ids). Same split as `Cat` / `CatDoc`.
+	  (`ObjectId` ids). Same split as `CatWithRefs` / `CatJoinedDoc`.
 	- Rule: the joined `user` is a `UserRef` and the joined `cat` a `CatRef`. One shape serves both pages: each ignores the side it already knows.
 	  `cat.ownerId` marks a review written by the cat's owner (the Owner chip), on any page.
 	- Avoid: `ReviewJoined` (for the wire type), `PopulatedReview`, `ReviewDetails`.
@@ -176,7 +176,7 @@
 	  `login` / `signup` / `logout` are the actions.
 	- Avoid: `signin`, `register`, `signout`.
 - `require*` vs `attach*` middleware
-	- Canonical meaning: `require*` (`requireAuth`, `requireCatOwner`, `requireAdmin`) throws on
+	- Canonical meaning: `require*` (`requireAuth`, `requireCatOwner`, `requireReviewOwner`) throws on
 	  failure. `attach*` (`attachTokenUser`) only decorates the request and
 	  never blocks.
 	- Rule: a `require*` that needs a user bundles `requireAuth` in front of its check

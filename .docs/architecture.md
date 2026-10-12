@@ -179,4 +179,5 @@ Open questions live in `roadmap.md`. When one is decided, record it here.
 ## Change Log
 - 2026-10-01 — Initial architecture.
 - 2026-10-04 — FE data flow: server data via react-router loaders/actions, Zustand for client state only.
-- 2026-10-06 — Auth boundary: `/api/auth/*` routes, the `loginToken` cookie and `attachLoggedInUser`.
+- 2026-10-06 — Auth boundary: `/api/auth/*` routes, the `loginToken` cookie and `attachTokenUser`.
+- 2026-10-11 — Collections: `reviews`, read with its author and cat joined via `$lookup`.
