@@ -84,6 +84,10 @@ export interface User extends Omit<UserInput, 'password'> {
   updatedAt: number
 }
 
+// A user as anyone may see them (GET /api/users/:id). No username (half a login) and never the
+// password. isAdmin is public on purpose, so the UI can mark staff
+export type PublicUser = Pick<User, '_id' | 'fullname' | 'isAdmin' | 'createdAt'>
+
 export type LoggedInUser = Pick<User, '_id' | 'username' | 'fullname' | 'isAdmin'>
 
 // What a permission check needs to know about the current user. null = a guest

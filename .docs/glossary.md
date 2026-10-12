@@ -67,6 +67,14 @@
 	- Rule: `isAdmin` is never client-set. `userSchema` leaves it out, so Zod strips it.
 	- Avoid: `UserDto`, `NewUser`, `Credentials` (for the signup body).
 
+- `PublicUser`
+	- Canonical meaning: a user as anyone may see them, as `GET /api/users/:id` returns it:
+	  `{ _id, fullname, isAdmin, createdAt }`. Shown in the user page's header.
+	- Rule: no `username` (half a login) and never `password`. `isAdmin` is public on purpose,
+	  so the UI can mark staff. The backend builds it from an allow-list
+	  (`PUBLIC_USER_FIELDS`), like the join refs.
+	- Avoid: `UserProfile`, `Profile` (the page's name), `UserSummary`.
+
 - `Review` vs `ReviewInput` vs `ReviewContentInput` vs `ReviewDoc`
 	- Canonical meaning: `Review` is a stored review as the API returns it (with `_id`,
 	  `userId` and the timestamps). `ReviewInput` is what adding one sends (`catId`, `content`),
