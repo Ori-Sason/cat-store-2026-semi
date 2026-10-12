@@ -149,15 +149,23 @@ $_pill-sizes: (
   white-space: nowrap;
 }
 
-// The Admin chip next to a user's name (the header menu, the user page header). Dark, so it
-// stands apart from the light You chip on reviews. A review row's .chip.admin uses the same colors
-@mixin admin-chip {
+// Small uppercase tag next to a name: You / Owner / Admin. Light by default, callers that
+// need another color override it (e.g. Owner is pink)
+@mixin chip {
   padding: 1px 8px;
   font-size: 0.7rem;
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  color: $clr-white;
+  color: $primary-clr-800;
   border-radius: $radius-pill;
+  background-color: $primary-clr-200;
+}
+
+// The Admin chip: dark, so it stands apart from the light You chip. Used next to a user's name
+// (the header menu, the user page header) and on review rows
+@mixin admin-chip {
+  @include chip;
+  color: $clr-white;
   background-color: $primary-clr-800;
 }

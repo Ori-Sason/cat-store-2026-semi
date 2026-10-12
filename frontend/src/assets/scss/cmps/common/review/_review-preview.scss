@@ -30,15 +30,8 @@
   // You (the viewer's own review) and Admin (written by staff) on a cat's page only, and Owner
   // (written by the cat's owner)
   .chip {
+    @include chip;
     align-self: center;
-    padding: 1px 8px;
-    font-size: 0.7rem;
-    font-weight: 700;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    color: $primary-clr-800;
-    border-radius: $radius-pill;
-    background-color: $primary-clr-200;
 
     &.owner {
       color: $clr-black;
@@ -47,8 +40,7 @@
 
     // Dark, so it stands apart from You (light blue): it marks whose edits carry authority
     &.admin {
-      color: $clr-white;
-      background-color: $primary-clr-800;
+      @include admin-chip;
     }
   }
 
