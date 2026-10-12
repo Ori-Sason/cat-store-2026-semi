@@ -1,0 +1,25 @@
+@use 'setup' as *;
+
+// On the user page the list sits right on the page background, not inside a white card like
+// on cat-details, so the list's divider lines (the page's own color) don't show. Each review
+// is its own full-width card instead, framed like the cat cards
+.user-reviews {
+  .review-list,
+  .review-list-skeleton {
+    gap: $space-3;
+
+    li {
+      padding: 0 $space-4;
+      border: 1px solid rgba($primary-clr-900, 0.08);
+      border-radius: $radius-lg;
+      background-color: $clr-white;
+      box-shadow: $shadow-sm;
+    }
+  }
+
+  // The skeleton rows carry their own vertical padding; the review rows get theirs from
+  // .review-preview
+  .review-list-skeleton li {
+    padding: $space-3 $space-4;
+  }
+}
