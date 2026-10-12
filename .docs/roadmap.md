@@ -184,12 +184,18 @@ Before the first real deploy. This turns into a `deploy` skill once Part 6 start
 - [ ] Pagination on the cat list.
 - [ ] CI: GitHub Actions runs lint, typecheck and tests on every push and PR, with a `mongo`
    service container for the backend tests. Most useful before the Part 6 deploy.
+- [ ] User management: an admin can ban a user, and a user can delete their own account.
+   Needs the delete / ban policy decided first (see Open questions).
 
 ## Open questions
 
 Single home for open questions. Once one is decided, record the answer in `architecture.md` → Decisions and remove it here.
 
 - Deploy: Render build/start steps.
+- User delete / ban policy (Extras → User management): what happens to the user's cats and
+  reviews: keep them, remove them, or split by event (a self-delete vs a ban). Today the read
+  side disagrees: a review whose author is gone is hidden (`$unwind`), and a cat whose owner is
+  gone stays visible with `owner: null`. The decision settles both.
 
 ## Update Triggers
 - Mark an item `[x]` only when it's fully done, and update the **Current** line in the same change.
