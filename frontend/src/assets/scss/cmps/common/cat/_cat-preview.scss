@@ -52,6 +52,14 @@
     color: $primary-clr-900;
   }
 
+  // Muted text, not blue: it isn't a link (the whole card is)
+  .owner {
+    font-size: 0.8rem;
+    overflow-wrap: anywhere;
+    color: $primary-clr-900;
+    opacity: 0.7;
+  }
+
   .price {
     font-weight: 700;
     font-variant-numeric: tabular-nums;

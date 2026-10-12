@@ -1,14 +1,14 @@
 import type React from 'react'
 import { Suspense } from 'react'
 import { Await, Link } from 'react-router'
-import type { Cat } from '@cat-store/shared'
+import type { CatWithRefs } from '@cat-store/shared'
 import { NEWEST_CATS_LIMIT } from '../../models/home'
 import { CatListSkeleton } from '../common/cat/cat-list-skeleton'
 import { CatPreview } from '../common/cat/cat-preview'
 import { SectionError } from '../common/util/section-error'
 
 interface NewestCatsProps {
-  cats: Promise<Cat[]> // from the home loader, un-awaited
+  cats: Promise<CatWithRefs[]> // from the home loader, un-awaited
 }
 
 // The band and its heading render right away. Only the cards wait on the API.
@@ -30,7 +30,7 @@ export const NewestCats: React.FC<NewestCatsProps> = ({ cats }) => {
               <ul className="cat-list clean-list">
                 {cats.map((cat) => (
                   <li key={cat._id}>
-                    <CatPreview cat={cat} />
+                    <CatPreview cat={cat} isOwnerShown />
                   </li>
                 ))}
               </ul>

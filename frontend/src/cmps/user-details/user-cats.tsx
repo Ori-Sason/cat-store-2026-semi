@@ -9,6 +9,7 @@ import { SectionError } from '../common/util/section-error'
 const _SKELETON_CARD_COUNT = 4
 
 // The cats tab of /user/:id, rendered through user-details' <Outlet>.
+// The cards hide the owner: every one would show the same name, and the header already does.
 // The key remounts the <Suspense> per user. Without it, going from one user page to another
 // keeps the first user's cats on screen under the new header until the new list arrives:
 // a <Suspense> already on screen doesn't fall back again during a navigation
@@ -20,7 +21,7 @@ export const UserCats: React.FC = () => {
     <section className="user-cats">
       <Suspense key={userId} fallback={<CatListSkeleton count={_SKELETON_CARD_COUNT} />}>
         <Await resolve={cats} errorElement={<SectionError />}>
-          {(cats) => <CatList cats={cats} emptyText="No cats listed yet." />}
+          {(cats) => <CatList cats={cats} emptyText="No cats listed yet." isOwnerShown={false} />}
         </Await>
       </Suspense>
     </section>

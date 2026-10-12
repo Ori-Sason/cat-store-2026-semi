@@ -1,16 +1,20 @@
 import type React from 'react'
 import { Link, useLocation } from 'react-router'
-import type { Cat } from '@cat-store/shared'
+import type { CatWithRefs } from '@cat-store/shared'
 import type { CatListLocationState } from '../../../models/util'
 import { utilService } from '../../../services/util.service'
 import { CatImg } from './cat-img'
 import { CatLabels } from './cat-labels'
 
 interface CatPreviewProps {
-  cat: Cat
+  cat: CatWithRefs
+  // false where the page already says whose cats they are (the user page's cats tab)
+  isOwnerShown: boolean
 }
 
-export const CatPreview: React.FC<CatPreviewProps> = ({ cat }) => {
+// The owner is plain text, not a link to /user/:id: the whole card is a <Link>, and a link
+// inside it would be a nested <a>. cat-details has the owner link
+export const CatPreview: React.FC<CatPreviewProps> = ({ cat, isOwnerShown }) => {
   const location = useLocation()
   const state: CatListLocationState = { listSearch: location.search }
 
@@ -20,6 +24,7 @@ export const CatPreview: React.FC<CatPreviewProps> = ({ cat }) => {
       <div className="body">
         <div className="top">
           <h3>{cat.name}</h3>
+          {isOwnerShown && <span className="owner">by {cat.owner.fullname}</span>}
           <span className="price">{utilService.formatPrice(cat.price)}</span>
         </div>
         <CatLabels key={cat.labels.join()} labels={cat.labels} />

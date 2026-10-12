@@ -1,6 +1,6 @@
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import type { Cat, LoggedInUser, PublicUser, ReviewWithRefs } from '@cat-store/shared'
+import type { CatWithRefs, LoggedInUser, PublicUser, ReviewWithRefs } from '@cat-store/shared'
 import { createMemoryRouter, RouterProvider } from 'react-router'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { UserCats } from '../../cmps/user-details/user-cats'
@@ -26,10 +26,10 @@ function _buildUser(_id: string, fullname: string): PublicUser {
   return { _id, fullname, isAdmin: false, createdAt: Date.UTC(2026, 9, 4, 12) }
 }
 
-function _buildCat(_id: string, name: string, ownerId: string): Cat {
+function _buildCat(_id: string, name: string, owner: PublicUser): CatWithRefs {
   return {
     _id,
-    ownerId,
+    owner: { _id: owner._id, fullname: owner.fullname, isAdmin: owner.isAdmin },
     name,
     price: 100,
     labels: [],
@@ -42,7 +42,7 @@ function _buildCat(_id: string, name: string, ownerId: string): Cat {
 
 const MAYA = _buildUser('user-1', 'Maya Levi')
 const NOAM = _buildUser('user-2', 'Noam Cohen')
-const MAYA_CAT = _buildCat('cat-1', 'Mitzi', MAYA._id)
+const MAYA_CAT = _buildCat('cat-1', 'Mitzi', MAYA)
 const MAYA_LOGGED_IN: LoggedInUser = { ...MAYA, username: 'maya' }
 
 // Maya's review of someone else's cat
@@ -111,6 +111,14 @@ describe('UserDetails', () => {
     expect(await screen.findByRole('heading', { name: 'Mitzi' })).toBeInTheDocument()
     expect(userService.getById).toHaveBeenCalledWith('user-1')
     expect(catService.query).toHaveBeenCalledWith(expect.objectContaining({ ownerId: 'user-1' }))
+  })
+
+  // Every card would say the same name, and the header already does
+  it("hides the owner on the cats tab's cards", async () => {
+    _renderAt('/user/user-1')
+
+    await screen.findByRole('heading', { name: 'Mitzi' })
+    expect(screen.queryByText('by Maya Levi')).not.toBeInTheDocument()
   })
 
   it('marks an admin with an Admin chip in the header', async () => {

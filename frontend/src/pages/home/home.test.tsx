@@ -1,5 +1,5 @@
 import { render, screen, within } from '@testing-library/react'
-import type { Cat, CatLabelStats, LoggedInUser } from '@cat-store/shared'
+import type { CatLabelStats, CatWithRefs, LoggedInUser } from '@cat-store/shared'
 import { createMemoryRouter, RouterProvider } from 'react-router'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ApiError } from '../../models/api-error'
@@ -19,7 +19,7 @@ const _USER = {
 
 const _CAT = {
   _id: 'cat-1',
-  ownerId: 'user-1',
+  owner: { _id: 'user-1', fullname: 'Ori Sason', isAdmin: false },
   name: 'Mitzi',
   price: 95,
   labels: ['Calm'],
@@ -27,7 +27,7 @@ const _CAT = {
   imgUrl: '',
   createdAt: 1,
   updatedAt: 1,
-} satisfies Cat
+} satisfies CatWithRefs
 
 const _STATS: CatLabelStats[] = [
   { label: 'Calm', count: 2, inStockCount: 1, medianPrice: 300, minPrice: 200, maxPrice: 400 },

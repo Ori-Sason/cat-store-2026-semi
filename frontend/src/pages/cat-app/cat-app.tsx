@@ -60,7 +60,7 @@ export const CatApp: React.FC = () => {
       </header>
       <CatFilterBar filterBy={draftFilterBy} onSetFilter={onSetFilter} />
       <div className={`list-container ${isLoading ? 'is-loading' : ''}`}>
-        <CatList cats={cats} emptyText="No cats match these filters." />
+        <CatList cats={cats} emptyText="No cats match these filters." isOwnerShown />
       </div>
     </section>
   )

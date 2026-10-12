@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { DEFAULT_CAT_FILTER, type Cat, type LoggedInUser } from '@cat-store/shared'
+import { DEFAULT_CAT_FILTER, type CatWithRefs, type LoggedInUser } from '@cat-store/shared'
 import { createMemoryRouter, RouterProvider, useLocation } from 'react-router'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { catService } from '../../services/cat.service'
@@ -16,7 +16,7 @@ const _FILTER_DEBOUNCE_MS = 500
 const _CATS = [
   {
     _id: 'cat-1',
-    ownerId: 'user-1',
+    owner: { _id: 'user-1', fullname: 'Maya Levi', isAdmin: false },
     name: 'Mitzi',
     price: 120,
     labels: ['Calm'],
@@ -25,7 +25,7 @@ const _CATS = [
     createdAt: 1,
     updatedAt: 1,
   },
-] satisfies Cat[]
+] satisfies CatWithRefs[]
 
 const USER: LoggedInUser = { _id: 'user-2', username: 'user', fullname: 'U', isAdmin: false }
 

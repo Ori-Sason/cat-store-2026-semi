@@ -21,9 +21,10 @@ export const catService = {
 
 // URLSearchParams, not a plain object: axios sends it as is, so labels go out as
 // repeated keys (labels=Kitten&labels=Calm) instead of axios's labels[]=…
-function query(filterBy: CatFilter = DEFAULT_CAT_FILTER): Promise<Cat[]> {
+// Each cat comes with its owner's ref, like getById
+function query(filterBy: CatFilter = DEFAULT_CAT_FILTER): Promise<CatWithRefs[]> {
   const params = new URLSearchParams(catFilterService.filterToParams(filterBy))
-  return httpService.get<Cat[]>(BASE_PATH, params)
+  return httpService.get<CatWithRefs[]>(BASE_PATH, params)
 }
 
 function getById(catId: string): Promise<CatWithRefs> {

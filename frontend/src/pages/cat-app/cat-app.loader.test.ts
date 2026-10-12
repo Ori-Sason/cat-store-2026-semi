@@ -1,4 +1,4 @@
-import { DEFAULT_CAT_FILTER, type Cat } from '@cat-store/shared'
+import { DEFAULT_CAT_FILTER, type CatWithRefs } from '@cat-store/shared'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { ApiError } from '../../models/api-error'
 import { catService } from '../../services/cat.service'
@@ -6,7 +6,7 @@ import { catAppLoader } from './cat-app.loader'
 
 vi.mock('../../services/cat.service')
 
-const _CATS = [{ _id: 'cat-1', name: 'Mitzi' }] as Cat[]
+const _CATS = [{ _id: 'cat-1', name: 'Mitzi' }] as CatWithRefs[]
 
 function _request(path: string) {
   return new Request(`http://localhost${path}`)

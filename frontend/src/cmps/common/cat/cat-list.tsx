@@ -1,20 +1,21 @@
 import type React from 'react'
-import type { Cat } from '@cat-store/shared'
+import type { CatWithRefs } from '@cat-store/shared'
 import { CatPreview } from './cat-preview'
 
 interface CatListProps {
-  cats: Cat[]
+  cats: CatWithRefs[]
   emptyText: string // each page says why it has none: no filter match, or no cats yet
+  isOwnerShown: boolean
 }
 
-export const CatList: React.FC<CatListProps> = ({ cats, emptyText }) => {
+export const CatList: React.FC<CatListProps> = ({ cats, emptyText, isOwnerShown }) => {
   if (!cats.length) return <p className="cat-list empty">{emptyText}</p>
 
   return (
     <ul className="cat-list clean-list">
       {cats.map((cat) => (
         <li key={cat._id}>
-          <CatPreview cat={cat} />
+          <CatPreview cat={cat} isOwnerShown={isOwnerShown} />
         </li>
       ))}
     </ul>
