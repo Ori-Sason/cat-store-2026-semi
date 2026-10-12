@@ -1,5 +1,5 @@
 import type { ObjectId } from 'mongodb'
-import type { Cat, CatWithRefs } from '@cat-store/shared'
+import type { CAT_REF_FIELDS, Cat, CatWithRefs } from '@cat-store/shared'
 import type { UserRefDoc } from './user.ts'
 
 export const CAT_COLLECTION = 'cats'
@@ -9,14 +9,9 @@ export interface CatDoc extends Omit<Cat, '_id' | 'ownerId'> {
   ownerId: ObjectId
 }
 
-// The cat fields a joined doc (e.g. a review's cat) carries, besides `_id`
-// ownerId lets a review show an Owner chip when the cat's owner wrote it
-export const CAT_REF_FIELDS = [
-  'name',
-  'imgUrl',
-  'ownerId',
-] as const satisfies readonly (keyof CatDoc)[]
-
+// The DB-side shape of the shared CatRef. Its field list (CAT_REF_FIELDS) lives in shared, so the
+// wire type and the projection can't drift apart. Picked from CatDoc, since both `_id` and
+// ownerId are ObjectIds here
 export type CatRefDoc = Pick<CatDoc, '_id' | (typeof CAT_REF_FIELDS)[number]>
 
 // The aggregation output behind GET /api/cats/:id: CatWithRefs with ObjectIds.

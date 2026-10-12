@@ -58,6 +58,18 @@ export interface CatWithRefs extends Omit<Cat, 'ownerId'> {
   owner: UserRef
 }
 
+// The fields a joined doc (a review's cat) carries, besides `_id`. An allow-list the backend
+// projects with, like USER_REF_FIELDS. ownerId lets a review show an Owner chip when the cat's
+// owner wrote it
+export const CAT_REF_FIELDS = [
+  'name',
+  'imgUrl',
+  'ownerId',
+] as const satisfies readonly (keyof Cat)[]
+
+// A cat as a join carries it: a review's cat
+export type CatRef = Pick<Cat, '_id' | (typeof CAT_REF_FIELDS)[number]>
+
 export interface CatLabelStats {
   label: CatLabel
   count: number

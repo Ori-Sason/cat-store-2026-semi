@@ -1,11 +1,12 @@
 import { ObjectId, type Filter } from 'mongodb'
 import {
+  CAT_REF_FIELDS,
   USER_REF_FIELDS,
   type ReviewContentInput,
   type ReviewFilter,
   type ReviewInput,
 } from '@cat-store/shared'
-import { CAT_COLLECTION, CAT_REF_FIELDS } from '../../models/cat.ts'
+import { CAT_COLLECTION } from '../../models/cat.ts'
 import { HttpError } from '../../models/http-error.ts'
 import { REVIEW_COLLECTION, type ReviewDoc, type ReviewJoinedDoc } from '../../models/review.ts'
 import { USER_COLLECTION } from '../../models/user.ts'

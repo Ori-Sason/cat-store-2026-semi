@@ -60,6 +60,13 @@
 	  Permission checks take the id alone: `canEditCat(cat.owner._id, …)`.
 	- Avoid: `CatWithOwner`, `PopulatedCat`, `CatDetails` (the page's name).
 
+- `CatRef`
+	- Canonical meaning: a cat as a join carries it: `{ _id, name, imgUrl, ownerId }`. A review's
+	  `cat` is a `CatRef`.
+	- Rule: built from an allow-list in shared (`CAT_REF_FIELDS`), like `UserRef`. `ownerId` is in
+	  on purpose: the Owner chip on reviews.
+	- Avoid: `CatSummary`, `ReviewCat`.
+
 - `User` vs `UserInput` vs `UserDoc`
 	- Canonical meaning: `User` is a stored user as the API returns it, with no password.
 	  `UserInput` is the user fields a client may set (`fullname`, `username`, `password`),
@@ -97,7 +104,7 @@
 	  cat: { _id, name, imgUrl, ownerId } }`, with no `userId` / `catId`. `ReviewWithRefs` is the wire
 	  type (`shared/`, string ids). `ReviewJoinedDoc` is the backend-only aggregation output
 	  (`ObjectId` ids). Same split as `Cat` / `CatDoc`.
-	- Rule: the joined `user` is a `UserRef`. One shape serves both pages: each ignores the side it already knows.
+	- Rule: the joined `user` is a `UserRef` and the joined `cat` a `CatRef`. One shape serves both pages: each ignores the side it already knows.
 	  `cat.ownerId` marks a review written by the cat's owner (the Owner chip), on any page.
 	- Avoid: `ReviewJoined` (for the wire type), `PopulatedReview`, `ReviewDetails`.
 
