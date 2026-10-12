@@ -1,9 +1,15 @@
 import { ObjectId, type Filter } from 'mongodb'
-import { CAT_LABELS, type CatFilter, type CatInput, type CatLabelStats } from '@cat-store/shared'
+import {
+  CAT_LABELS,
+  USER_REF_FIELDS,
+  type CatFilter,
+  type CatInput,
+  type CatLabelStats,
+} from '@cat-store/shared'
 import { CAT_COLLECTION, type CatDoc, type CatJoinedDoc } from '../../models/cat.ts'
 import { HttpError } from '../../models/http-error.ts'
 import { REVIEW_COLLECTION, type ReviewDoc } from '../../models/review.ts'
-import { USER_COLLECTION, USER_REF_FIELDS } from '../../models/user.ts'
+import { USER_COLLECTION } from '../../models/user.ts'
 import { mongoService } from '../../services/mongodb.service.ts'
 import { utilService } from '../../services/util.service.ts'
 

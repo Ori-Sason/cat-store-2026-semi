@@ -1,11 +1,7 @@
 import { MongoServerError, ObjectId } from 'mongodb'
+import { PUBLIC_USER_FIELDS } from '@cat-store/shared'
 import { HttpError } from '../../models/http-error.ts'
-import {
-  PUBLIC_USER_FIELDS,
-  USER_COLLECTION,
-  type PublicUserDoc,
-  type UserDoc,
-} from '../../models/user.ts'
+import { USER_COLLECTION, type PublicUserDoc, type UserDoc } from '../../models/user.ts'
 import { mongoService } from '../../services/mongodb.service.ts'
 import { utilService } from '../../services/util.service.ts'
 

@@ -84,12 +84,23 @@ export interface User extends Omit<UserInput, 'password'> {
   updatedAt: number
 }
 
-// A user as anyone may see them (GET /api/users/:id). No username (half a login) and never the
-// password. isAdmin is public on purpose, so the UI can mark staff
-export type PublicUser = Pick<User, '_id' | 'fullname' | 'isAdmin' | 'createdAt'>
+// The fields a joined doc (a review's author, a cat's owner) carries, besides `_id`. An allow-list
+// the backend projects with, so a field added to users later (a secret, say) stays out of every
+// join by default. isAdmin is in on purpose: the UI marks staff
+export const USER_REF_FIELDS = ['fullname', 'isAdmin'] as const satisfies readonly (keyof User)[]
 
-// A user as a join carries them: a review's author, a cat's owner. A subset of PublicUser
-export type UserRef = Pick<User, '_id' | 'fullname' | 'isAdmin'>
+// The fields GET /api/users/:id returns, besides `_id`. Built on the ref fields, so a UserRef stays
+// a subset of a PublicUser. No username (half a login) and never the password
+export const PUBLIC_USER_FIELDS = [
+  ...USER_REF_FIELDS,
+  'createdAt',
+] as const satisfies readonly (keyof User)[]
+
+// A user as anyone may see them (GET /api/users/:id)
+export type PublicUser = Pick<User, '_id' | (typeof PUBLIC_USER_FIELDS)[number]>
+
+// A user as a join carries them: a review's author, a cat's owner
+export type UserRef = Pick<User, '_id' | (typeof USER_REF_FIELDS)[number]>
 
 export type LoggedInUser = Pick<User, '_id' | 'username' | 'fullname' | 'isAdmin'>
 

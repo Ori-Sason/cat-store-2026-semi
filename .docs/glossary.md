@@ -71,14 +71,15 @@
 	- Canonical meaning: a user as anyone may see them, as `GET /api/users/:id` returns it:
 	  `{ _id, fullname, isAdmin, createdAt }`. Shown in the user page's header.
 	- Rule: no `username` (half a login) and never `password`. `isAdmin` is public on purpose,
-	  so the UI can mark staff. The backend builds it from an allow-list
-	  (`PUBLIC_USER_FIELDS`), like the join refs.
+	  so the UI can mark staff. Built from an allow-list in shared
+	  (`PUBLIC_USER_FIELDS`, which extends `USER_REF_FIELDS`): the type and the backend projection
+	  read the same list.
 	- Avoid: `UserProfile`, `Profile` (the page's name), `UserSummary`.
 
 - `UserRef`
 	- Canonical meaning: a user as a join carries them: `{ _id, fullname, isAdmin }`. A review's
 	  `user` and a cat's `owner` are both `UserRef`s. A subset of `PublicUser`.
-	- Rule: built from an allow-list (`USER_REF_FIELDS`), so `password` and `username` never
+	- Rule: built from an allow-list in shared (`USER_REF_FIELDS`), so `password` and `username` never
 	  leave the DB. `isAdmin` is in on purpose, like in `PublicUser`: the Admin chip on reviews.
 	- Avoid: `UserSummary`, `Author` (for the type), `PopulatedUser`.
 

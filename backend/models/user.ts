@@ -1,5 +1,5 @@
 import type { ObjectId } from 'mongodb'
-import type { User } from '@cat-store/shared'
+import type { PublicUser, User, UserRef } from '@cat-store/shared'
 
 export const USER_COLLECTION = 'users'
 
@@ -9,19 +9,9 @@ export interface UserDoc extends Omit<User, '_id'> {
   password: string
 }
 
-// The user fields a joined doc (e.g. a review's author) may carry, besides `_id` (UserRef). An
-// allow-list, so a field added to users later (a secret, say) stays out of every join by default.
-// isAdmin is in on purpose, like in PublicUser: the UI marks staff
-export const USER_REF_FIELDS = ['fullname', 'isAdmin'] as const satisfies readonly (keyof UserDoc)[]
+// The DB-side shapes of the shared PublicUser and UserRef. Their field lists
+// (PUBLIC_USER_FIELDS, USER_REF_FIELDS) live in shared, so the wire types and the projections
+// can't drift apart. Only `_id` differs: an ObjectId here, a string once serialized
+export type PublicUserDoc = Omit<PublicUser, '_id'> & Pick<UserDoc, '_id'>
 
-// The fields GET /api/users/:id returns, besides `_id` (PublicUser). An allow-list, like the refs:
-// no username (half a login) and never the password
-export const PUBLIC_USER_FIELDS = [
-  'fullname',
-  'isAdmin',
-  'createdAt',
-] as const satisfies readonly (keyof UserDoc)[]
-
-export type PublicUserDoc = Pick<UserDoc, '_id' | (typeof PUBLIC_USER_FIELDS)[number]>
-
-export type UserRefDoc = Pick<UserDoc, '_id' | (typeof USER_REF_FIELDS)[number]>
+export type UserRefDoc = Omit<UserRef, '_id'> & Pick<UserDoc, '_id'>
