@@ -178,23 +178,25 @@
     display: grid;
     gap: $space-1;
 
-    a {
-      padding: $space-2 $space-3;
-      color: $primary-clr-800;
-      border-radius: $radius-sm;
-
-      &:hover {
-        background-color: rgba($primary-clr-100, 0.6);
-      }
-
-      &.active {
-        font-weight: 700;
-        background-color: $primary-clr-100;
-      }
-    }
-
     @include from($bp-md) {
       display: none;
+    }
+  }
+
+  // One row look for the page links and Profile. Profile shows on every screen size
+  .page-rows a,
+  .profile-link {
+    padding: $space-2 $space-3;
+    color: $primary-clr-800;
+    border-radius: $radius-sm;
+
+    &:hover {
+      background-color: rgba($primary-clr-100, 0.6);
+    }
+
+    &.active {
+      font-weight: 700;
+      background-color: $primary-clr-100;
     }
   }
 

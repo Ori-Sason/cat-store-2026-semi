@@ -76,6 +76,12 @@ export const HeaderMenu: React.FC<HeaderMenuProps> = ({
               </div>
             </div>
           )}
+          {/* On every screen size, unlike the page rows: the bar has no link to it */}
+          {user && (
+            <NavLink to={`/user/${user._id}`} className="profile-link" onClick={onClose}>
+              Profile
+            </NavLink>
+          )}
           <nav className="page-rows">
             {NAV_LINKS.map(({ to, label }) => (
               <NavLink key={to} to={to} onClick={onClose}>

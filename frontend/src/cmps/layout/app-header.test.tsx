@@ -41,6 +41,7 @@ function _renderAt(path: string) {
             ),
           },
           { path: '/about', element: <p>About page</p> },
+          { path: '/user/:id', element: <p>User page</p> },
         ],
       },
     ],
@@ -112,6 +113,7 @@ describe('AppHeader', () => {
       `/login?redirectTo=${encodeURIComponent('/cat?txt=Mitzi')}`,
     )
     expect(menu.queryByRole('button', { name: 'Logout' })).not.toBeInTheDocument()
+    expect(menu.queryByRole('link', { name: 'Profile' })).not.toBeInTheDocument()
   })
 
   it('shows a logged-in user a Menu button with their initial, closed', () => {
@@ -148,6 +150,18 @@ describe('AppHeader', () => {
     await _openMenu(user)
 
     expect(screen.getByText('Admin')).toBeInTheDocument()
+  })
+
+  it('opens their own user page from the Profile row, and closes the menu', async () => {
+    useLoggedInUserStore.setState({ loggedInUser: _USER })
+    const { router, user } = _renderAt('/cat')
+    await _openMenu(user)
+
+    await user.click(_getMenu().getByRole('link', { name: 'Profile' }))
+
+    expect(router.state.location.pathname).toBe('/user/user-1')
+    expect(screen.getByText('User page')).toBeInTheDocument()
+    expect(screen.queryByText('Hi, Ori!')).not.toBeInTheDocument()
   })
 
   it('closes the menu on a second Menu click', async () => {
