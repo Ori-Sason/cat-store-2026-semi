@@ -52,7 +52,7 @@ export interface Cat extends CatInput {
   updatedAt: number
 }
 
-// A cat joined with its owner, as GET /api/cats/:id returns it. The owner's ref replaces
+// A cat joined with its owner, as GET /api/cats and GET /api/cats/:id return it. The owner's ref replaces
 // ownerId, like a review's refs replace userId / catId
 export interface CatWithRefs extends Omit<Cat, 'ownerId'> {
   owner: UserRef

@@ -93,7 +93,7 @@ const CATS: CatDoc[] = [
 async function _getNames(query: string): Promise<string[]> {
   const res = await request(app).get(`/api/cats${query}`)
   expect(res.status).toBe(200)
-  return res.body.map((cat: Cat) => cat.name)
+  return res.body.map((cat: CatWithRefs) => cat.name)
 }
 
 describe('GET /api/cats', () => {
@@ -102,11 +102,40 @@ describe('GET /api/cats', () => {
     await collection.insertMany(CATS)
   })
 
+  it("returns each cat with its owner's ref in place of ownerId, with only _id, fullname and isAdmin", async () => {
+    await _insertCat(_buildCat({ name: 'Luna', ownerId: ADMIN._id, createdAt: 6_000 }))
+
+    const res = await request(app).get('/api/cats?limit=2')
+
+    expect(res.status).toBe(200)
+    // toEqual, not toMatchObject: an extra key (ownerId, or the owner's password or username)
+    // fails the test
+    expect(res.body[0].owner).toEqual({
+      _id: ADMIN._id.toHexString(),
+      fullname: ADMIN.fullname,
+      isAdmin: true,
+    })
+    expect(res.body[1]).toEqual(
+      _toJsonWithRefs(CATS[4]!, {
+        _id: CAT_OWNER._id.toHexString(),
+        fullname: CAT_OWNER.fullname,
+        isAdmin: false,
+      }),
+    )
+  })
+
+  // Hidden from the store, not deleted: until user management decides the policy
+  it("leaves out a cat whose owner's user is gone", async () => {
+    await _insertCat(_buildCat({ name: 'Orphan', ownerId: new ObjectId(), createdAt: 6_000 }))
+
+    expect(await _getNames('')).toEqual(['Felix', 'garfield', 'Max', 'bella', 'tom'])
+  })
+
   it('returns every cat, newest first, with a string _id', async () => {
     const res = await request(app).get('/api/cats')
 
     expect(res.status).toBe(200)
-    expect(res.body.map((cat: Cat) => cat.name)).toEqual([
+    expect(res.body.map((cat: CatWithRefs) => cat.name)).toEqual([
       'Felix',
       'garfield',
       'Max',

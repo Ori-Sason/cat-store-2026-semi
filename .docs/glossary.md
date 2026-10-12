@@ -50,13 +50,15 @@
 	- Avoid: `CatDto`, `NewCat`, `CatPayload`, `CatToSave`.
 
 - `CatWithRefs` vs `CatJoinedDoc`
-	- Canonical meaning: a cat joined with its owner, as `GET /api/cats/:id` returns it: a `Cat`
+	- Canonical meaning: a cat joined with its owner, as `GET /api/cats` and `GET /api/cats/:id`
+	  return it: a `Cat`
 	  with `owner` (a `UserRef`) in place of `ownerId` (the ref replaces it, like a
 	  review's refs replace `userId` / `catId`). `CatWithRefs` is the wire type (`shared/`, string ids). `CatJoinedDoc` is the
 	  backend-only aggregation output (`ObjectId` ids). Same split as `ReviewWithRefs` /
 	  `ReviewJoinedDoc`.
 	- Rule: `owner` is a `UserRef`, like a review's `user`. A cat whose
 	  owner's user doc is gone isn't returned (an inner join), so `owner` is never null.
+	  The only plain-`Cat` responses are POST / PUT.
 	  Permission checks take the id alone: `canEditCat(cat.owner._id, …)`.
 	- Avoid: `CatWithOwner`, `PopulatedCat`, `CatDetails` (the page's name).
 

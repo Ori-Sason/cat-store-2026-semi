@@ -14,7 +14,7 @@ export interface CatDoc extends Omit<Cat, '_id' | 'ownerId'> {
 // ownerId are ObjectIds here
 export type CatRefDoc = Pick<CatDoc, '_id' | (typeof CAT_REF_FIELDS)[number]>
 
-// The aggregation output behind GET /api/cats/:id: CatWithRefs with ObjectIds.
+// The aggregation output behind GET /api/cats and GET /api/cats/:id: CatWithRefs with ObjectIds.
 // aggregate<T>() only asserts it, so the route tests pin the real keys
 export interface CatJoinedDoc extends Omit<CatWithRefs, '_id' | 'owner'> {
   _id: ObjectId

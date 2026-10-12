@@ -1,4 +1,4 @@
-import { ObjectId, type Filter } from 'mongodb'
+import { ObjectId, type Document, type Filter } from 'mongodb'
 import {
   CAT_LABELS,
   USER_REF_FIELDS,
@@ -13,7 +13,12 @@ import { USER_COLLECTION } from '../../models/user.ts'
 import { mongoService } from '../../services/mongodb.service.ts'
 import { utilService } from '../../services/util.service.ts'
 
-async function query(filterBy: CatFilter): Promise<CatDoc[]> {
+// Each cat comes with its owner's ref, like the details page. The owner join is the reason this
+// is an aggregate and not a find(). $match, $sort and $limit go first: they run as one indexed
+// query, and the lookup then joins only the cats returned.
+// The $unwind drops a cat whose owner is gone, after $limit, so a limit=N page can come back
+// short by the orphans in it. Fine while users can't be deleted
+async function query(filterBy: CatFilter): Promise<CatJoinedDoc[]> {
   // A malformed ownerId can't own a cat, so the answer is "no cats". Returning early matters:
   // dropping the bad id from the criteria would mean every cat
   const ownerId = filterBy.ownerId ? utilService.toObjectId(filterBy.ownerId) : null
@@ -21,10 +26,17 @@ async function query(filterBy: CatFilter): Promise<CatDoc[]> {
 
   const collection = await mongoService.getCollection<CatDoc>(CAT_COLLECTION)
   return collection
-    .find(_buildCriteria(filterBy, ownerId))
-    .sort(utilService.buildSort<CatDoc>(filterBy))
-    .collation({ locale: 'en' }) // case-insensitive string sort: "bella" sits next to "Bella"
-    .limit(filterBy.limit ?? 0) // after the sort, so it keeps the first N in sort order. 0 = no limit
+    .aggregate<CatJoinedDoc>(
+      [
+        { $match: _buildCriteria(filterBy, ownerId) },
+        { $sort: utilService.buildSort<CatDoc>(filterBy) },
+        // after the sort, so it keeps the first N in sort order. $limit must be positive,
+        // so no limit = no stage
+        ...(filterBy.limit ? [{ $limit: filterBy.limit }] : []),
+        ..._ownerStages(),
+      ],
+      { collation: { locale: 'en' } }, // case-insensitive string sort: "bella" sits next to "Bella"
+    )
     .toArray()
 }
 
@@ -44,12 +56,7 @@ async function getByIdWithOwner(catId: string): Promise<CatJoinedDoc> {
   if (!_id) throw _catNotFound(catId)
   const collection = await mongoService.getCollection<CatDoc>(CAT_COLLECTION)
   const [cat] = await collection
-    .aggregate<CatJoinedDoc>([
-      { $match: { _id } },
-      utilService.buildLookup(USER_COLLECTION, 'ownerId', 'owner', USER_REF_FIELDS),
-      { $unwind: '$owner' },
-      { $unset: 'ownerId' }, // the owner's ref replaces it
-    ])
+    .aggregate<CatJoinedDoc>([{ $match: { _id } }, ..._ownerStages()])
     .toArray()
   if (!cat) throw _catNotFound(catId)
   return cat
@@ -148,6 +155,16 @@ function _buildCriteria(
   if (labels.length) criteria.labels = { $all: labels }
   if (ownerId) criteria.ownerId = ownerId
   return criteria
+}
+
+// The owner join, shared by the list and the details page. $unwind is an inner join: a cat whose
+// owner's user is gone drops out. Any $match on ownerId must come before the $unset
+function _ownerStages(): Document[] {
+  return [
+    utilService.buildLookup(USER_COLLECTION, 'ownerId', 'owner', USER_REF_FIELDS),
+    { $unwind: '$owner' },
+    { $unset: 'ownerId' }, // the owner's ref replaces it
+  ]
 }
 
 // $group only returns labels some cat has. Map CAT_LABELS so the order stays fixed and
