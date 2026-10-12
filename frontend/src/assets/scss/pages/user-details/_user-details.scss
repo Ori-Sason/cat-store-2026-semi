@@ -1,0 +1,46 @@
+@use 'setup' as *;
+
+.user-details {
+  display: grid;
+  gap: $space-4;
+
+  .profile-head {
+    display: grid;
+    gap: $space-1;
+
+    h1 {
+      font-size: 1.5rem;
+      overflow-wrap: anywhere;
+      color: $primary-clr-900;
+    }
+
+    .joined {
+      font-size: 0.85rem;
+      color: $primary-clr-850;
+    }
+  }
+
+  // Underlined tabs. The active one is the NavLink's .active (it also gets aria-current="page")
+  .tabs {
+    display: flex;
+    gap: $space-4;
+    border-bottom: 1px solid $primary-clr-200;
+
+    a {
+      padding: $space-2 0;
+      margin-bottom: -1px; // the active border sits on the nav's own line
+      font-weight: 600;
+      color: $primary-clr-850;
+      border-bottom: 2px solid transparent;
+
+      &:hover {
+        color: $primary-clr-600;
+      }
+
+      &.active {
+        color: $primary-clr-900;
+        border-bottom-color: $primary-clr-600;
+      }
+    }
+  }
+}

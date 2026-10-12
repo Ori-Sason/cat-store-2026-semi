@@ -2,6 +2,7 @@ import { data, type RouteObject } from 'react-router'
 import { LayoutApp } from './cmps/layout/layout-app'
 import { LayoutRoot } from './cmps/layout/layout-root'
 import { CatReviews } from './cmps/cat-details/cat-reviews'
+import { UserCats } from './cmps/user-details/user-cats'
 import { RouteError } from './cmps/common/util/route-error'
 import { CatApp } from './pages/cat-app/cat-app'
 import { catAppLoader } from './pages/cat-app/cat-app.loader'
@@ -19,6 +20,9 @@ import { LoginSignup } from './pages/login-signup/login-signup'
 import { loginSignupAction } from './pages/login-signup/login-signup.action'
 import { reviewAction } from './pages/review/review.action'
 import { reviewLoader } from './pages/review/review.loader'
+import { userCatsLoader } from './pages/user-details/user-cats.loader'
+import { UserDetails } from './pages/user-details/user-details'
+import { userDetailsLoader } from './pages/user-details/user-details.loader'
 import { utilService } from './services/util.service'
 
 // Just the routes. main.tsx creates the router after loading the logged-in user, since
@@ -80,6 +84,17 @@ export const routes: RouteObject[] = [
                     loader: (args) => reviewLoader(args, 'catId'),
                     element: <CatReviews />,
                   },
+                ],
+              },
+              {
+                path: '/user/:id',
+                loader: userDetailsLoader,
+                // A review action on a tab reloads only that tab, not the user
+                shouldRevalidate: utilService.skipReloadOnActionAt('/review'),
+                element: <UserDetails />,
+                children: [
+                  // One child route per tab, each with its own loader. Only the open tab loads
+                  { index: true, loader: userCatsLoader, element: <UserCats /> },
                 ],
               },
               {
