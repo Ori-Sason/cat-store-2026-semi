@@ -1,216 +1,108 @@
 # Glossary
 
 ## Purpose
-- Define canonical domain terms and approved short forms used across code, API routes, docs, and plans.
+The one canonical name for each domain concept, and the synonyms to avoid. Check it before
+naming a new type, field, route or variable.
 
-## Core Terms
-### Entities
-- cat (`cats`, `Cat`, `catService`)
-	- Canonical meaning: one cat offered on the store by its owner. The core entity:
-	  it has a name, price, labels, stock flag and photo, plus reviews and a chat room.
-	- Avoid: `listing`, `item`, `product`, `pet`.
-- user (`users`, `User`, `UserDoc`)
-	- Canonical meaning: an account that can log in. A user with `isAdmin` is an admin.
-	- Avoid: `account`, `member`, `customer`.
-- owner (`ownerId`)
-	- Canonical meaning: the user who created a cat. Only the owner (or an admin) can
-	  edit or delete it. Set by the server, never by the client.
-	- Rule: `ownerId` is named for the role, not the entity, a deliberate exception to
-	  the `<entity>Id` rule in `naming.md`. It holds a `users` `_id`.
-	- Rule: `catPermissionService` (`shared/`) holds the cat rules. The FE hides what fails
-	  them. The BE checks edit / delete through it (`requireCatOwner`), and add with `requireAuth`.
-	- Avoid: `seller`, `creator`, `createdBy`, `userId` (on a cat).
-- review (`reviews`, `Review`, `reviewService`)
-	- Canonical meaning: one user's written text about one cat. Its author is `userId`
-	  (server-set from the verified user, never from the body) and its cat is `catId`.
-	- Rule: a review stays on its cat. An edit changes `content` only.
-	- Rule: `reviewPermissionService` (`shared/`) holds the review rules. Any logged-in user can
-	  add one (on their own cat too). Only the author (or an admin) can edit or delete it: the BE
-	  checks that through `requireReviewOwner`, and add with `requireAuth`.
-	- Avoid: `comment`, `feedback`, `rating` (there's no score), `author` as a field name.
-- label (`labels`, `CatLabel`, `CAT_LABELS`)
-	- Canonical meaning: one of a fixed set of descriptors attached to a cat.
-	  A cat can have several. Used for filtering cats and for dashboard stats.
-	- Values: `Kitten`, `Adult`, `Senior`, `Playful`, `Calm`, `Affectionate`,
-	  `Long-hair`, `Short-hair`, `Indoor`, `Good with kids`.
-	- Avoid: `traits`, `tags`, `categories`, `type`.
-- pickup point (`PickupPoint`, `PICKUP_POINTS`)
-	- Canonical meaning: a fixed place where a buyer collects a cat. Shown on the
-	  About page map with its address and hours.
-	- Rule: FE-only static data (`frontend/src/models/pickup-point.ts`), not a
-	  collection and not on the wire.
-	- Avoid: `store` (clashes with the app and Zustand stores), `branch`, `location`, `shop`.
+An entry is: the term with its code names, a line or two of meaning, and `Avoid:`. Add a
+`Rule:` only when the name itself needs one (an exception to `naming.md`, a term that's easy to
+misuse).
 
-### Type shapes
-- `Cat` vs `CatInput`
-	- Canonical meaning: `Cat` is a stored cat as the API returns it (with `_id`,
-	  `createdAt` and `updatedAt`). Its `imgUrl` can be `''`, and the FE then shows the
-	  default image. `CatInput` is
-	  what the client sends (POST / PUT body, edit-form state), inferred from `catSchema`.
-	- Avoid: `CatDto`, `NewCat`, `CatPayload`, `CatToSave`.
+Not here, so it isn't kept twice:
+- Field lists → the types in `shared/src/models/` and `backend/models/`.
+- Permissions → `product-definition.md` and the shared permission services.
+- How something works and why → `architecture.md`, or a code comment next to it.
+- General naming conventions (casing, `is` prefix, file names) → `.claude/rules/naming.md`.
 
-- `CatWithRefs` vs `CatJoinedDoc`
-	- Canonical meaning: a cat joined with its owner, as `GET /api/cats` and `GET /api/cats/:id`
-	  return it: a `Cat`
-	  with `owner` (a `UserRef`) in place of `ownerId` (the ref replaces it, like a
-	  review's refs replace `userId` / `catId`). `CatWithRefs` is the wire type (`shared/`, string ids). `CatJoinedDoc` is the
-	  backend-only aggregation output (`ObjectId` ids). Same split as `ReviewWithRefs` /
-	  `ReviewJoinedDoc`.
-	- Rule: `owner` is a `UserRef`, like a review's `user`. A cat whose
-	  owner's user doc is gone isn't returned (an inner join), so `owner` is never null.
-	  The only plain-`Cat` responses are POST / PUT.
-	  Permission checks take the id alone: `canEditCat(cat.owner._id, …)`.
-	- Avoid: `CatWithOwner`, `PopulatedCat`, `CatDetails` (the page's name).
+## Entities
+- **cat** (`cats`, `Cat`, `catService`): one cat offered on the store by its owner. The core entity.
+  Avoid: `listing`, `item`, `product`, `pet`.
+- **user** (`users`, `User`, `userService`): an account that can log in. A user with `isAdmin` is
+  an admin.
+  Avoid: `account`, `member`, `customer`.
+- **owner** (`ownerId`): the user who created a cat.
+  Rule: named for the role, not the entity, an exception to the `<entity>Id` rule. It holds a
+  `users` `_id`.
+  Avoid: `seller`, `creator`, `createdBy`, `userId` (on a cat).
+- **review** (`reviews`, `Review`, `reviewService`): one user's written text about one cat. Its
+  author is `userId` and its cat is `catId`.
+  Avoid: `comment`, `feedback`, `rating` (there's no score), `author` as a field name.
+- **label** (`labels`, `CatLabel`, `CAT_LABELS`): one of a fixed set of descriptors on a cat. A
+  cat can have several.
+  Avoid: `traits`, `tags`, `categories`, `type`.
+- **pickup point** (`PickupPoint`, `PICKUP_POINTS`): a fixed place where a buyer collects a cat,
+  shown on the About map. FE-only static data, not a collection.
+  Avoid: `store` (clashes with the app and the Zustand stores), `branch`, `location`, `shop`.
 
-- `CatRef`
-	- Canonical meaning: a cat as a join carries it: `{ _id, name, imgUrl, ownerId }`. A review's
-	  `cat` is a `CatRef`.
-	- Rule: built from an allow-list in shared (`CAT_REF_FIELDS`), like `UserRef`. `ownerId` is in
-	  on purpose: the Owner chip on reviews.
-	- Avoid: `CatSummary`, `ReviewCat`.
+## Type shapes
+Entity types are named by suffix. The last column lists every type that exists today. A
+suffix missing for an entity means that type doesn't exist yet. Add it when it's needed,
+don't assume it.
 
-- `User` vs `UserInput` vs `UserDoc`
-	- Canonical meaning: `User` is a stored user as the API returns it, with no password.
-	  `UserInput` is the user fields a client may set (`fullname`, `username`, `password`),
-	  inferred from `userSchema`. `UserDoc` is the backend-only DB shape, with `password` as the bcrypt hash.
-	- Rule: `isAdmin` is never client-set. `userSchema` leaves it out, so Zod strips it.
-	- Avoid: `UserDto`, `NewUser`, `Credentials` (for the signup body).
+| Suffix | Meaning | Lives in | Exists today |
+|---|---|---|---|
+| (none) | the stored entity as the API returns it, with string ids | `shared/` | `Cat`, `User` (no password), `Review` |
+| `*Input` | what the client sends, inferred from `<entity>Schema` | `shared/` | `CatInput`, `UserInput`, `ReviewInput` |
+| `*WithRefs` | the wire type with refs joined in place of their ids (`ownerId` → `owner`) | `shared/` | `CatWithRefs`, `ReviewWithRefs` |
+| `*Ref` | the slice of an entity a join carries, from `<ENTITY>_REF_FIELDS` | `shared/` | `CatRef`, `UserRef` |
+| `*Doc` | the DB shape of any of the above, with `ObjectId` ids | `backend/models/` | `CatDoc`, `UserDoc` (with the hash), `ReviewDoc`, `CatRefDoc`, `UserRefDoc`, `PublicUserDoc` |
+| `*JoinedDoc` | the aggregation output behind a `*WithRefs` | `backend/models/` | `CatJoinedDoc`, `ReviewJoinedDoc` |
 
-- `PublicUser`
-	- Canonical meaning: a user as anyone may see them, as `GET /api/users/:id` returns it:
-	  `{ _id, fullname, isAdmin, createdAt }`. Shown in the user page's header.
-	- Rule: no `username` (half a login) and never `password`. `isAdmin` is public on purpose,
-	  so the UI can mark staff. Built from an allow-list in shared
-	  (`PUBLIC_USER_FIELDS`, which extends `USER_REF_FIELDS`): the type and the backend projection
-	  read the same list.
-	- Avoid: `UserProfile`, `Profile` (the page's name), `UserSummary`.
+Avoid for all of them: `*Dto`, `New*`, `*Payload`, `*ToSave`, `Populated*`, `*Summary`, and
+page names (`CatDetails`, `Profile`) as type names.
 
-- `UserRef`
-	- Canonical meaning: a user as a join carries them: `{ _id, fullname, isAdmin }`. A review's
-	  `user` and a cat's `owner` are both `UserRef`s. A subset of `PublicUser`.
-	- Rule: built from an allow-list in shared (`USER_REF_FIELDS`), so `password` and `username` never
-	  leave the DB. `isAdmin` is in on purpose, like in `PublicUser`: the Admin chip on reviews.
-	- Avoid: `UserSummary`, `Author` (for the type), `PopulatedUser`.
+The ones that don't follow the pattern:
+- `ReviewContentInput`: what editing a review sends, `content` only.
+  Avoid: `ReviewUpdate`.
+- `PublicUser`: a user as anyone may see them (`GET /api/users/:id`). `UserRef` is a subset of it.
+  Avoid: `UserProfile`.
+- `SignupInput` / `LoginInput`: the bodies of `POST /api/auth/signup` and `/login`.
+  Avoid: `Credentials`, `LoginDto`, `AuthPayload`.
+- `CatFilter` / `filterBy`: `CatFilter` is the type for how the cat list is filtered and sorted.
+  `filterBy` is a variable that holds one.
+  Avoid: `criteria` (that's the Mongo query built from it), `query`, `searchParams` (for the
+  parsed value).
+- `ReviewFilter`: which reviews `GET /api/reviews` returns, by `catId`, `userId` or both.
+  Avoid: `ReviewQuery`, `criteria`.
+- `CatLabelStats` / label stats: per-label price and stock stats over the whole catalog, for the
+  dashboard.
+  Avoid: `stats` alone in type names, `metrics`, `analytics`.
 
-- `Review` vs `ReviewInput` vs `ReviewContentInput` vs `ReviewDoc`
-	- Canonical meaning: `Review` is a stored review as the API returns it (with `_id`,
-	  `userId` and the timestamps). `ReviewInput` is what adding one sends (`catId`, `content`),
-	  inferred from `reviewSchema`. `ReviewContentInput` is what editing one sends (`content`
-	  only), inferred from `reviewContentSchema`. `ReviewDoc` is the backend-only DB shape,
-	  with `userId` / `catId` as `ObjectId`.
-	- Avoid: `ReviewDto`, `NewReview`, `ReviewUpdate`.
+## Auth
+- `auth` vs `login` / `signup` / `logout`: `auth` is the area (routes, service, middleware). The
+  others are the actions.
+  Avoid: `signin`, `register`, `signout`.
+- `loggedInUser` / `LoggedInUser`: the session identity, and the JWT payload.
+  Avoid: `currentUser`, `authUser`, `sessionUser`, `me` (only in the route `GET /api/auth/me`).
+- `LoggedInUserOrGuest`: what the permission services take. `null` is a guest.
+- token user (`tokenUser`): the `LoggedInUser` decoded from the `loginToken`, with no DB read.
+  Can be stale.
+- verified user (`verifiedUser`): the `LoggedInUser` re-read from the DB by `requireAuth`.
+  Avoid: `freshUser`, `dbUser`.
+- `loginToken`: the signed JWT, and the name of the cookie that holds it.
+  Avoid: `token`, `jwt`, `accessToken`, `session`.
+- `isRemembered`: the "remember me" choice sent with login and signup. Not stored on the user.
+  Avoid: `rememberMe`, `isPersistent`, `stayLoggedIn`.
+- `isAdmin`: the admin flag on a user.
+  Avoid: `role`, `admin`.
+- `require*` vs `attach*` middleware: `require*` (`requireAuth`, `requireCatOwner`) throws on
+  failure. `attach*` (`attachTokenUser`) only decorates the request and never blocks.
 
-- `ReviewWithRefs` vs `ReviewJoinedDoc`
-	- Canonical meaning: a review joined with its author and its cat, as `GET /api/reviews`
-	  returns it: `{ _id, content, createdAt, updatedAt, user: { _id, fullname, isAdmin },
-	  cat: { _id, name, imgUrl, ownerId } }`, with no `userId` / `catId`. `ReviewWithRefs` is the wire
-	  type (`shared/`, string ids). `ReviewJoinedDoc` is the backend-only aggregation output
-	  (`ObjectId` ids). Same split as `CatWithRefs` / `CatJoinedDoc`.
-	- Rule: the joined `user` is a `UserRef` and the joined `cat` a `CatRef`. One shape serves both pages: each ignores the side it already knows.
-	  `cat.ownerId` marks a review written by the cat's owner (the Owner chip), on any page.
-	- Avoid: `ReviewJoined` (for the wire type), `PopulatedReview`, `ReviewDetails`.
-
-- `ReviewFilter`
-	- Canonical meaning: which reviews `GET /api/reviews` returns: `catId`, `userId`, or both
-	  (AND). At least one is required, so there's no system-wide list. Parsed by
-	  `reviewFilterSchema`.
-	- Avoid: `ReviewQuery`, `criteria`.
-
-- `SignupInput` / `LoginInput`
-	- Canonical meaning: the request bodies of `POST /api/auth/signup` and `/login`.
-	  `SignupInput` is `UserInput` plus `isRemembered`. `LoginInput` is `username`,
-	  `password` and `isRemembered`, with no signup rules. Inferred from `signupSchema` / `loginSchema`.
-	- Avoid: `Credentials`, `LoginDto`, `AuthPayload`.
-
-- `CatFilter` / `filterBy` / `catFilterService`
-	- Canonical meaning: `CatFilter` is the type for how the cat list is filtered and
-	  sorted (`txt`, `isInStock`, `labels`, `sortBy`, `sortDir`, `limit`, `ownerId`). `filterBy` is a variable
-	  that holds one. `catFilterService.paramsToFilter` parses the query string into it,
-	  on both the FE and the BE.
-	- Rule: several `labels` match with `$all`, so a cat must have every selected label.
-	- Rule: `limit` keeps the first N cats after the sort. `null` means every match, and a bad
-	  or `0` value parses to `null`, like the other params (no 400).
-	- Rule: `ownerId` keeps one user's cats (the user page). `null` (the param missing) means any
-	  owner. A malformed id is kept as is, not dropped to `null` (that would mean every cat): the
-	  BE then returns `[]`. Repeated, the first one wins.
-	- Avoid: `criteria` (that's the Mongo query built from it), `query`, `searchParams` (for the parsed value).
-
-- `CatLabelStats` / label stats
-	- Canonical meaning: one row per label in `CAT_LABELS` order, over the whole catalog
-	  (it ignores `filterBy`): `count`, `inStockCount`, and the `medianPrice` / `minPrice` /
-	  `maxPrice` (`null` when the label has no cats). A cat with several labels counts once
-	  per label. Served by `GET /api/cats/stats`, charted on the dashboard.
-	- Avoid: `stats` alone in type names, `metrics`, `analytics`.
-
-### Auth
-- `loggedInUser` / `LoggedInUser`
-	- Canonical meaning: the session identity. `_id`, `username`, `fullname`,
-	  `isAdmin` only. It's the JWT payload and the type of both ALS user fields
-	  (`tokenUser`, `verifiedUser`).
-	- Avoid: `currentUser`, `authUser`, `sessionUser`, `me`. (`me` only
-	  appears in the route `GET /api/auth/me`.)
-	- `LoggedInUserOrGuest`: what the permission services take. `_id` and `isAdmin`, or
-	  `null` for a guest.
-- token user (`tokenUser`)
-	- Canonical meaning: the `LoggedInUser` decoded from the `loginToken`, with no DB read.
-	  `attachTokenUser` puts it in the ALS store on every request. It can be up to 7 days stale
-	  (`isAdmin` revoked, user deleted), so it's for logs and `/me`'s lookup only.
-	- Avoid: using it in a permission check.
-- verified user (`verifiedUser`)
-	- Canonical meaning: the `LoggedInUser` re-read from the DB. Only `requireAuth` sets it.
-	  Permission checks and controllers read it through `alsService.getVerifiedUser()`,
-	  which throws (500) when `requireAuth` didn't run.
-	- Avoid: `freshUser`, `dbUser`.
-- `loginToken`
-	- Canonical meaning: the signed JWT, and the name of the cookie that holds it.
-	- Avoid: `token`, `jwt`, `accessToken`, `session`.
-- `isRemembered`
-	- Canonical meaning: the "remember me" choice sent with login and signup. `true` → a
-	  7-day `loginToken` cookie. `false` → a session cookie. Not stored on the user.
-	- Avoid: `rememberMe`, `isPersistent`, `stayLoggedIn`.
-- `isAdmin`
-	- Canonical meaning: admin flag on a user.
-	- Avoid: `role`, `admin`.
-- `auth` vs `login` / `signup` / `logout`
-	- Canonical meaning: `auth` is the area (routes, service, middleware).
-	  `login` / `signup` / `logout` are the actions.
-	- Avoid: `signin`, `register`, `signout`.
-- `require*` vs `attach*` middleware
-	- Canonical meaning: `require*` (`requireAuth`, `requireCatOwner`, `requireReviewOwner`) throws on
-	  failure. `attach*` (`attachTokenUser`) only decorates the request and
-	  never blocks.
-	- Rule: a `require*` that needs a user bundles `requireAuth` in front of its check
-	  (`requireCatOwner = [requireAuth, _checkCatOwner]`), so it's mounted alone.
-
-### Errors + request context
-- `HttpError`
-	- Canonical meaning: BE class for expected failures (`status`, `code`, `message`).
-- `ApiErrorBody`
-	- Canonical meaning: the one JSON error shape on the wire (`shared/`).
-- `ApiError`
-	- Canonical meaning: FE class that `httpService` turns every axios failure into.
-- error `code`
-	- Canonical meaning: machine-readable error id from `ERROR_CODES`.
-	- Rule: `SCREAMING_SNAKE`. Prefer `<THING>_<PROBLEM>` when a thing is involved
-	  (e.g. `CAT_NOT_FOUND`, `USERNAME_TAKEN`). Generic codes can be a single word
-	  or a plain phrase (`UNAUTHORIZED`, `FORBIDDEN`, `INTERNAL`, `INVALID_CREDENTIALS`).
-	  The FE branches on `code`, never on `message`.
-- `fieldErrors`
-	- Canonical meaning: per-field validation errors, `field → string[]`.
-	- Avoid: `errors`, `validationErrors`, `details`.
-- `requestId`
-	- Canonical meaning: per-request id, sent as `X-Request-Id` and in error bodies.
-	- Avoid: `traceId`, `correlationId`.
-- `als`
-	- Canonical meaning: the per-request `AsyncLocalStorage` context (`alsService`,
-	  `AlsStore`).
-	- Rule: short form only.
-	- Avoid: `context`, `ctx`, `requestContext`.
-
-## Naming Alignment
-- Keep this glossary aligned with naming decisions in `../.claude/rules/naming.md`.
-- If a new domain term is introduced, add it here before broad usage.
+## Errors + request context
+- `HttpError`: BE class for expected failures (`status`, `code`, `message`).
+- `ApiErrorBody`: the one JSON error shape on the wire (`shared/`).
+- `ApiError`: FE class that `httpService` turns every axios failure into.
+- error `code`: machine-readable error id from `ERROR_CODES`.
+  Rule: `<THING>_<PROBLEM>` when a thing is involved (`CAT_NOT_FOUND`, `USERNAME_TAKEN`).
+  Generic codes can be a word or a plain phrase (`FORBIDDEN`, `INVALID_CREDENTIALS`).
+- `fieldErrors`: per-field validation errors, `field → string[]`.
+  Avoid: `errors`, `validationErrors`, `details`.
+- `requestId`: per-request id, sent as `X-Request-Id` and in error bodies.
+  Avoid: `traceId`, `correlationId`.
+- `als`: the per-request `AsyncLocalStorage` context (`alsService`, `AlsStore`). Short form only.
+  Avoid: `context`, `ctx`, `requestContext`.
 
 ## Update Triggers
-- Add new terms when introducing a new bounded context, entity, or shared API concept.
-- Avoid synonyms for existing terms unless explicitly approved and documented here.
+- Add a term when a new entity, type shape or shared concept appears, before it spreads.
+- A new suffixed type (e.g. `UserWithRefs`) → add it to the "Exists today" column.
+- A synonym for an existing term needs the user's OK, and then an entry here.
