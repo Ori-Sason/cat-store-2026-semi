@@ -153,24 +153,27 @@ shows buttons that fail with 403. After 3, the UI matches the backend. 4 proves 
    Show the Profile item in the header menu, linking to the logged-in user's page.
 - [x] 7. Reviews show up in exactly two places: per cat on `cat-details`, and per user on the user's reviews sub-page. There's no system-wide reviews page.
 
-## Part 6: Deploy + realtime
+## Part 6: Realtime (Socket.io)
 
-- [ ] 1. Deploy to Render, with MongoDB Atlas as the prod DB. Express serves the built FE from `backend/public`.
-   **Open:** the Render build/start steps aren't configured yet.
-- [ ] 2. Socket.io chat room on `cat-details`, one room per `cat._id`:
+- [ ] 1. Socket.io chat room on `cat-details`, one room per `cat._id`:
    - Dev proxy first: Socket.io connects on `/socket.io/`, not `/api`. So add a
      `'/socket.io'` entry with `ws: true` to the Vite proxy. `ws: true` on the `/api`
      entry wouldn't catch it.
    - Chat log with a username before each message.
    - A "X is typing…" indicator.
    - Chat history saved on the cat document.
-- [ ] 3. When any user adds, edits or deletes a cat or a review, notify all connected users.
+- [ ] 2. When any user adds, edits or deletes a cat or a review, notify all connected users.
 
 No image upload.
 
+## Part 7: Deployment
+
+- [ ] 1. Deploy to Render, with MongoDB Atlas as the prod DB. Express serves the built FE from `backend/public`.
+   **Open:** the Render build/start steps aren't configured yet.
+
 ### Prod checklist
 
-Before the first real deploy. This turns into a `deploy` skill once Part 6 starts.
+Before the first real deploy. This turns into a `deploy` skill once Part 7 starts.
 
 - `JWT_SECRET` set on the host, different from the local one (`openssl rand -base64 32`). Without it the server refuses to start.
 - Mongo connection env vars point at the prod DB (e.g. Atlas).
@@ -183,7 +186,7 @@ Before the first real deploy. This turns into a `deploy` skill once Part 6 start
 
 - [ ] Pagination on the cat list.
 - [ ] CI: GitHub Actions runs lint, typecheck and tests on every push and PR, with a `mongo`
-   service container for the backend tests. Most useful before the Part 6 deploy.
+   service container for the backend tests. Most useful before the Part 7 deploy.
 - [ ] User management: an admin can ban a user, and a user can delete their own account.
    Needs the delete / ban policy decided first (see Open questions).
 
