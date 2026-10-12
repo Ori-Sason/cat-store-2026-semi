@@ -2,14 +2,14 @@ import type React from 'react'
 import type { CatInput } from '@cat-store/shared'
 import { useLoaderData, useLocation, useNavigation, useSubmit } from 'react-router'
 import { CatEditForm } from '../../cmps/cat-edit/cat-edit-form'
-import type { CatListLocationState } from '../../models/util'
+import { utilService } from '../../services/util.service'
 import type { catEditLoader } from './cat-edit.loader'
 
 export const CatEdit: React.FC = () => {
   const { cat } = useLoaderData<typeof catEditLoader>()
   const location = useLocation()
-  // The list filter this page came from (via details or "+ Add cat"), handed back on Cancel
-  const listState = location.state as CatListLocationState | null
+  // Where details (or "+ Add cat") was opened from, handed back on Cancel
+  const backTo = utilService.getBackTo(location)
   const submit = useSubmit()
   const navigation = useNavigation()
   // formMethod stays set through the redirect's load, so Save can't fire twice
@@ -27,8 +27,8 @@ export const CatEdit: React.FC = () => {
         key={cat?._id ?? 'new'}
         cat={cat}
         isSaving={isSaving}
-        cancelTo={cat ? `/cat/${cat._id}` : `/cat${listState?.listSearch ?? ''}`}
-        cancelState={cat ? (listState ?? undefined) : undefined}
+        cancelTo={cat ? `/cat/${cat._id}` : backTo}
+        cancelState={cat ? { backTo } : undefined}
         onSave={onSave}
       />
     </section>

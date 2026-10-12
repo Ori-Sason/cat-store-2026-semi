@@ -1,7 +1,6 @@
 import type React from 'react'
 import { Link, useLocation } from 'react-router'
 import type { CatWithRefs } from '@cat-store/shared'
-import type { CatListLocationState } from '../../../models/util'
 import { utilService } from '../../../services/util.service'
 import { CatImg } from './cat-img'
 import { CatLabels } from './cat-labels'
@@ -16,10 +15,13 @@ interface CatPreviewProps {
 // inside it would be a nested <a>. cat-details has the owner link
 export const CatPreview: React.FC<CatPreviewProps> = ({ cat, isOwnerShown }) => {
   const location = useLocation()
-  const state: CatListLocationState = { listSearch: location.search }
 
   return (
-    <Link to={`/cat/${cat._id}`} state={state} className="cat-preview">
+    <Link
+      to={`/cat/${cat._id}`}
+      state={utilService.buildBackToState(location)}
+      className="cat-preview"
+    >
       <CatImg cat={cat} isSoldOutShown />
       <div className="body">
         <div className="top">

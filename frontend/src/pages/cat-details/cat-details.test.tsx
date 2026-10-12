@@ -5,7 +5,7 @@ import { createMemoryRouter, RouterProvider } from 'react-router'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { RouteError } from '../../cmps/common/util/route-error'
 import { ApiError } from '../../models/api-error'
-import type { CatListLocationState } from '../../models/util'
+import type { BackToLocationState } from '../../models/util'
 import { catService } from '../../services/cat.service'
 import { reviewService } from '../../services/review.service'
 import { useLoggedInUserStore } from '../../store/logged-in-user.store'
@@ -53,7 +53,7 @@ const REVIEWS = [
   _buildReview('review-2', 'Noam Cohen', 'Calm and cuddly'),
 ]
 
-function _renderAt(path: string, state?: CatListLocationState) {
+function _renderAt(path: string, state?: BackToLocationState) {
   const router = createMemoryRouter(
     [
       // Like the app's root route: no fallback logs a warning while the first loader runs
@@ -137,11 +137,26 @@ describe('CatDetails', () => {
   })
 
   it('goes back to the list with the filter it came from', async () => {
-    _renderAt('/cat/cat-1', { listSearch: '?labels=Calm' })
+    _renderAt('/cat/cat-1', { backTo: '/cat?labels=Calm' })
 
     expect(await screen.findByRole('link', { name: '← Back to cats' })).toHaveAttribute(
       'href',
       '/cat?labels=Calm',
+    )
+  })
+
+  it('goes back to home when it came from there', async () => {
+    _renderAt('/cat/cat-1', { backTo: '/' })
+
+    expect(await screen.findByRole('link', { name: '← Back to home' })).toHaveAttribute('href', '/')
+  })
+
+  it('goes back to the user page tab it came from', async () => {
+    _renderAt('/cat/cat-1', { backTo: '/user/user-1/reviews' })
+
+    expect(await screen.findByRole('link', { name: '← Back to profile' })).toHaveAttribute(
+      'href',
+      '/user/user-1/reviews',
     )
   })
 

@@ -83,7 +83,7 @@ describe('CatApp', () => {
     await userEvent.click(await screen.findByRole('link', { name: '+ Add cat' }))
 
     await waitFor(() => expect(router.state.location.pathname).toBe('/cat/new'))
-    expect(screen.getByText('{"listSearch":"?labels=Calm"}')).toBeInTheDocument()
+    expect(screen.getByText('{"backTo":"/cat?labels=Calm"}')).toBeInTheDocument()
   })
 
   it('writes a filter change to the URL and loads again', async () => {
@@ -170,6 +170,6 @@ describe('CatApp', () => {
     await userEvent.click(await screen.findByRole('heading', { name: 'Mitzi' }))
 
     await waitFor(() => expect(router.state.location.pathname).toBe('/cat/cat-1'))
-    expect(screen.getByText('{"listSearch":"?labels=Calm"}')).toBeInTheDocument()
+    expect(screen.getByText('{"backTo":"/cat?labels=Calm"}')).toBeInTheDocument()
   })
 })

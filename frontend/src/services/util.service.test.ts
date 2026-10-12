@@ -1,4 +1,4 @@
-import type { ShouldRevalidateFunctionArgs } from 'react-router'
+import type { Location, ShouldRevalidateFunctionArgs } from 'react-router'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { ApiError } from '../models/api-error'
 import { useUserMsgStore } from '../store/user-msg.store'
@@ -154,4 +154,27 @@ describe('utilService.getSafeRedirectTo', () => {
       expect(getSafeRedirectTo(redirectTo)).toBe('/cat')
     },
   )
+})
+
+// Only the fields the functions read: a real Location also has hash and key
+function _location(pathname: string, search: string, state: unknown): Location {
+  return { pathname, search, state, hash: '', key: 'default' }
+}
+
+describe('utilService.buildBackToState', () => {
+  it('points back at the current page with its search', () => {
+    expect(utilService.buildBackToState(_location('/cat', '?labels=Calm', null))).toEqual({
+      backTo: '/cat?labels=Calm',
+    })
+  })
+})
+
+describe('utilService.getBackTo', () => {
+  it('reads backTo from the location state', () => {
+    expect(utilService.getBackTo(_location('/cat/1', '', { backTo: '/user/u1' }))).toBe('/user/u1')
+  })
+
+  it('falls back to the plain list with no state', () => {
+    expect(utilService.getBackTo(_location('/cat/1', '', null))).toBe('/cat')
+  })
 })

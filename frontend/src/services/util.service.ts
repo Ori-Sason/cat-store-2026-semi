@@ -1,8 +1,9 @@
 import type { CSSProperties } from 'react'
-import { data, type ShouldRevalidateFunction } from 'react-router'
+import { data, type Location, type ShouldRevalidateFunction } from 'react-router'
 import type { CatLabel } from '@cat-store/shared'
 import { ApiError } from '../models/api-error'
 import { LABEL_COLORS } from '../models/label'
+import type { BackToLocationState } from '../models/util'
 import { useUserMsgStore } from '../store/user-msg.store'
 import { errorService } from './error.service'
 
@@ -94,6 +95,17 @@ function getSafeRedirectTo(redirectTo: string | null) {
   return target.pathname + target.search + target.hash
 }
 
+// The location state for a link into a cat's pages: "Back comes here", this page with its search
+function buildBackToState({ pathname, search }: Location): BackToLocationState {
+  return { backTo: pathname + search }
+}
+
+// Where Back / Cancel on a cat's pages return to. No state (a direct visit, or after a save's
+// redirect): the plain list
+function getBackTo(location: Location): string {
+  return (location.state as BackToLocationState | null)?.backTo ?? '/cat'
+}
+
 export const utilService = {
   formatPrice,
   formatDate,
@@ -105,4 +117,6 @@ export const utilService = {
   toActionError,
   skipReloadOnActionAt,
   getSafeRedirectTo,
+  buildBackToState,
+  getBackTo,
 }

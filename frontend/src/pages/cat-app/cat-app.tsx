@@ -5,6 +5,7 @@ import { catFilterService, catPermissionService, type CatFilter } from '@cat-sto
 import { CatFilterBar } from '../../cmps/cat-app/cat-filter-bar'
 import { CatList } from '../../cmps/common/cat/cat-list'
 import { useDebouncedCallback } from '../../hooks/use-debounced-callback'
+import { utilService } from '../../services/util.service'
 import { useLoggedInUserStore } from '../../store/logged-in-user.store'
 import type { catAppLoader } from './cat-app.loader'
 
@@ -53,7 +54,11 @@ export const CatApp: React.FC = () => {
           {cats.length} {cats.length === 1 ? 'cat' : 'cats'}
         </span>
         {isCanAddCat && (
-          <Link to="/cat/new" state={{ listSearch: location.search }} className="main-btn add-btn">
+          <Link
+            to="/cat/new"
+            state={utilService.buildBackToState(location)}
+            className="main-btn add-btn"
+          >
             + Add cat
           </Link>
         )}

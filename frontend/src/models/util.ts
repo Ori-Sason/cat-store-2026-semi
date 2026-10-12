@@ -4,8 +4,10 @@ export interface UserMsg {
   type: 'success' | 'error'
 }
 
-// Set by links that leave the list (a cat-preview, "+ Add cat") and passed on through edit,
-// so Back and Cancel can return to the list with the same filter
-export interface CatListLocationState {
-  listSearch: string
+// Set by links into a cat's pages (a cat card, a review row's cat, "+ Add cat") and passed on
+// through edit, so Back and Cancel return to the page they came from: the list with its filter,
+// home, or a user page. Location state, not a URL param: it lives in the history entry, so only
+// the app's own links can set it
+export interface BackToLocationState {
+  backTo: string // pathname + search
 }

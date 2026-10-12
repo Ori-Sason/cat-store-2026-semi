@@ -2,7 +2,7 @@ import type React from 'react'
 import { useState } from 'react'
 import { Link } from 'react-router'
 import { CAT_LABELS, catSchema, type CatInput, type CatLabel } from '@cat-store/shared'
-import type { CatListLocationState } from '../../models/util'
+import type { BackToLocationState } from '../../models/util'
 import { useFormValidation } from '../../hooks/use-form-validation'
 import { FieldError } from '../common/util/field-error'
 import { ToggleSwitch } from '../common/util/toggle-switch'
@@ -30,7 +30,7 @@ interface CatEditFormProps {
   cat: CatInput | null
   isSaving: boolean
   cancelTo: string
-  cancelState?: CatListLocationState
+  cancelState?: BackToLocationState
   onSave: (catInput: CatInput) => void
 }
 

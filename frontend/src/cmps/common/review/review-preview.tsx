@@ -1,5 +1,5 @@
 import type React from 'react'
-import { Link } from 'react-router'
+import { Link, useLocation } from 'react-router'
 import { reviewPermissionService, type ReviewWithRefs } from '@cat-store/shared'
 import { utilService } from '../../../services/util.service'
 import { useLoggedInUserStore } from '../../../store/logged-in-user.store'
@@ -16,6 +16,7 @@ interface ReviewPreviewProps {
 }
 
 export const ReviewPreview: React.FC<ReviewPreviewProps> = ({ review, shownOn }) => {
+  const location = useLocation()
   const loggedInUser = useLoggedInUserStore((state) => state.loggedInUser)
   const isCanEdit = reviewPermissionService.canEditReview(review.user._id, loggedInUser)
   const isByCatOwner = review.user._id === review.cat.ownerId
@@ -33,7 +34,7 @@ export const ReviewPreview: React.FC<ReviewPreviewProps> = ({ review, shownOn })
         ) : (
           <span className="cat-ref">
             On{' '}
-            <Link to={`/cat/${review.cat._id}`}>
+            <Link to={`/cat/${review.cat._id}`} state={utilService.buildBackToState(location)}>
               <CatImg cat={review.cat} alt="" isSoldOutShown={false} />
               <span className="cat-name">{review.cat.name}</span>
             </Link>

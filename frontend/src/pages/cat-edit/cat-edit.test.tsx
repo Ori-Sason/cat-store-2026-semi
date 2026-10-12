@@ -5,7 +5,7 @@ import { createMemoryRouter, RouterProvider } from 'react-router'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { RouteError } from '../../cmps/common/util/route-error'
 import { ApiError } from '../../models/api-error'
-import type { CatListLocationState } from '../../models/util'
+import type { BackToLocationState } from '../../models/util'
 import { catService } from '../../services/cat.service'
 import { useLoggedInUserStore } from '../../store/logged-in-user.store'
 import { useUserMsgStore } from '../../store/user-msg.store'
@@ -29,7 +29,7 @@ const _CAT = {
   owner: { _id: 'user-1', fullname: 'U', isAdmin: false },
 } satisfies CatWithRefs
 
-function _renderAt(path: string, state?: CatListLocationState) {
+function _renderAt(path: string, state?: BackToLocationState) {
   const router = createMemoryRouter(
     [
       // Like the app's root route: no fallback logs a warning while the first loader runs
@@ -93,8 +93,8 @@ describe('CatEdit', () => {
     expect(screen.getByRole('link', { name: 'Cancel' })).toHaveAttribute('href', '/cat')
   })
 
-  it('keeps the list filter from details through edit and back on Cancel', async () => {
-    const { user } = _renderAt('/cat/cat-1', { listSearch: '?labels=Calm' })
+  it('keeps where details came from through edit and back on Cancel', async () => {
+    const { user } = _renderAt('/cat/cat-1', { backTo: '/cat?labels=Calm' })
 
     await user.click(await screen.findByRole('link', { name: 'Edit' }))
     await user.click(await screen.findByRole('link', { name: 'Cancel' }))
@@ -105,8 +105,8 @@ describe('CatEdit', () => {
     )
   })
 
-  it('cancels an add back to the list with its filter', async () => {
-    _renderAt('/cat/new', { listSearch: '?labels=Calm' })
+  it('cancels an add back to where it came from', async () => {
+    _renderAt('/cat/new', { backTo: '/cat?labels=Calm' })
 
     expect(await screen.findByRole('link', { name: 'Cancel' })).toHaveAttribute(
       'href',

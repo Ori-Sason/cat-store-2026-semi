@@ -1,7 +1,7 @@
 import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { LoggedInUser, Review, ReviewWithRefs } from '@cat-store/shared'
-import { createMemoryRouter, RouterProvider, useLoaderData } from 'react-router'
+import { createMemoryRouter, RouterProvider, useLoaderData, useLocation } from 'react-router'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { ApiError } from '../../../models/api-error'
 import { reviewAction } from '../../../pages/review/review.action'
@@ -41,6 +41,10 @@ function ReviewsPage({ shownOn }: { shownOn: ReviewShownOn }) {
   return <ReviewList reviews={useLoaderData<ReviewWithRefs[]>()} shownOn={shownOn} />
 }
 
+function LocationStateProbe() {
+  return <pre>{JSON.stringify(useLocation().state)}</pre>
+}
+
 // A page whose loader reads the reviews, plus the real action-only /review/:id route.
 // After an action, react-router reloads this page's loader, like on cat-details
 function _render(loggedInUser: LoggedInUser | null, shownOn: ReviewShownOn = 'cat') {
@@ -56,6 +60,7 @@ function _render(loggedInUser: LoggedInUser | null, shownOn: ReviewShownOn = 'ca
             element: <ReviewsPage shownOn={shownOn} />,
           },
           { path: '/review/:id', action: reviewAction },
+          { path: '/cat/:id', element: <LocationStateProbe /> },
         ],
       },
     ],
@@ -204,6 +209,14 @@ describe('ReviewPreview', () => {
         '/cat/cat-1',
       )
       expect(within(review).queryByText('Maya Levi')).not.toBeInTheDocument()
+    })
+
+    it("hands the page it's on to the cat's page, for its back link", async () => {
+      _render(null, 'user')
+
+      await userEvent.click(within(await _findReview()).getByRole('link', { name: 'Mitzi' }))
+
+      expect(await screen.findByText('{"backTo":"/"}')).toBeInTheDocument()
     })
 
     it("leaves out the You chip on the viewer's own review", async () => {

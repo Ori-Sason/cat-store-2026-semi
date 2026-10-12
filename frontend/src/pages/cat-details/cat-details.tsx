@@ -5,7 +5,6 @@ import { catPermissionService } from '@cat-store/shared'
 import { CatImg } from '../../cmps/common/cat/cat-img'
 import { LabelChip } from '../../cmps/common/cat/label-chip'
 import { ConfirmModal } from '../../cmps/common/util/confirm-modal'
-import type { CatListLocationState } from '../../models/util'
 import { utilService } from '../../services/util.service'
 import { useLoggedInUserStore } from '../../store/logged-in-user.store'
 import type { catDetailsLoader } from './cat-details.loader'
@@ -13,7 +12,7 @@ import type { catDetailsLoader } from './cat-details.loader'
 export const CatDetails: React.FC = () => {
   const { cat } = useLoaderData<typeof catDetailsLoader>()
   const location = useLocation()
-  const listSearch = (location.state as CatListLocationState | null)?.listSearch ?? ''
+  const backTo = utilService.getBackTo(location)
   const fetcher = useFetcher()
   const [isConfirmOpen, setIsConfirmOpen] = useState(false)
   const isDeleting = fetcher.state !== 'idle'
@@ -27,8 +26,8 @@ export const CatDetails: React.FC = () => {
 
   return (
     <section className="cat-details">
-      <Link to={`/cat${listSearch}`} className="back-link">
-        ← Back to cats
+      <Link to={backTo} className="back-link">
+        ← Back to {_getBackLabel(backTo)}
       </Link>
 
       <article className="panel">
@@ -56,7 +55,7 @@ export const CatDetails: React.FC = () => {
           <p className="added">Added {utilService.formatDate(cat.createdAt)}</p>
           {isCanEdit && (
             <div className="actions">
-              <Link to={`/cat/${cat._id}/edit`} state={{ listSearch }} className="main-btn">
+              <Link to={`/cat/${cat._id}/edit`} state={{ backTo }} className="main-btn">
                 Edit
               </Link>
               <button
@@ -85,4 +84,13 @@ export const CatDetails: React.FC = () => {
       />
     </section>
   )
+}
+
+// The back link names the page it returns to. Only the app's own links set backTo, so these
+// three cover every origin
+function _getBackLabel(backTo: string) {
+  const pathname = backTo.split('?')[0]
+  if (pathname === '/') return 'home'
+  if (pathname?.startsWith('/user/')) return 'profile'
+  return 'cats'
 }
