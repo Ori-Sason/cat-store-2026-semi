@@ -123,6 +123,37 @@ describe('ReviewPreview', () => {
     })
   })
 
+  // isAdmin comes with the review's author ref, so everyone sees it
+  describe('the Admin chip', () => {
+    it('marks a review by an admin, for everyone', async () => {
+      vi.mocked(reviewService.query).mockResolvedValue([
+        { ...REVIEW, user: { _id: ADMIN._id, fullname: 'Admin User', isAdmin: true } },
+      ])
+      _render(null)
+      const review = await _findReview()
+
+      expect(within(review).getByText('Admin')).toBeInTheDocument()
+    })
+
+    it('is not on a review by a regular user', async () => {
+      _render(ADMIN)
+      const review = await _findReview()
+
+      expect(within(review).queryByText('Admin')).not.toBeInTheDocument()
+    })
+
+    // The user page's header marks the admin once instead
+    it("is not on a review row on a user's page", async () => {
+      vi.mocked(reviewService.query).mockResolvedValue([
+        { ...REVIEW, user: { _id: ADMIN._id, fullname: 'Admin User', isAdmin: true } },
+      ])
+      _render(null, 'user')
+      const review = await _findReview()
+
+      expect(within(review).queryByText('Admin')).not.toBeInTheDocument()
+    })
+  })
+
   describe('the Owner chip', () => {
     it("marks a review by the cat's owner, for everyone", async () => {
       vi.mocked(reviewService.query).mockResolvedValue([

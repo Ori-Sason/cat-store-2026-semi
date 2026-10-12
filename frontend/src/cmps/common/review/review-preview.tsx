@@ -22,6 +22,8 @@ export const ReviewPreview: React.FC<ReviewPreviewProps> = ({ review, shownOn = 
   // On a user's page every row has the same author, so You would repeat on every row of
   // the viewer's own profile
   const isYouShown = shownOn === 'cat' && review.user._id === loggedInUser?._id
+  // Same on a user's page: the header there already marks an admin
+  const isAdminShown = shownOn === 'cat' && review.user.isAdmin
 
   return (
     <article className={`review-preview shown-on-${shownOn}`}>
@@ -37,6 +39,7 @@ export const ReviewPreview: React.FC<ReviewPreviewProps> = ({ review, shownOn = 
             </Link>
           </span>
         )}
+        {isAdminShown && <span className="chip admin">Admin</span>}
         {isByCatOwner && <span className="chip owner">Owner</span>}
         {isYouShown && <span className="chip">You</span>}
         <time dateTime={new Date(review.createdAt).toISOString()}>
