@@ -21,6 +21,9 @@ How to write tests. When to write them lives in `.claude/rules/testing.md`.
 - With `vi.useFakeTimers()`, user-event hangs: its async wrapper waits on a `setTimeout` the
   fake clock never fires. Use `fireEvent` for clicks, or
   `vi.useFakeTimers({ shouldAdvanceTime: true })` when you need user-event (typing, focus).
+- `getByText` / `findByText` also match a controlled `<textarea>`: React mirrors its value
+  into the text content. To find text the user just typed, after a save, scope the query
+  (`{ selector: 'p' }`) or it may grab the form field, which a remount then detaches.
 
 ## When a test fails
 - Fix the code, unless the behavior changed on purpose. Then update or delete the test.

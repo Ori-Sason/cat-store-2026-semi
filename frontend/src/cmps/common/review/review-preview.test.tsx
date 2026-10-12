@@ -185,7 +185,8 @@ describe('ReviewPreview', () => {
       vi.mocked(reviewService.query).mockResolvedValue([{ ...REVIEW, content: 'Even sweeter' }])
       await userEvent.click(within(review).getByRole('button', { name: 'Save' }))
 
-      expect(await within(review).findByText('Even sweeter')).toBeInTheDocument()
+      // The review's text, not the edit form's textarea, which also holds it until the form closes
+      expect(await within(review).findByText('Even sweeter', { selector: 'p' })).toBeInTheDocument()
       expect(within(review).queryByRole('textbox')).not.toBeInTheDocument()
       expect(reviewService.update).toHaveBeenCalledWith('review-1', { content: 'Even sweeter' })
       expect(useUserMsgStore.getState().msg).toMatchObject({ txt: 'Review updated' })

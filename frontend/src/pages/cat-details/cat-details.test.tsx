@@ -295,7 +295,8 @@ describe('CatDetails reviews', () => {
     await userEvent.type(screen.getByLabelText('Your review'), 'Purrfect')
     await userEvent.click(screen.getByRole('button', { name: 'Post review' }))
 
-    expect(await screen.findByText('Purrfect')).toBeInTheDocument()
+    // The review's text, not the add form's textarea, which also holds it until the form remounts
+    expect(await screen.findByText('Purrfect', { selector: 'p' })).toBeInTheDocument()
     expect(reviewService.add).toHaveBeenCalledWith({ catId: 'cat-1', content: 'Purrfect' })
     expect(screen.getByLabelText('Your review')).toHaveValue('')
     // A fresh form: the empty field doesn't show "Review is required" from the last submit
@@ -351,7 +352,8 @@ describe('CatDetails reviews', () => {
       await userEvent.type(field, 'So calm')
       await userEvent.click(within(review).getByRole('button', { name: 'Save' }))
 
-      expect(await screen.findByText('So calm')).toBeInTheDocument()
+      // The review's text, not the edit form's textarea, which also holds it until the form closes
+      expect(await screen.findByText('So calm', { selector: 'p' })).toBeInTheDocument()
       expect(reviewService.update).toHaveBeenCalledWith('review-1', { content: 'So calm' })
       expect(reviewService.query).toHaveBeenCalledTimes(2)
       expect(catService.getById).toHaveBeenCalledOnce()
