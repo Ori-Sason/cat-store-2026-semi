@@ -4,10 +4,10 @@ import { ReviewPreview, type ReviewShownOn } from './review-preview'
 
 interface ReviewListProps {
   reviews: ReviewWithRefs[]
-  shownOn?: ReviewShownOn
+  shownOn: ReviewShownOn
 }
 
-export const ReviewList: React.FC<ReviewListProps> = ({ reviews, shownOn = 'cat' }) => {
+export const ReviewList: React.FC<ReviewListProps> = ({ reviews, shownOn }) => {
   if (!reviews.length) return <p className="review-list empty">No reviews yet</p>
 
   return (

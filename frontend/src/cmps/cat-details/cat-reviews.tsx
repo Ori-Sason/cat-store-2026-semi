@@ -56,7 +56,7 @@ export const CatReviews: React.FC = () => {
 
       <Suspense fallback={<ReviewListSkeleton />}>
         <Await resolve={reviews} errorElement={<SectionError />}>
-          {(reviews) => <ReviewList reviews={reviews} />}
+          {(reviews) => <ReviewList reviews={reviews} shownOn="cat" />}
         </Await>
       </Suspense>
     </section>

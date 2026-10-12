@@ -37,13 +37,13 @@ const STORED: Review = {
 }
 
 // A test-only page, not a `_` helper: hooks lint needs a PascalCase component name
-function ReviewsPage({ shownOn }: { shownOn?: ReviewShownOn }) {
+function ReviewsPage({ shownOn }: { shownOn: ReviewShownOn }) {
   return <ReviewList reviews={useLoaderData<ReviewWithRefs[]>()} shownOn={shownOn} />
 }
 
 // A page whose loader reads the reviews, plus the real action-only /review/:id route.
 // After an action, react-router reloads this page's loader, like on cat-details
-function _render(loggedInUser: LoggedInUser | null, shownOn?: ReviewShownOn) {
+function _render(loggedInUser: LoggedInUser | null, shownOn: ReviewShownOn = 'cat') {
   useLoggedInUserStore.setState({ loggedInUser })
   const router = createMemoryRouter(
     [

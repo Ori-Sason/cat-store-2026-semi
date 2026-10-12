@@ -7,15 +7,15 @@ import { CatImg } from '../cat/cat-img'
 import { ReviewEditable } from './review-editable'
 
 // The page the row is on. Each page already shows one side of the review, so the row's header
-// shows the other: the author on a cat's page, the cat on a user's page
+// shows the other: the author on a cat's page, the cat on a user's page.
 export type ReviewShownOn = 'cat' | 'user'
 
 interface ReviewPreviewProps {
   review: ReviewWithRefs
-  shownOn?: ReviewShownOn
+  shownOn: ReviewShownOn
 }
 
-export const ReviewPreview: React.FC<ReviewPreviewProps> = ({ review, shownOn = 'cat' }) => {
+export const ReviewPreview: React.FC<ReviewPreviewProps> = ({ review, shownOn }) => {
   const loggedInUser = useLoggedInUserStore((state) => state.loggedInUser)
   const isCanEdit = reviewPermissionService.canEditReview(review.user._id, loggedInUser)
   const isByCatOwner = review.user._id === review.cat.ownerId
