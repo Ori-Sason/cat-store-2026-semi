@@ -22,7 +22,7 @@ function _cat(overrides: Partial<Cat>): Cat {
 function _renderList(cats: Cat[]) {
   render(
     <MemoryRouter>
-      <CatList cats={cats} />
+      <CatList cats={cats} emptyText="Nothing here" />
     </MemoryRouter>,
   )
 }
@@ -46,9 +46,9 @@ describe('CatList', () => {
     expect(screen.getByText('Calm')).toBeInTheDocument()
   })
 
-  it('shows an empty state when no cat matches', () => {
+  it("shows the page's empty text when there are no cats", () => {
     _renderList([])
 
-    expect(screen.getByText('No cats match these filters.')).toBeInTheDocument()
+    expect(screen.getByText('Nothing here')).toBeInTheDocument()
   })
 })

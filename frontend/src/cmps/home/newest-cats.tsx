@@ -2,16 +2,17 @@ import type React from 'react'
 import { Suspense } from 'react'
 import { Await, Link } from 'react-router'
 import type { Cat } from '@cat-store/shared'
+import { NEWEST_CATS_LIMIT } from '../../models/home'
+import { CatListSkeleton } from '../common/cat/cat-list-skeleton'
 import { CatPreview } from '../common/cat/cat-preview'
 import { SectionError } from '../common/util/section-error'
-import { NewestCatsSkeleton } from './newest-cats-skeleton'
 
 interface NewestCatsProps {
   cats: Promise<Cat[]> // from the home loader, un-awaited
 }
 
 // The band and its heading render right away. Only the cards wait on the API.
-// CatPreview is used directly, not CatList: its "No cats match these filters" is wrong here
+// CatPreview is used directly, not CatList: this section styles its own grid and empty state
 export const NewestCats: React.FC<NewestCatsProps> = ({ cats }) => {
   return (
     <section className="newest-cats">
@@ -22,7 +23,7 @@ export const NewestCats: React.FC<NewestCatsProps> = ({ cats }) => {
         </Link>
       </div>
 
-      <Suspense fallback={<NewestCatsSkeleton />}>
+      <Suspense fallback={<CatListSkeleton count={NEWEST_CATS_LIMIT} />}>
         <Await resolve={cats} errorElement={<SectionError />}>
           {(cats) =>
             cats.length ? (

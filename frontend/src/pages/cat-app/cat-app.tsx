@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, useLoaderData, useLocation, useNavigation, useSearchParams } from 'react-router'
 import { catFilterService, catPermissionService, type CatFilter } from '@cat-store/shared'
 import { CatFilterBar } from '../../cmps/cat-app/cat-filter-bar'
-import { CatList } from '../../cmps/cat-app/cat-list'
+import { CatList } from '../../cmps/common/cat/cat-list'
 import { useDebouncedCallback } from '../../hooks/use-debounced-callback'
 import { useLoggedInUserStore } from '../../store/logged-in-user.store'
 import type { catAppLoader } from './cat-app.loader'
@@ -60,7 +60,7 @@ export const CatApp: React.FC = () => {
       </header>
       <CatFilterBar filterBy={draftFilterBy} onSetFilter={onSetFilter} />
       <div className={`list-container ${isLoading ? 'is-loading' : ''}`}>
-        <CatList cats={cats} />
+        <CatList cats={cats} emptyText="No cats match these filters." />
       </div>
     </section>
   )

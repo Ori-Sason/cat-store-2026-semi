@@ -1,7 +1,7 @@
 @use 'setup' as *;
 
 // The grid comes from .cat-list. Only the cards are drawn here
-.newest-cats-skeleton {
+.cat-list-skeleton {
   .card {
     display: grid;
     gap: 10px;

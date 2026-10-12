@@ -1,15 +1,18 @@
 import type React from 'react'
-import { NEWEST_CATS_LIMIT } from '../../models/home'
+
+interface CatListSkeletonProps {
+  count: number
+}
 
 // Uses the .cat-list grid, so the cards land in the same spots as the real ones
-export const NewestCatsSkeleton: React.FC = () => {
+export const CatListSkeleton: React.FC<CatListSkeletonProps> = ({ count }) => {
   return (
     <ul
-      className="newest-cats-skeleton cat-list clean-list"
+      className="cat-list-skeleton cat-list clean-list"
       aria-busy="true"
       aria-label="Loading cats"
     >
-      {Array.from({ length: NEWEST_CATS_LIMIT }, (_, idx) => (
+      {Array.from({ length: count }, (_, idx) => (
         <li key={idx} className="card">
           <span className="skel img" />
           <span className="skel line" />
