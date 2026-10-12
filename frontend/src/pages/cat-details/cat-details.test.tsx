@@ -1,6 +1,6 @@
 import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import type { Cat, LoggedInUser, Review, ReviewWithRefs } from '@cat-store/shared'
+import type { CatWithRefs, LoggedInUser, Review, ReviewWithRefs } from '@cat-store/shared'
 import { createMemoryRouter, RouterProvider } from 'react-router'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { RouteError } from '../../cmps/common/util/route-error'
@@ -23,7 +23,6 @@ vi.mock('../../services/review.service')
 
 const CAT = {
   _id: 'cat-1',
-  ownerId: 'user-1',
   name: 'Mitzi',
   price: 95.5,
   labels: ['Calm', 'Indoor'],
@@ -31,7 +30,8 @@ const CAT = {
   imgUrl: '',
   createdAt: Date.UTC(2026, 9, 4, 12),
   updatedAt: Date.UTC(2026, 9, 4, 12),
-} satisfies Cat
+  owner: { _id: 'user-1', fullname: 'Lior Ben-David' },
+} satisfies CatWithRefs
 
 const CAT_OWNER: LoggedInUser = { _id: 'user-1', username: 'user', fullname: 'U', isAdmin: false }
 const NON_CAT_OWNER_USER: LoggedInUser = { ...CAT_OWNER, _id: 'user-2' }
@@ -44,7 +44,7 @@ function _buildReview(_id: string, fullname: string, content: string): ReviewWit
     createdAt: Date.UTC(2026, 9, 9, 12),
     updatedAt: Date.UTC(2026, 9, 9, 12),
     user: { _id: `${_id}-author`, fullname },
-    cat: { _id: CAT._id, name: CAT.name, imgUrl: CAT.imgUrl, ownerId: CAT.ownerId },
+    cat: { _id: CAT._id, name: CAT.name, imgUrl: CAT.imgUrl, ownerId: CAT.owner._id },
   }
 }
 
@@ -127,6 +127,22 @@ describe('CatDetails', () => {
     expect(screen.getByRole('link', { name: 'Edit' })).toHaveAttribute('href', '/cat/cat-1/edit')
   })
 
+  it("shows the owner's full name as plain text", async () => {
+    _renderAt('/cat/cat-1')
+
+    expect(await screen.findByText('Owner: Lior Ben-David')).toBeInTheDocument()
+    // Plain text until the user page exists
+    expect(screen.queryByRole('link', { name: /Lior Ben-David/ })).not.toBeInTheDocument()
+  })
+
+  it("shows no owner line when the owner's user is gone", async () => {
+    vi.mocked(catService.getById).mockResolvedValue({ ...CAT, owner: null })
+    _renderAt('/cat/cat-1')
+
+    expect(await screen.findByRole('heading', { name: 'Mitzi' })).toBeInTheDocument()
+    expect(screen.queryByText(/Owner:/)).not.toBeInTheDocument()
+  })
+
   it('goes back to the list with the filter it came from', async () => {
     _renderAt('/cat/cat-1', { listSearch: '?labels=Calm' })
 
@@ -192,6 +208,19 @@ describe('CatDetails', () => {
 
     expect(await screen.findByRole('link', { name: 'Edit' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Delete' })).toBeInTheDocument()
+  })
+
+  // canEditCat gets owner?._id ?? null, so an orphan cat stays manageable by an admin
+  it.each([
+    ['shows Edit to an admin', ADMIN, true],
+    ['hides Edit from a user', NON_CAT_OWNER_USER, false],
+  ])("%s when the owner's user is gone", async (_, loggedInUser, isEditShown) => {
+    vi.mocked(catService.getById).mockResolvedValue({ ...CAT, owner: null })
+    useLoggedInUserStore.setState({ loggedInUser })
+    _renderAt('/cat/cat-1')
+
+    await screen.findByRole('heading', { name: 'Mitzi' })
+    expect(!!screen.queryByRole('link', { name: 'Edit' })).toBe(isEditShown)
   })
 
   it.each([

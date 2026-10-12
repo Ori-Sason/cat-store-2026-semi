@@ -9,8 +9,7 @@ import { requireAuth } from './require-auth.middleware.ts'
 const _checkCatOwner: RequestHandler<{ id: string }> = async (req, _res, next) => {
   const verifiedUser = alsService.getVerifiedUser()
   const cat = await catService.getById(req.params.id)
-  const ownerId = cat.ownerId.toHexString()
-  if (!catPermissionService.canEditCat({ ownerId }, verifiedUser)) {
+  if (!catPermissionService.canEditCat(cat.ownerId.toHexString(), verifiedUser)) {
     throw new HttpError(403, 'FORBIDDEN', `Cat ${req.params.id} isn't yours`) // 403 Forbidden
   }
   next()

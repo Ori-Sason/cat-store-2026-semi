@@ -1,7 +1,7 @@
 import type React from 'react'
 import { useState } from 'react'
 import { Link } from 'react-router'
-import { CAT_LABELS, catSchema, type Cat, type CatInput, type CatLabel } from '@cat-store/shared'
+import { CAT_LABELS, catSchema, type CatInput, type CatLabel } from '@cat-store/shared'
 import type { CatListLocationState } from '../../models/util'
 import { useFormValidation } from '../../hooks/use-form-validation'
 import { FieldError } from '../common/util/field-error'
@@ -15,7 +15,7 @@ type CatTextField = 'name' | 'price' | 'imgUrl'
 
 const _EMPTY_FORM: CatForm = { name: '', price: '', labels: [], isInStock: true, imgUrl: '' }
 
-function _toForm(cat: Cat | null): CatForm {
+function _toForm(cat: CatInput | null): CatForm {
   if (!cat) return _EMPTY_FORM
   const { name, price, labels, isInStock, imgUrl } = cat
   return { name, price: String(price), labels, isInStock, imgUrl }
@@ -26,7 +26,8 @@ function _toCatInput(form: CatForm) {
 }
 
 interface CatEditFormProps {
-  cat: Cat | null
+  // The cat being edited (null = add). Only its editable fields are read
+  cat: CatInput | null
   isSaving: boolean
   cancelTo: string
   cancelState?: CatListLocationState

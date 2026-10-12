@@ -1,4 +1,4 @@
-import type { Cat } from '@cat-store/shared'
+import type { CatWithRefs } from '@cat-store/shared'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { ApiError } from '../../models/api-error'
 import { catService } from '../../services/cat.service'
@@ -8,7 +8,7 @@ import { catDetailsLoader } from './cat-details.loader'
 vi.mock('../../services/cat.service')
 vi.mock('../../services/review.service')
 
-const _CAT = { _id: 'cat-1', name: 'Mitzi' } as Cat
+const _CAT = { _id: 'cat-1', name: 'Mitzi' } as CatWithRefs
 
 describe('catDetailsLoader', () => {
   beforeEach(() => {

@@ -1,8 +1,9 @@
 import { ObjectId, type Filter } from 'mongodb'
 import { CAT_LABELS, type CatFilter, type CatInput, type CatLabelStats } from '@cat-store/shared'
-import { CAT_COLLECTION, type CatDoc } from '../../models/cat.ts'
+import { CAT_COLLECTION, type CatDoc, type CatJoinedDoc } from '../../models/cat.ts'
 import { HttpError } from '../../models/http-error.ts'
 import { REVIEW_COLLECTION, type ReviewDoc } from '../../models/review.ts'
+import { USER_COLLECTION, USER_REF_FIELDS } from '../../models/user.ts'
 import { mongoService } from '../../services/mongodb.service.ts'
 import { utilService } from '../../services/util.service.ts'
 
@@ -20,6 +21,26 @@ async function getById(catId: string): Promise<CatDoc> {
   const _id = utilService.toObjectId(catId)
   const collection = await mongoService.getCollection<CatDoc>(CAT_COLLECTION)
   const cat = _id && (await collection.findOne({ _id }))
+  if (!cat) throw _catNotFound(catId)
+  return cat
+}
+
+// getById plus the owner's ref, for the details page only. getById stays plain: the owner check,
+// update and reviewService.add need the bare cat, and shouldn't pay for a join.
+// We use $first over $unwind because $unwind with preserveNullAndEmptyArrays would omit owner when
+// the user is gone, and the type promises null
+async function getByIdWithOwner(catId: string): Promise<CatJoinedDoc> {
+  const _id = utilService.toObjectId(catId)
+  if (!_id) throw _catNotFound(catId)
+  const collection = await mongoService.getCollection<CatDoc>(CAT_COLLECTION)
+  const [cat] = await collection
+    .aggregate<CatJoinedDoc>([
+      { $match: { _id } },
+      utilService.buildLookup(USER_COLLECTION, 'ownerId', 'owner', USER_REF_FIELDS),
+      { $set: { owner: { $ifNull: [{ $first: '$owner' }, null] } } },
+      { $unset: 'ownerId' }, // the owner's ref replaces it
+    ])
+    .toArray()
   if (!cat) throw _catNotFound(catId)
   return cat
 }
@@ -138,6 +159,7 @@ function _catNotFound(catId: string): HttpError {
 export const catService = {
   query,
   getById,
+  getByIdWithOwner,
   add,
   update,
   remove,

@@ -1,6 +1,6 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import type { Cat } from '@cat-store/shared'
+import type { CatWithRefs } from '@cat-store/shared'
 import { createMemoryRouter, RouterProvider } from 'react-router'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { RouteError } from '../../cmps/common/util/route-error'
@@ -19,7 +19,6 @@ vi.mock('../../services/cat.service')
 
 const _CAT = {
   _id: 'cat-1',
-  ownerId: 'user-1',
   name: 'Mitzi',
   price: 95.5,
   labels: ['Calm'],
@@ -27,7 +26,8 @@ const _CAT = {
   imgUrl: '',
   createdAt: 1,
   updatedAt: 1,
-} satisfies Cat
+  owner: { _id: 'user-1', fullname: 'U' },
+} satisfies CatWithRefs
 
 function _renderAt(path: string, state?: CatListLocationState) {
   const router = createMemoryRouter(
@@ -115,7 +115,11 @@ describe('CatEdit', () => {
   })
 
   it('saves the cat and lands on its details', async () => {
-    vi.mocked(catService.save).mockResolvedValue({ ..._CAT, name: 'Mitzi Jr' })
+    vi.mocked(catService.save).mockResolvedValue({
+      ..._CAT,
+      ownerId: _CAT.owner._id,
+      name: 'Mitzi Jr',
+    })
     const { router, user } = _renderAt('/cat/cat-1/edit')
 
     const nameInput = await screen.findByLabelText('Name')

@@ -5,6 +5,7 @@ import {
   type CatFilter,
   type CatInput,
   type CatLabelStats,
+  type CatWithRefs,
 } from '@cat-store/shared'
 import { httpService } from './http.service'
 
@@ -25,8 +26,8 @@ function query(filterBy: CatFilter = DEFAULT_CAT_FILTER): Promise<Cat[]> {
   return httpService.get<Cat[]>(BASE_PATH, params)
 }
 
-function getById(catId: string): Promise<Cat> {
-  return httpService.get<Cat>(`${BASE_PATH}/${catId}`)
+function getById(catId: string): Promise<CatWithRefs> {
+  return httpService.get<CatWithRefs>(`${BASE_PATH}/${catId}`)
 }
 
 // A whole Cat is fine on PUT - the BE strips _id, createdAt and updatedAt

@@ -18,7 +18,7 @@ export async function getCatLabelStats(_req: Request, res: Response) {
 }
 
 export async function getCatById(req: Request<{ id: string }>, res: Response) {
-  const cat = await catService.getById(req.params.id)
+  const cat = await catService.getByIdWithOwner(req.params.id)
   res.json(cat)
 }
 

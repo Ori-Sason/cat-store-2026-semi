@@ -7,6 +7,7 @@ import {
   type CatInput,
   type CatLabel,
   type CatLabelStats,
+  type CatWithRefs,
 } from '@cat-store/shared'
 import { app } from '../../app.ts'
 import { CAT_COLLECTION, type CatDoc } from '../../models/cat.ts'
@@ -51,6 +52,12 @@ function _loginCookie({ _id, username, fullname, isAdmin }: UserDoc): string {
 // The cat as the API sends it: ObjectIds become hex strings
 function _toJson(cat: CatDoc): Cat {
   return { ...cat, _id: cat._id.toHexString(), ownerId: cat.ownerId.toHexString() }
+}
+
+// The details shape: the owner's ref replaces ownerId
+function _toJsonWithRefs(cat: CatDoc, owner: CatWithRefs['owner']): CatWithRefs {
+  const { ownerId: _ownerId, ...json } = _toJson(cat)
+  return { ...json, owner }
 }
 
 async function _insertCat(cat: CatDoc) {
@@ -232,15 +239,28 @@ describe('GET /api/cats/:id', () => {
     vi.restoreAllMocks()
   })
 
-  it('returns the cat', async () => {
+  it('returns the cat with its owner, whose ref carries only _id and fullname', async () => {
     const cat = _buildCat({ name: 'Mitzi' })
-    const collection = await mongoService.getCollection<CatDoc>(CAT_COLLECTION)
-    await collection.insertOne(cat)
+    await _insertCat(cat)
 
     const res = await request(app).get(`/api/cats/${cat._id.toHexString()}`)
 
     expect(res.status).toBe(200)
-    expect(res.body).toEqual(_toJson(cat))
+    // toEqual, not toMatchObject: an extra key (ownerId, or the owner's password, isAdmin,
+    // username) fails the test
+    expect(res.body).toEqual(
+      _toJsonWithRefs(cat, { _id: CAT_OWNER._id.toHexString(), fullname: CAT_OWNER.fullname }),
+    )
+  })
+
+  it("returns owner: null, not a missing key, when the owner's user is gone", async () => {
+    const cat = _buildCat({ ownerId: new ObjectId() })
+    await _insertCat(cat)
+
+    const res = await request(app).get(`/api/cats/${cat._id.toHexString()}`)
+
+    expect(res.status).toBe(200)
+    expect(res.body).toEqual(_toJsonWithRefs(cat, null))
   })
 
   it('returns 404 CAT_NOT_FOUND for an id that does not exist', async () => {

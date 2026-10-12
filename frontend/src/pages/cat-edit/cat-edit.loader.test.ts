@@ -1,4 +1,4 @@
-import type { Cat, LoggedInUser } from '@cat-store/shared'
+import type { CatWithRefs, LoggedInUser } from '@cat-store/shared'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { ApiError } from '../../models/api-error'
 import { catService } from '../../services/cat.service'
@@ -7,7 +7,11 @@ import { catEditLoader } from './cat-edit.loader'
 
 vi.mock('../../services/cat.service')
 
-const CAT = { _id: 'cat-1', ownerId: 'user-1', name: 'Mitzi' } as Cat
+const CAT = {
+  _id: 'cat-1',
+  name: 'Mitzi',
+  owner: { _id: 'user-1', fullname: 'U' },
+} as CatWithRefs
 const CAT_OWNER: LoggedInUser = { _id: 'user-1', username: 'user', fullname: 'U', isAdmin: false }
 const NON_CAT_OWNER_USER: LoggedInUser = { ...CAT_OWNER, _id: 'user-2' }
 const ADMIN: LoggedInUser = { _id: 'admin-1', username: 'admin', fullname: 'A', isAdmin: true }

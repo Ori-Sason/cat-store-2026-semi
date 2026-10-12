@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { createMemoryRouter, RouterProvider } from 'react-router'
-import type { Cat, LoggedInUser, Review, ReviewWithRefs } from '@cat-store/shared'
+import type { CatWithRefs, LoggedInUser, Review, ReviewWithRefs } from '@cat-store/shared'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { routes } from './router'
 import { catService } from './services/cat.service'
@@ -43,7 +43,7 @@ describe('routes', () => {
       _id: 'cat-1',
       name: 'Mitzi',
       labels: [],
-    } as unknown as Cat)
+    } as unknown as CatWithRefs)
     vi.mocked(reviewService.query).mockResolvedValue([])
     _renderAt('/cat/cat-1')
 
@@ -60,7 +60,7 @@ describe('routes', () => {
       _id: 'cat-1',
       name: 'Mitzi',
       labels: [],
-    } as unknown as Cat)
+    } as unknown as CatWithRefs)
     vi.mocked(reviewService.query).mockResolvedValue([])
     vi.mocked(reviewService.add).mockResolvedValue({ _id: 'review-1' } as Review)
     _renderAt('/cat/cat-1')

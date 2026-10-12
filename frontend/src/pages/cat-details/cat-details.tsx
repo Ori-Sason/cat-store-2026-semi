@@ -18,7 +18,7 @@ export const CatDetails: React.FC = () => {
   const [isConfirmOpen, setIsConfirmOpen] = useState(false)
   const isDeleting = fetcher.state !== 'idle'
   const loggedInUser = useLoggedInUserStore((state) => state.loggedInUser)
-  const isCanEdit = catPermissionService.canEditCat(cat, loggedInUser)
+  const isCanEdit = catPermissionService.canEditCat(cat.owner?._id ?? null, loggedInUser)
 
   function onConfirmDelete() {
     setIsConfirmOpen(false)
@@ -50,6 +50,7 @@ export const CatDetails: React.FC = () => {
               ))}
             </ul>
           )}
+          {cat.owner && <p className="owner">Owner: {cat.owner.fullname}</p>}
           <p className="added">Added {utilService.formatDate(cat.createdAt)}</p>
           {isCanEdit && (
             <div className="actions">

@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import type { User } from './user.ts'
 import type { SortByDirection } from './util.ts'
 
 export const CAT_LABELS = [
@@ -49,6 +50,12 @@ export interface Cat extends CatInput {
   ownerId: string // the user who created the cat - server-set, so it's not in catSchema
   createdAt: number
   updatedAt: number
+}
+
+// A cat joined with its owner, as GET /api/cats/:id returns it. The owner's ref replaces
+// ownerId, like a review's refs replace userId / catId. owner is null when the owner's user doc is gone
+export interface CatWithRefs extends Omit<Cat, 'ownerId'> {
+  owner: Pick<User, '_id' | 'fullname'> | null
 }
 
 export interface CatLabelStats {

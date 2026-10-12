@@ -1,5 +1,6 @@
 import type { ObjectId } from 'mongodb'
-import type { Cat } from '@cat-store/shared'
+import type { Cat, CatWithRefs } from '@cat-store/shared'
+import type { UserRefDoc } from './user.ts'
 
 export const CAT_COLLECTION = 'cats'
 
@@ -17,3 +18,10 @@ export const CAT_REF_FIELDS = [
 ] as const satisfies readonly (keyof CatDoc)[]
 
 export type CatRefDoc = Pick<CatDoc, '_id' | (typeof CAT_REF_FIELDS)[number]>
+
+// The aggregation output behind GET /api/cats/:id: CatWithRefs with ObjectIds.
+// aggregate<T>() only asserts it, so the route tests pin the real keys
+export interface CatJoinedDoc extends Omit<CatWithRefs, '_id' | 'owner'> {
+  _id: ObjectId
+  owner: UserRefDoc | null
+}

@@ -94,6 +94,12 @@
     gap: $space-2;
   }
 
+  .owner {
+    font-weight: 700;
+    overflow-wrap: anywhere;
+    color: $primary-clr-900;
+  }
+
   .added {
     font-size: 0.85rem;
     color: $primary-clr-850;

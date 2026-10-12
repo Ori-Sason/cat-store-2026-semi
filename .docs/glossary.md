@@ -49,6 +49,17 @@
 	  what the client sends (POST / PUT body, edit-form state), inferred from `catSchema`.
 	- Avoid: `CatDto`, `NewCat`, `CatPayload`, `CatToSave`.
 
+- `CatWithRefs` vs `CatJoinedDoc`
+	- Canonical meaning: a cat joined with its owner, as `GET /api/cats/:id` returns it: a `Cat`
+	  with `owner: { _id, fullname } | null` in place of `ownerId` (the ref replaces it, like a
+	  review's refs replace `userId` / `catId`). `CatWithRefs` is the wire type (`shared/`, string ids). `CatJoinedDoc` is the
+	  backend-only aggregation output (`ObjectId` ids). Same split as `ReviewWithRefs` /
+	  `ReviewJoinedDoc`.
+	- Rule: `owner` is an allow-list (`_id`, `fullname`), like a review's `user`. It's `null`,
+	  never missing, when the owner's user doc is gone. Permission checks take the id alone:
+	  `canEditCat(cat.owner?._id ?? null, …)`. With `null`, only an admin can edit.
+	- Avoid: `CatWithOwner`, `PopulatedCat`, `CatDetails` (the page's name).
+
 - `User` vs `UserInput` vs `UserDoc`
 	- Canonical meaning: `User` is a stored user as the API returns it, with no password.
 	  `UserInput` is the user fields a client may set (`fullname`, `username`, `password`),
