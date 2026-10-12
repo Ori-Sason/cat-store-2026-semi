@@ -50,7 +50,9 @@ export const CatDetails: React.FC = () => {
               ))}
             </ul>
           )}
-          <p className="owner">Owner: {cat.owner.fullname}</p>
+          <p className="owner">
+            Owner: <Link to={`/user/${cat.owner._id}`}>{cat.owner.fullname}</Link>
+          </p>
           <p className="added">Added {utilService.formatDate(cat.createdAt)}</p>
           {isCanEdit && (
             <div className="actions">

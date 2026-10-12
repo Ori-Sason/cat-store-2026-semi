@@ -98,6 +98,10 @@
     font-weight: 700;
     overflow-wrap: anywhere;
     color: $primary-clr-900;
+
+    a:hover {
+      text-decoration: underline;
+    }
   }
 
   .added {

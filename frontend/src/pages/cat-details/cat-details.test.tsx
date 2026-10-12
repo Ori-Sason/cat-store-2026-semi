@@ -127,12 +127,13 @@ describe('CatDetails', () => {
     expect(screen.getByRole('link', { name: 'Edit' })).toHaveAttribute('href', '/cat/cat-1/edit')
   })
 
-  it("shows the owner's full name as plain text", async () => {
+  it("links the owner's full name to their user page", async () => {
     _renderAt('/cat/cat-1')
 
-    expect(await screen.findByText('Owner: Lior Ben-David')).toBeInTheDocument()
-    // Plain text until the user page exists
-    expect(screen.queryByRole('link', { name: /Lior Ben-David/ })).not.toBeInTheDocument()
+    expect(await screen.findByRole('link', { name: 'Lior Ben-David' })).toHaveAttribute(
+      'href',
+      '/user/user-1',
+    )
   })
 
   it('goes back to the list with the filter it came from', async () => {
