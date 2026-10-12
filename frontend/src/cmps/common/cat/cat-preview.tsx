@@ -16,7 +16,7 @@ export const CatPreview: React.FC<CatPreviewProps> = ({ cat }) => {
 
   return (
     <Link to={`/cat/${cat._id}`} state={state} className="cat-preview">
-      <CatImg cat={cat} />
+      <CatImg cat={cat} isSoldOutShown />
       <div className="body">
         <div className="top">
           <h3>{cat.name}</h3>

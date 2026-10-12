@@ -32,7 +32,7 @@ export const CatDetails: React.FC = () => {
       </Link>
 
       <article className="panel">
-        <CatImg cat={cat} />
+        <CatImg cat={cat} isSoldOutShown />
         <div className="info">
           <h1>{cat.name}</h1>
           <div className="price-row">

@@ -125,10 +125,7 @@ export const CatEditForm: React.FC<CatEditFormProps> = ({
       <div className="field">
         <label htmlFor="cat-imgUrl">Image URL</label>
         <div className="img-row">
-          <CatImg
-            cat={{ name: form.name, imgUrl: form.imgUrl, isInStock: form.isInStock }}
-            isSoldOutShown={false}
-          />
+          <CatImg cat={{ name: form.name, imgUrl: form.imgUrl }} isSoldOutShown={false} />
           <div className="img-input">
             <input type="url" {...getTextFieldProps('imgUrl', 'cat-imgUrl-hint')} />
             <p id="cat-imgUrl-hint" className="hint">
