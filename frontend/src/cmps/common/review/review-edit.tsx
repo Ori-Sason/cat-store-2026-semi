@@ -1,11 +1,11 @@
 import type React from 'react'
-import { useId, useState } from 'react'
+import { useId } from 'react'
 import {
   REVIEW_CONTENT_MAX_LENGTH,
   reviewContentSchema,
   type ReviewContentInput,
 } from '@cat-store/shared'
-import { useFormValidation } from '../../../hooks/use-form-validation'
+import { useForm } from '../../../hooks/use-form'
 import { FieldError } from '../util/field-error'
 
 interface ReviewEditProps {
@@ -24,40 +24,33 @@ export const ReviewEdit: React.FC<ReviewEditProps> = ({
   initialContent = '',
   onCancel,
 }) => {
-  const [content, setContent] = useState(initialContent)
   // The add form and any open edit forms share a page, so each needs its own ids
   const idPrefix = useId()
-  const formValidation = useFormValidation(reviewContentSchema, { content }, idPrefix)
-  const { formParseResult } = formValidation
-  const fieldProps = formValidation.getFieldProps('content', `${idPrefix}-hint`)
+  const hintId = `${idPrefix}-hint`
+  const { form, getTextFieldProps, getErrorProps, onSubmit } = useForm({
+    initialForm: { content: initialContent },
+    schema: reviewContentSchema,
+    idPrefix,
+    onValidSubmit: onSave,
+  })
+  const contentProps = getTextFieldProps('content', hintId)
   const isEdit = !!onCancel
   const [submitTxt, savingTxt] = isEdit ? ['Save', 'Saving…'] : ['Post review', 'Posting…']
 
-  function onSubmit(ev: React.SubmitEvent<HTMLFormElement>) {
-    ev.preventDefault()
-    formValidation.markSubmitted()
-    if (formParseResult.success) onSave(formParseResult.data)
-  }
-
   return (
     <form className="review-edit" noValidate onSubmit={onSubmit}>
-      <label htmlFor={fieldProps.id}>{isEdit ? 'Edit your review' : 'Your review'}</label>
+      <label htmlFor={contentProps.id}>{isEdit ? 'Edit your review' : 'Your review'}</label>
       <textarea
         rows={3}
-        value={content}
-        onChange={(ev) => setContent(ev.target.value)}
         // Edit mode opens from the ⋮ menu, which unmounts: without this, focus drops to <body>.
         // The add form sits on the page from the start, so it doesn't grab focus
         autoFocus={isEdit}
-        {...fieldProps}
+        {...contentProps}
       />
       <div className="foot">
-        <FieldError
-          errorId={formValidation.getErrorId('content')}
-          errorTxt={formValidation.getError('content')}
-        />
-        <p id={`${idPrefix}-hint`} className="hint">
-          {content.length} / {REVIEW_CONTENT_MAX_LENGTH}
+        <FieldError {...getErrorProps('content')} />
+        <p id={hintId} className="hint">
+          {form.content.length} / {REVIEW_CONTENT_MAX_LENGTH}
         </p>
       </div>
       <div className="actions">

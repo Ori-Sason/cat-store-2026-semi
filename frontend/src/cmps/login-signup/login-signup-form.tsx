@@ -1,9 +1,8 @@
 import type React from 'react'
-import { useState } from 'react'
 import { Link } from 'react-router'
 import { loginSchema, type LoginInput, type SignupInput } from '@cat-store/shared'
 import { signupFormSchema } from '../../models/user'
-import { useFormValidation } from '../../hooks/use-form-validation'
+import { useForm } from '../../hooks/use-form'
 import { FieldError } from '../common/util/field-error'
 
 export type LoginSignupMode = 'login' | 'signup'
@@ -15,7 +14,6 @@ interface LoginSignupForm {
   confirmPassword: string
   isRemembered: boolean
 }
-type TextField = 'fullname' | 'username' | 'password' | 'confirmPassword'
 
 const _EMPTY_FORM: LoginSignupForm = {
   fullname: '',
@@ -38,39 +36,19 @@ export const LoginSignupForm: React.FC<LoginSignupFormProps> = ({
   otherModeTo,
   onSubmit,
 }) => {
-  const [form, setForm] = useState(_EMPTY_FORM)
   const isSignup = mode === 'signup'
-
-  const formValidation = useFormValidation<typeof loginSchema | typeof signupFormSchema>(
-    isSignup ? signupFormSchema : loginSchema,
+  const {
     form,
-    'login-signup',
-  )
-  const { formParseResult } = formValidation
-
-  function getTextFieldProps(field: TextField) {
-    return {
-      value: form[field],
-      onChange: (ev: React.ChangeEvent<HTMLInputElement>) =>
-        setForm((prev) => ({ ...prev, [field]: ev.target.value })),
-      ...formValidation.getFieldProps(field),
-    }
-  }
-
-  function renderError(field: TextField) {
-    return (
-      <FieldError
-        errorId={formValidation.getErrorId(field)}
-        errorTxt={formValidation.getError(field)}
-      />
-    )
-  }
-
-  function onSubmitForm(ev: React.SubmitEvent<HTMLFormElement>) {
-    ev.preventDefault()
-    formValidation.markSubmitted()
-    if (formParseResult.success) onSubmit(formParseResult.data)
-  }
+    setField,
+    getTextFieldProps,
+    getErrorProps,
+    onSubmit: onSubmitForm,
+  } = useForm({
+    initialForm: _EMPTY_FORM,
+    schema: isSignup ? signupFormSchema : loginSchema,
+    idPrefix: 'login-signup',
+    onValidSubmit: onSubmit,
+  })
 
   return (
     <form className="login-signup-form" noValidate onSubmit={onSubmitForm}>
@@ -78,14 +56,14 @@ export const LoginSignupForm: React.FC<LoginSignupFormProps> = ({
         <div className="field">
           <label htmlFor="login-signup-fullname">Full name</label>
           <input type="text" autoComplete="name" {...getTextFieldProps('fullname')} />
-          {renderError('fullname')}
+          <FieldError {...getErrorProps('fullname')} />
         </div>
       )}
 
       <div className="field">
         <label htmlFor="login-signup-username">Username</label>
         <input type="text" autoComplete="username" {...getTextFieldProps('username')} />
-        {renderError('username')}
+        <FieldError {...getErrorProps('username')} />
       </div>
 
       <div className="field">
@@ -96,7 +74,7 @@ export const LoginSignupForm: React.FC<LoginSignupFormProps> = ({
           autoComplete={isSignup ? 'new-password' : 'current-password'}
           {...getTextFieldProps('password')}
         />
-        {renderError('password')}
+        <FieldError {...getErrorProps('password')} />
       </div>
 
       {isSignup && (
@@ -107,7 +85,7 @@ export const LoginSignupForm: React.FC<LoginSignupFormProps> = ({
             autoComplete="new-password"
             {...getTextFieldProps('confirmPassword')}
           />
-          {renderError('confirmPassword')}
+          <FieldError {...getErrorProps('confirmPassword')} />
         </div>
       )}
 
@@ -115,7 +93,7 @@ export const LoginSignupForm: React.FC<LoginSignupFormProps> = ({
         <input
           type="checkbox"
           checked={form.isRemembered}
-          onChange={(ev) => setForm((prev) => ({ ...prev, isRemembered: ev.target.checked }))}
+          onChange={(ev) => setField('isRemembered', ev.target.checked)}
         />
         Remember me
       </label>

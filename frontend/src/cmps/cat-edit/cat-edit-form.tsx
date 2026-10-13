@@ -1,9 +1,8 @@
 import type React from 'react'
-import { useState } from 'react'
 import { Link } from 'react-router'
 import { CAT_LABELS, catSchema, type CatInput, type CatLabel } from '@cat-store/shared'
 import type { BackToLocationState } from '../../models/util'
-import { useFormValidation } from '../../hooks/use-form-validation'
+import { useForm } from '../../hooks/use-form'
 import { FieldError } from '../common/util/field-error'
 import { ToggleSwitch } from '../common/util/toggle-switch'
 import { CatImg } from '../common/cat/cat-img'
@@ -11,7 +10,6 @@ import { LabelToggles } from '../common/cat/label-toggles'
 
 // Price stays a string while typing, so an empty field shows empty instead of 0
 type CatForm = Omit<CatInput, 'price'> & { price: string }
-type CatTextField = 'name' | 'price' | 'imgUrl'
 
 const _EMPTY_FORM: CatForm = { name: '', price: '', labels: [], isInStock: true, imgUrl: '' }
 
@@ -41,36 +39,16 @@ export const CatEditForm: React.FC<CatEditFormProps> = ({
   cancelState,
   onSave,
 }) => {
-  const [form, setForm] = useState(() => _toForm(cat))
-  const formValidation = useFormValidation(catSchema, _toCatInput(form), 'cat')
-  const { formParseResult } = formValidation
-
-  function getTextFieldProps(field: CatTextField, hintId?: string) {
-    return {
-      value: form[field],
-      onChange: (ev: React.ChangeEvent<HTMLInputElement>) =>
-        setForm((prev) => ({ ...prev, [field]: ev.target.value })),
-      ...formValidation.getFieldProps(field, hintId),
-    }
-  }
-
-  function renderError(field: CatTextField) {
-    return (
-      <FieldError
-        errorId={formValidation.getErrorId(field)}
-        errorTxt={formValidation.getError(field)}
-      />
-    )
-  }
+  const { form, setField, getTextFieldProps, getErrorProps, onSubmit } = useForm({
+    initialForm: () => _toForm(cat),
+    schema: catSchema,
+    idPrefix: 'cat',
+    toInput: _toCatInput,
+    onValidSubmit: onSave,
+  })
 
   function onSetLabels(labels: CatLabel[]) {
-    setForm((prev) => ({ ...prev, labels }))
-  }
-
-  function onSubmit(ev: React.SubmitEvent<HTMLFormElement>) {
-    ev.preventDefault()
-    formValidation.markSubmitted()
-    if (formParseResult.success) onSave(formParseResult.data)
+    setField('labels', labels)
   }
 
   return (
@@ -78,13 +56,13 @@ export const CatEditForm: React.FC<CatEditFormProps> = ({
       <div className="field">
         <label htmlFor="cat-name">Name</label>
         <input type="text" {...getTextFieldProps('name')} />
-        {renderError('name')}
+        <FieldError {...getErrorProps('name')} />
       </div>
 
       <div className="field">
         <label htmlFor="cat-price">Price ($)</label>
         <input type="text" inputMode="decimal" {...getTextFieldProps('price')} />
-        {renderError('price')}
+        <FieldError {...getErrorProps('price')} />
       </div>
 
       <div className="field">
@@ -119,7 +97,7 @@ export const CatEditForm: React.FC<CatEditFormProps> = ({
       <ToggleSwitch
         label="In stock"
         isChecked={form.isInStock}
-        onChange={(isInStock) => setForm((prev) => ({ ...prev, isInStock }))}
+        onChange={(isInStock) => setField('isInStock', isInStock)}
       />
 
       <div className="field">
@@ -131,7 +109,7 @@ export const CatEditForm: React.FC<CatEditFormProps> = ({
             <p id="cat-imgUrl-hint" className="hint">
               Leave empty to use the default cat image
             </p>
-            {renderError('imgUrl')}
+            <FieldError {...getErrorProps('imgUrl')} />
           </div>
         </div>
       </div>
