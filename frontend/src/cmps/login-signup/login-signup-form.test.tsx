@@ -65,16 +65,6 @@ describe('LoginSignupForm', () => {
     expect(onSubmit).not.toHaveBeenCalled()
   })
 
-  it('shows a field error after leaving the field', async () => {
-    const { user } = _render('signup')
-
-    await user.type(screen.getByLabelText('Password'), 'short')
-    await user.tab()
-
-    expect(screen.getByText('Password must be at least 8 characters')).toBeInTheDocument()
-    expect(screen.getByLabelText('Password')).toHaveAttribute('aria-invalid', 'true')
-  })
-
   it('shows a mismatch error on confirm password, even while other fields are invalid', async () => {
     const { onSubmit, user } = _render('signup')
 

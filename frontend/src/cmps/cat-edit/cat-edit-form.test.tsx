@@ -29,16 +29,6 @@ function _render(cat: Cat | null = null) {
 
 describe('CatEditForm', () => {
   // When errors show (touch, submit) is covered by the hook's tests. These check the wiring.
-  it('shows a field error after leaving the field', async () => {
-    const { user } = _render()
-
-    await user.type(screen.getByLabelText('Name'), 'M')
-    await user.tab()
-
-    expect(screen.getByText('Name must be at least 2 characters')).toBeInTheDocument()
-    expect(screen.getByLabelText('Name')).toHaveAttribute('aria-invalid', 'true')
-  })
-
   it('shows every error on submit and does not save an invalid cat', async () => {
     const { onSave, user } = _render()
 
