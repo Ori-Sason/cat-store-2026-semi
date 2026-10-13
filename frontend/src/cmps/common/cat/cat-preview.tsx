@@ -12,7 +12,9 @@ interface CatPreviewProps {
 }
 
 // The owner is plain text, not a link to /user/:id: the whole card is a <Link>, and a link
-// inside it would be a nested <a>. cat-details has the owner link
+// inside it would be a nested <a>. cat-details has the owner link.
+// Decided against a stretched-link card (would allow an owner link): a bigger markup / SCSS /
+// test change for a small gain
 export const CatPreview: React.FC<CatPreviewProps> = ({ cat, isOwnerShown }) => {
   const location = useLocation()
 

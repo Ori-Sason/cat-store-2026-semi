@@ -44,6 +44,10 @@ How to write tests. When to write them lives in `.claude/rules/testing.md`.
 - Frontend: `src/test-setup.ts` registers the jest-dom matchers (`toBeInTheDocument()`,
   `toHaveValue()`, ...) and runs RTL `cleanup` after each test. Don't repeat either in a test file.
   It also imports `vitest-canvas-mock` globally, so canvas code (the OpenLayers map) runs in jsdom.
+- Frontend route tests: `createMemoryRouter` + `RouterProvider` (see `cat-details.test.tsx`).
+  Not `createRoutesStub`: it targets framework mode. A page test builds its own route tree, so
+  what lives only in the route config (`shouldRevalidate`, index children, 404 loaders) is pinned
+  in `router.test.tsx` against the real `routes`.
 - Backend: Supertest calls the Express app in memory, with no open port. Tests use a separate
   database (`MONGODB_DATABASE` in `backend/.env.test`) in the same `db-local` container, and
   wipe it freely. Never point tests at the dev database.

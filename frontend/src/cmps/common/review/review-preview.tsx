@@ -8,6 +8,8 @@ import { ReviewEditable } from './review-editable'
 
 // The page the row is on. Each page already shows one side of the review, so the row's header
 // shows the other: the author on a cat's page, the cat on a user's page.
+// A shownOn flag, not a renderHeader prop per page: the chip rules (You / Owner / Admin) stay in
+// this file
 export type ReviewShownOn = 'cat' | 'user'
 
 interface ReviewPreviewProps {
@@ -32,6 +34,7 @@ export const ReviewPreview: React.FC<ReviewPreviewProps> = ({ review, shownOn })
         {shownOn === 'cat' ? (
           <span className="author">{review.user.fullname}</span>
         ) : (
+          // "On" before the thumb, so it doesn't read as the author's avatar
           <span className="cat-ref">
             On{' '}
             <Link to={`/cat/${review.cat._id}`} state={utilService.buildBackToState(location)}>

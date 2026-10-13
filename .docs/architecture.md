@@ -61,6 +61,8 @@ Env: `node --env-file=.env.local`, no dotenv. Prod needs `JWT_SECRET`, Mongo URL
   (`/review`, `/review/:id`), and a section that must reload alone is a child route with its
   own loader.
   Why: the router already holds and revalidates the data, and a store copy would go stale.
+  A child route, not `useFetcher().load` from a resource route: that would start the request
+  after render instead of in parallel with the parent's loader.
 - **Data leaves the DB through allow-lists.** Joins use `$lookup` with an inclusion `$project`
   inside it (`USER_REF_FIELDS`, `CAT_REF_FIELDS`), and `GET /api/users/:id` projects
   `PUBLIC_USER_FIELDS`. Never `password`, and no `username` (half a login).

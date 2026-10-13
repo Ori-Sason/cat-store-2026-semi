@@ -7,7 +7,8 @@ import { ReviewListSkeleton } from '../common/review/review-list-skeleton'
 import { SectionError } from '../common/util/section-error'
 
 // The reviews tab of /user/:id, rendered through user-details' <Outlet>. A thin wrapper over
-// ReviewList: no add form here (that lives on the cat's page). Each editable row owns its
+// ReviewList: no add form here (that lives on the cat's page). Not merged with CatReviews behind
+// a mode flag: the flag would switch off half of it (the form and its fetcher). Each editable row owns its
 // fetcher, and after an edit / delete react-router reloads only this tab's reviewLoader.
 // The key remounts the <Suspense> per user, like the cats tab
 export const UserReviews: React.FC = () => {

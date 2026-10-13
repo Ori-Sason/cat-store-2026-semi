@@ -102,6 +102,9 @@ export type PublicUser = Pick<User, '_id' | (typeof PUBLIC_USER_FIELDS)[number]>
 // A user as a join carries them: a review's author, a cat's owner
 export type UserRef = Pick<User, '_id' | (typeof USER_REF_FIELDS)[number]>
 
+// The session identity: the login / signup response, GET /api/auth/me, the JWT payload and the
+// ALS user. /me returns this, not PublicUser: switching it alone would give the FE store two
+// shapes. username isn't a leak here, it's the user's own data (the header menu shows it)
 export type LoggedInUser = Pick<User, '_id' | 'username' | 'fullname' | 'isAdmin'>
 
 // What a permission check needs to know about the current user. null = a guest

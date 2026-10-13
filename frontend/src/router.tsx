@@ -91,6 +91,8 @@ export const routes: RouteObject[] = [
                 path: '/user/:id',
                 loader: userDetailsLoader,
                 // A review action on a tab reloads only that tab, not the user
+                // No errorElement here: it would catch the tabs' errors too and hide the header.
+                // The tab loaders are deferred, so a failed tab shows in its own <Await errorElement>
                 shouldRevalidate: utilService.skipReloadOnActionAt('/review'),
                 element: <UserDetails />,
                 children: [

@@ -43,7 +43,8 @@ export interface Review extends ReviewInput {
 }
 
 // A review joined with its author and its cat (GET /api/reviews). userId / catId are replaced
-// by the slim `user` / `cat`, and the user side never carries the password or username
+// by the slim `user` / `cat`, and the user side never carries the password or username.
+// One shape for the cat page and the user page: each ignores the side it already shows
 export interface ReviewWithRefs extends Omit<Review, 'userId' | 'catId'> {
   user: UserRef
   cat: CatRef
