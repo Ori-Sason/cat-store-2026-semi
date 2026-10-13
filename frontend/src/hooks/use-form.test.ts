@@ -4,8 +4,8 @@ import { describe, expect, it, vi } from 'vitest'
 import { z } from 'zod'
 import { useForm } from './use-form'
 
-// When errors show (touch, submit) is covered by useFormValidation's tests.
-// These check what useForm adds: the form state, the input wiring and the submit flow.
+// The rules for when errors show (touch, submit) are tested in useFormValidation's tests.
+// These check that useForm wires them, plus the form state and the submit flow.
 const _schema = z.object({
   name: z.string().min(1, 'Name is required'),
   age: z.number('Age must be a number'),
@@ -86,6 +86,25 @@ describe('useForm', () => {
     act(() => result.current.setField('isActive', true))
 
     expect(result.current.form.isActive).toBe(true)
+  })
+
+  it('accepts only fields that can hold any string as text fields', () => {
+    const { result } = renderHook(() =>
+      useForm({
+        initialForm: { name: '', size: 'S' as 'S' | 'L', isActive: false },
+        schema: z.object({ name: z.string(), size: z.enum(['S', 'L']), isActive: z.boolean() }),
+        idPrefix: 'test',
+        onValidSubmit: vi.fn(),
+      }),
+    )
+
+    // Type-level checks: typecheck fails if these stop being errors
+    // @ts-expect-error a boolean can't back a text input
+    result.current.getTextFieldProps('isActive')
+    // @ts-expect-error onChange could write a value outside 'S' | 'L'
+    result.current.getTextFieldProps('size')
+
+    expect(result.current.getTextFieldProps('name').value).toBe('')
   })
 
   it('shows every error on an invalid submit and does not call onValidSubmit', () => {

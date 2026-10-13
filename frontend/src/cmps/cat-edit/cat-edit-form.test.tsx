@@ -28,7 +28,7 @@ function _render(cat: Cat | null = null) {
 }
 
 describe('CatEditForm', () => {
-  // When errors show (touch, submit) is covered by the hook's tests. These check the wiring.
+  // When errors show (touch, submit) is covered by useFormValidation's tests. These check the wiring.
   it('shows every error on submit and does not save an invalid cat', async () => {
     const { onSave, user } = _render()
 

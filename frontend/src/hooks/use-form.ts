@@ -3,8 +3,11 @@ import { useState } from 'react'
 import type { z } from 'zod'
 import { useFormValidation, type FormField } from './use-form-validation'
 
-// Form keys whose value is a string, so they can back a text input or textarea
-type _TextField<F> = { [K in keyof F]: F[K] extends string ? K : never }[keyof F] & string
+// Form keys that can hold any string, so they can back a text input or textarea.
+// Fields with a literal union type like 'S' | 'L' are rejected: onChange writes whatever
+// the user typed, which may be outside the union. That's why it's `string extends F[K]`,
+// not `F[K] extends string`
+type _TextField<F> = { [K in keyof F]: string extends F[K] ? K : never }[keyof F] & string
 
 interface UseFormOptions<F, S extends z.ZodType> {
   initialForm: F | (() => F)

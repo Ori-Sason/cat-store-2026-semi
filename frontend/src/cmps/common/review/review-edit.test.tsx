@@ -10,7 +10,7 @@ function _render(isSaving = false) {
 }
 
 describe('ReviewEdit', () => {
-  // When errors show (touch, submit) is covered by the hook's tests. These check the wiring.
+  // When errors show (touch, submit) is covered by useFormValidation's tests. These check the wiring.
   it('shows the error on submit and does not save a blank review', async () => {
     const { onSave, user } = _render()
 
