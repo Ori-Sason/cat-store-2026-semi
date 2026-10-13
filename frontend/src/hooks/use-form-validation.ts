@@ -3,7 +3,7 @@ import { z } from 'zod'
 
 // Distributes over a union schema (login | signup), so each branch's keys count.
 // A plain `keyof (A | B)` keeps only the keys both share.
-type _Field<S extends z.ZodType> =
+export type FormField<S extends z.ZodType> =
   z.input<S> extends infer I ? (I extends unknown ? keyof I & string : never) : never
 
 // Validates `input` against `schema` on every render. Errors show once a field is
@@ -22,16 +22,16 @@ export function useFormValidation<S extends z.ZodType>(
     ? {}
     : z.flattenError(formParseResult.error).fieldErrors
 
-  function getError(field: _Field<S>) {
+  function getError(field: FormField<S>) {
     return touched[field] || isSubmitted ? fieldErrors[field]?.[0] : undefined
   }
 
-  function getErrorId(field: _Field<S>) {
+  function getErrorId(field: FormField<S>) {
     return `${idPrefix}-${field}-error`
   }
 
   // The id and a11y props for a field's input. The caller adds value and onChange.
-  function getFieldProps(field: _Field<S>, hintId?: string) {
+  function getFieldProps(field: FormField<S>, hintId?: string) {
     const error = getError(field)
     const describedBy = [hintId, error && getErrorId(field)].filter(Boolean).join(' ')
     return {
