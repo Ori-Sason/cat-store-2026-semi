@@ -7,6 +7,15 @@
   wait for an OK for that commit. Approving a plan like "one commit per test" is not
   approval to make those commits.
 
+## Before a merge to main or a push
+Suggest the ones that apply. Don't run them on your own: the user decides, and may skip one
+for a reason (e.g. a handoff stays for now).
+- A fresh-context review of the whole branch, when it has real code changes.
+- `npm run test:e2e`, before a local merge. The pre-push hook already runs it on a push.
+- If the branch's handoffs are done: move any decision a later session could reverse to where
+  it will be in context when it matters (e.g. a code comment, a doc, a rule, a skill, CLAUDE.md).
+  Check it isn't already there first. Then the user can delete them.
+
 ## Branches
 - Do implementation work on a dedicated branch, never on `main`.
 - Create the branch before executing an approved plan.
