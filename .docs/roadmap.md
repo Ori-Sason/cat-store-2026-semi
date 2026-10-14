@@ -159,9 +159,10 @@ shows buttons that fail with 403. After 3, the UI matches the backend. 4 proves 
    - Dev proxy first: Socket.io connects on `/socket.io/`, not `/api`. So add a
      `'/socket.io'` entry with `ws: true` to the Vite proxy. `ws: true` on the `/api`
      entry wouldn't catch it.
-   - Chat log with a username before each message.
+   - Chat log with the author's full name before each message (`username` isn't public).
    - A "X is typing…" indicator.
-   - Chat history saved on the cat document.
+   - Chat history saved in its own `chatMsgs` collection, not on the cat document, so cat
+     reads never carry the chat.
 - [ ] 2. When any user adds, edits or deletes a cat or a review, notify all connected users.
 
 No image upload.

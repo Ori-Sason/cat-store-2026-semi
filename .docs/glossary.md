@@ -105,6 +105,12 @@ The ones that don't follow the pattern:
 - `als`: the per-request `AsyncLocalStorage` context (`alsService`, `AlsStore`). Short form only.
   Avoid: `context`, `ctx`, `requestContext`.
 
+## UI
+- **user msg** (`UserMsg`, `useUserMsgStore`, the `UserMessage` component): a short success or
+  error message that pops up and closes by itself after a few seconds. A navigation msg
+  (`navigationMsg`) is one queued to show once the next navigation finishes.
+  Avoid: `toast`, `snackbar`, `alert`, `notification`.
+
 ## Update Triggers
 - Add a term when a new entity, type shape or shared concept appears, before it spreads.
 - A new suffixed type (e.g. `UserWithRefs`) → add it to the "Exists today" column.
