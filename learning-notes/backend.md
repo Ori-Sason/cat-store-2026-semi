@@ -69,3 +69,16 @@
     ```
     Bonus: one `throw` instead of two. TS still narrows `user` to non-null after it.
   * **Honest caveat.** Signup returns `USERNAME_TAKEN`, so anyone can already check if a username exists there. The dummy hash closes the login leak only. It's defense in depth, not a full fix.
+* `clientMsgId`: idempotency for chat writes (Part 6 chat, planned)
+  * **The problem.** A chat message goes over a socket event with an ack. If the server saved it but the ack got lost (timeout, a dropped connection), the client retries, and the retry saves it a second time:
+    ```
+    client ──msg──▶ server: insert ✓ ──ack──✗ (lost)
+    client: timeout → retry ──msg──▶ server: insert ✓   ← duplicate
+    ```
+  * **The fix.** The client generates a UUID per message (`clientMsgId`) and sends the same one on every retry. A unique index `{ userId, clientMsgId }` turns the second insert into a duplicate-key error, and the server answers with the already-saved message instead.
+    * Scoped per user, so one user can't block another user's id.
+  * **It does two jobs:**
+    1. **Dedupe retries.** Chat retries on purpose: timeout → retry, and Socket.io resends its buffered emits after a reconnect.
+    2. **Match pending → saved.** The optimistic message shows before the server gives it an `_id`, so it needs its own key. When the ack or the broadcast arrives, `clientMsgId` says which pending message it replaces.
+  * **Why not on the REST forms (cats, reviews).** A form waits for the response with its button disabled, and nothing retries it by itself. A lost response is rare and visible: the user sees a duplicate review and deletes it. There's also no optimistic item that needs a key before the `_id`.
+  * **The REST version of this** is an `Idempotency-Key` header (Stripe uses it): the client sends a unique key per operation, and the server stores the first response under that key and replays it on a retry. Worth it where a duplicate costs money (payments), not for cat forms.
