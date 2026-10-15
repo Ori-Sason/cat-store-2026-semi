@@ -60,6 +60,18 @@ How to write tests. When to write them lives in `.claude/rules/testing.md`.
   DB per worker, which needs the `catStoreTest` Mongo user widened.
 - Tooling is installed and configured. Don't reinstall or reconfigure it without a plan that
   calls for it.
+- Backend socket tests: `startSocketServer()` (`backend/test/socket-server.helper.ts`) in
+  `beforeAll`, its `close()` in `afterAll`. It's a real http server on a random port, with io
+  attached through the same `socketService.setup` as `server.ts`.
+  - Connect with its `connectClient(cookie?, options?)`, not `io()` directly. The cookie goes
+    in `extraHeaders` (`loginToken=${authService.createLoginToken(...)}`), each call is a new
+    connection (`forceNew`), and auto-reconnect is off.
+  - `close()` disconnects every client it made, then `socketService.close()`. A client left
+    open keeps Vitest from exiting, and a holder left set skips the emit no-op in later tests.
+  - Read the server side of a socket with `socketService.getIo().fetchSockets()`, matched by
+    the client's `id`.
+  - A file that also writes to the DB calls `setupTestDb()` too. Files that only check the
+    handshake don't.
 - E2E: Playwright starts its own backend (:8001, `catsTest`, re-seeded each run) and Vite
   (:5174), so `npm run dev` can stay up. Specs start from the seed data in
   `backend/scripts/data/cats.json`. Seed labels and owners are random, so don't assert on them:

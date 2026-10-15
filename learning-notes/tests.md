@@ -1,3 +1,18 @@
+* **Supertest, Vitest and Playwright**
+  * **Supertest + Vitest for unit and integration tests.**
+    * Supertest is built for testing **Node.js HTTP servers (like Express or Fastify) in-process**. Instead of deploying your backend and running it on a fixed port, you pass your application instance directly (`request(app)`).
+    * Under the hood, Supertest binds `app` to a random free port, sends a real HTTP request over localhost, and closes it after. All inside the test's own process, so integration tests are almost as fast as unit tests.
+    * Vitest is a general-purpose test runner. It provides the environment to run code, assertions (`expect`) and mocks (`vi.mock`), but Vitest itself doesn't know how to fire HTTP requests at an Express app.
+    * Together: Supertest is the HTTP client, and Vitest is the test runner executing the file.
+  * **Why Playwright doesn't need Supertest.** Playwright is a browser automation and end-to-end (E2E) testing framework.
+    * **Built-in API testing:** Playwright has its own request API (`request.get()`, `request.post()`), so it needs no external library like Supertest or axios for network calls.
+    * **A live server:** Playwright tests act like a real user or a separate system. They hit a running server, started by the `webServer` property in `playwright.config.ts` (here: its own backend on `:8001` and Vite on `:5174`).
+    * Supertest can also hit a URL (`request('http://localhost:8000')`), but its point is the in-process `request(app)`, with no server to start.
+  * **Why sockets need a test server of their own.** - [socket-server.helper.ts](/backend/test/socket-server.helper.ts)
+    * Supertest only does HTTP request → response. It has no Socket.io client, and the temporary server it opens per request has no `io` attached. A socket needs a real listening http server with `io` on it, and a real client that connects and stays connected.
+    * Importing `server.ts` wouldn't help: it connects Mongo, listens on a fixed port and registers the signal handlers.
+    * So the helper builds its own http server from `app`, attaches `io` through the same `socketService.setup`, and listens on a random port.
+  * **Notice that the helper creates clients, while `socketService.setup` doesn't.** The helper's clients are `socket.io-client` stand-ins for browser tabs (it's just for testing). The real server never creates clients. It only gets sockets when clients connect, and `io` tracks those itself. The real client is the frontend's `socketService` singleton.
 * Mocking axios in the http service tests — [http.service.test.ts](/frontend/src/services/http.service.test.ts)
   * The service calls an axios **instance**, not `axios.get` / `axios.put`. Every method goes through `ajax()`, and that calls the instance as a function:
     ```ts

@@ -82,3 +82,22 @@
     2. **Match pending → saved.** The optimistic message shows before the server gives it an `_id`, so it needs its own key. When the ack or the broadcast arrives, `clientMsgId` says which pending message it replaces.
   * **Why not on the REST forms (cats, reviews).** A form waits for the response with its button disabled, and nothing retries it by itself. A lost response is rare and visible: the user sees a duplicate review and deletes it. There's also no optimistic item that needs a key before the `_id`.
   * **The REST version of this** is an `Idempotency-Key` header (Stripe uses it): the client sends a unique key per operation, and the server stores the first response under that key and replays it on a retry. Worth it where a duplicate costs money (payments), not for cat forms.
+* Socket.io transports: polling first, then WebSocket — [socket.service.ts](/backend/services/socket.service.ts)
+  * **A WebSocket starts as HTTP.** The client sends a `GET` with `Upgrade: websocket`, the server answers `101 Switching Protocols`, and from then on both sides send frames over that one TCP connection.
+  * **Why not open a WebSocket right away.**
+    * A failed WebSocket attempt is often not a quick "no". Some proxies, antivirus tools and middleboxes accept the `101` and then drop the frames, or just hang. The client waits for a timeout before it falls back: seconds of a dead connection.
+    * History: when Socket.io was designed, many browsers and networks had no WebSocket at all.
+  * **The fix: engine.io (the layer under Socket.io) starts on plain HTTP long-polling.** The first request gets a session id (`sid`), and every later request carries it.
+    * **Server → client:** the client sends a `GET`, and the server holds it open until it has something to send, then answers. The client sends the next `GET` right away. So there's always a request waiting, and the server can "push" at any moment.
+    * **Client → server:** each message goes as its own `POST`, with the same `sid`.
+    * Plain HTTP almost always works, so the app is live at once. The upgrade is tried in the background. If it fails, the client stays on polling and nobody notices.
+  * **The default flow:**
+    ```
+    1. GET  ?transport=polling                      → handshake, the server assigns a sid
+    2. GET / POST ?transport=polling&sid=X          → the app is already live
+    3. GET  ?transport=websocket&sid=X  (Upgrade)   → 101, tried in the background
+    4. a probe ping/pong over the WebSocket, then polling stops and everything goes over frames
+    ```
+    With `transports: ['websocket']` there's no polling: the upgrade request is the first contact (no `sid` yet), and the handshake happens on it.
+  * **Why it mattered for the handshake cookie.** The handshake can arrive on a polling `GET` or on a WebSocket upgrade, depending on the transport. `io.engine.use(cookieParser())` runs on every engine.io HTTP request, the upgrade included, so `socket.request.cookies` is there either way.
+  * **Bottom line:** a few extra round trips at connect time, in exchange for "always connects fast, even on hostile networks". `transports: ['websocket']` skips them, at the cost of no fallback.
