@@ -12,8 +12,11 @@
 // `systemMessage` reaches the user only, not Claude's context - the point is
 // oversight, not steering.
 //
-// Limit: writes through Bash or PowerShell (heredoc, `sed`, `rm`) don't fire
-// Edit/Write hooks, so they skip this notice - same gap as the oxfmt hook.
+// Bash writes (heredoc, `sed`, `rm`) don't fire Edit/Write hooks, so
+// block-memory-bash.mjs denies any Bash command that names the memory path.
+// That keeps every memory write on Edit/Write, where this notice sees it.
+// Limit: PowerShell isn't guarded, and a path built at runtime still slips
+// past the Bash guard (see its header).
 
 import fs from 'node:fs'
 import os from 'node:os'
