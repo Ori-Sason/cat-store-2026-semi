@@ -72,6 +72,19 @@ How to write tests. When to write them lives in `.claude/rules/testing.md`.
     the client's `id`.
   - A file that also writes to the DB calls `setupTestDb()` too. Files that only check the
     handshake don't.
+  - To prove a client got **no** broadcast, do a round trip on that client's own connection
+    (an `emitWithAck`) and then assert. The server writes a broadcast to a socket before any
+    later ack on it, so everything already sent has arrived. Not a sleep.
+  - An expired token: set `tokenExp` on the server-side socket (through `fetchSockets()`). Don't
+    fake `Date` or timers: the client's heartbeat sees the jump as a dead connection and the
+    test hangs.
+  - To hold an async step mid-flight (e.g. a slow cat read during `chat:join`), `vi.spyOn` the
+    service with `mockReturnValueOnce` of a `Promise.withResolvers` promise, and resolve it when
+    the test is ready.
+- Socket chain steps (`middlewares/socket/`) are tested without a server: bind the step with
+  the real `socketService.on()` on `createFakeSocket()` (`backend/test/fake-socket.helper.ts`),
+  emit with a `vi.fn()` ack, and assert on the ack. A stand-in step before it can set what an
+  earlier step would (e.g. `verifiedUser` in the ALS store).
 - E2E: Playwright starts its own backend (:8001, `catsTest`, re-seeded each run) and Vite
   (:5174), so `npm run dev` can stay up. Specs start from the seed data in
   `backend/scripts/data/cats.json`. Seed labels and owners are random, so don't assert on them:
