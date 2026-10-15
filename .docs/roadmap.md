@@ -156,13 +156,22 @@ shows buttons that fail with 403. After 3, the UI matches the backend. 4 proves 
 ## Part 6: Realtime (Socket.io)
 
 - [ ] 1. Socket.io chat room on `cat-details`, one room per `cat._id`:
-   - Dev proxy first: Socket.io connects on `/socket.io/`, not `/api`. So add a
-     `'/socket.io'` entry with `ws: true` to the Vite proxy. `ws: true` on the `/api`
-     entry wouldn't catch it.
    - Chat log with the author's full name before each message (`username` isn't public).
    - A "X is typing…" indicator.
    - Chat history saved in its own `chatMsgs` collection, not on the cat document, so cat
      reads never carry the chat.
+   - The author edits their own messages. The author or an admin deletes them.
+
+   Built in three stages, one branch each. Each stage ticks its own sub-item in its last
+   feature commit.
+   - [ ] 1a. Backend: Socket.io on the http server, the history route, and the socket events
+     for join / leave, send, edit, delete and typing.
+   - [ ] 1b. Seed: chat msgs for the seed cats, covering paging and every message state.
+   - [ ] 1c. Frontend: the chat panel on `cat-details`, with send, edit, delete, typing and
+     E2E.
+     - Dev proxy first: Socket.io connects on `/socket.io/`, not `/api`. So add a
+       `'/socket.io'` entry with `ws: true` to the Vite proxy. `ws: true` on the `/api`
+       entry wouldn't catch it.
 - [ ] 2. When any user adds, edits or deletes a cat or a review, notify all connected users.
 
 No image upload.
