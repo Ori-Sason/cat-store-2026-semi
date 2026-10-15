@@ -4,15 +4,18 @@ import {
   CHAT_MSG_ADD,
   CHAT_MSG_REMOVE,
   CHAT_MSG_UPDATE,
+  CHAT_TYPING,
   chatMsgRemoveSchema,
   chatMsgSchema,
   chatMsgUpdateSchema,
   chatPermissionService,
   chatRoomSchema,
+  chatTypingSchema,
 } from '@cat-store/shared'
 import { requireChatMsgPermission } from '../../middlewares/socket/require-chat-msg-permission.socket-middleware.ts'
 import { requireRoomMember } from '../../middlewares/socket/require-room-member.socket-middleware.ts'
 import { requireSocketUser } from '../../middlewares/socket/require-socket-user.socket-middleware.ts'
+import { requireTokenUser } from '../../middlewares/socket/require-token-user.socket-middleware.ts'
 import { validatePayload } from '../../middlewares/socket/validate-payload.socket-middleware.ts'
 import type { AppSocket } from '../../models/socket.ts'
 import { socketService } from '../../services/socket.service.ts'
@@ -49,5 +52,16 @@ export function registerChatSocketRoutes(socket: AppSocket): void {
     requireRoomMember,
     requireChatMsgPermission(chatPermissionService.canRemoveChatMsg),
     chatSocketController.removeMsg,
+  )
+  // Token-only auth (no DB read): typing is frequent.
+  // No ack: nothing is saved, so the client has nothing to wait for. A failed check (a guest, or
+  // not in the room) is only logged
+  socketService.on(
+    socket,
+    CHAT_TYPING,
+    validatePayload(chatTypingSchema),
+    requireTokenUser,
+    requireRoomMember,
+    chatSocketController.relayTyping,
   )
 }

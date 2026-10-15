@@ -10,7 +10,9 @@ import {
   CHAT_MSG_REMOVED,
   CHAT_MSG_UPDATE,
   CHAT_MSG_UPDATED,
+  CHAT_TYPING,
   type ChatMsg,
+  type ChatTyping,
 } from '@cat-store/shared'
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { CAT_COLLECTION, type CatDoc } from '../../models/cat.ts'
@@ -548,5 +550,59 @@ describe('chat:msg-remove', () => {
     const ack = await guest.emitWithAck(CHAT_MSG_REMOVE, _payload(msg))
 
     expect(ack).toEqual({ error: expect.objectContaining({ code: 'UNAUTHORIZED' }) })
+  })
+})
+
+describe('chat:typing', () => {
+  // Every chat:typing the client gets from here on
+  function _collectTyping(client: ClientSocket): ChatTyping[] {
+    const typings: ChatTyping[] = []
+    client.on(CHAT_TYPING, (typing: ChatTyping) => typings.push(typing))
+    return typings
+  }
+
+  it('relays to the rest of the room with the typer as a UserRef, the sender excluded', async () => {
+    const typer = await _joinedClient(MAYA)
+    const other = await _joinedClient(NOAM)
+    const typerTypings = _collectTyping(typer)
+    const otherTypings = _collectTyping(other)
+
+    typer.emit(CHAT_TYPING, { catId, isTyping: true })
+    await _flush(typer)
+    await _flush(other)
+
+    expect(otherTypings).toEqual([
+      {
+        catId,
+        isTyping: true,
+        user: { _id: MAYA._id.toHexString(), fullname: MAYA.fullname, isAdmin: false },
+      },
+    ])
+    expect(typerTypings).toEqual([])
+  })
+
+  it("drops a guest's typing", async () => {
+    const guest = await server.connectClient()
+    await guest.emitWithAck(CHAT_JOIN, { catId })
+    const other = await _joinedClient(NOAM)
+    const otherTypings = _collectTyping(other)
+
+    guest.emit(CHAT_TYPING, { catId, isTyping: true })
+    await _flush(guest)
+    await _flush(other)
+
+    expect(otherTypings).toEqual([])
+  })
+
+  it('drops the typing of a user who never joined the room', async () => {
+    const typer = await server.connectClient(_loginCookie(MAYA))
+    const other = await _joinedClient(NOAM)
+    const otherTypings = _collectTyping(other)
+
+    typer.emit(CHAT_TYPING, { catId, isTyping: true })
+    await _flush(typer)
+    await _flush(other)
+
+    expect(otherTypings).toEqual([])
   })
 })

@@ -164,7 +164,7 @@ shows buttons that fail with 403. After 3, the UI matches the backend. 4 proves 
 
    Built in three stages, one branch each. Each stage ticks its own sub-item in its last
    feature commit.
-   - [ ] 1a. Backend: Socket.io on the http server, the history route, and the socket events
+   - [x] 1a. Backend: Socket.io on the http server, the history route, and the socket events
      for join / leave, send, edit, delete and typing.
    - [ ] 1b. Seed: chat msgs for the seed cats, covering paging and every message state.
    - [ ] 1c. Frontend: the chat panel on `cat-details`, with send, edit, delete, typing and

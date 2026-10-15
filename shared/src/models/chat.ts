@@ -78,6 +78,13 @@ export const chatTypingSchema = z.object({
 
 export type ChatTypingInput = z.infer<typeof chatTypingSchema>
 
+// chat:typing, server → room: the input plus who's typing. user is built from the token user
+// (no DB read: typing is frequent, and a stale name for a few seconds is harmless), never with
+// username
+export interface ChatTyping extends ChatTypingInput {
+  user: UserRef
+}
+
 // GET /api/cats/:id/chat-msgs. Neither → the newest page, beforeId → older, afterId → newer
 // (the reconnect gap fill). Both make no sense together. A repeated query param arrives as an
 // array and fails the string check

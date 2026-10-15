@@ -2,11 +2,14 @@ import {
   CHAT_MSG_ADDED,
   CHAT_MSG_REMOVED,
   CHAT_MSG_UPDATED,
+  CHAT_TYPING,
   type ChatMsg,
   type ChatMsgInput,
   type ChatMsgRemoveInput,
   type ChatMsgUpdateInput,
   type ChatRoomInput,
+  type ChatTyping,
+  type ChatTypingInput,
 } from '@cat-store/shared'
 import type { SocketEvent } from '../../models/socket.ts'
 import { alsService } from '../../services/als.service.ts'
@@ -80,10 +83,23 @@ async function removeMsg({ payload }: SocketEvent<ChatMsgRemoveInput>): Promise<
   return { msg }
 }
 
+// chat:typing. Relayed to the room as is, plus the typer's UserRef.
+// socket.to(room), unlike the msg events: the sender is excluded, it knows it's typing. That's
+// the sending socket, not the user, so the same user's other tab on this cat shows them typing.
+// The server keeps no typing state and sends no false of its own: the client sends it, and the
+// receivers' timeout covers a lost connection or a closed tab
+function relayTyping({ socket, payload }: SocketEvent<ChatTypingInput>): void {
+  // requireTokenUser already rejected a guest. Picked field by field, so username never goes out
+  const { _id, fullname, isAdmin } = socket.data.tokenUser!
+  const typing: ChatTyping = { ...payload, user: { _id, fullname, isAdmin } }
+  socket.to(socketService.getCatRoomName(payload.catId)).emit(CHAT_TYPING, typing)
+}
+
 export const chatSocketController = {
   join,
   leave,
   addMsg,
   updateMsg,
   removeMsg,
+  relayTyping,
 }

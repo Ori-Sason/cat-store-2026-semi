@@ -68,6 +68,8 @@ The ones that don't follow the pattern:
   un-joined wire type, so it takes the plain name, not `ChatMsgWithRefs`.
 - `ChatMsgUpdateInput`, `ChatMsgRemoveInput`, `ChatRoomInput`, `ChatTypingInput`: the socket
   payloads. Each event gets its own schema, since a socket event has no URL to carry the ids.
+- `ChatTyping`: the `chat:typing` the server relays to the room, `ChatTypingInput` plus the
+  typer's `user` (`UserRef`). Server → client only, so it has no schema.
 - `ChatHistoryQuery`: the `beforeId` / `afterId` cursor of `GET /api/cats/:id/chat-msgs`.
   `ChatMsgOlderPage` / `ChatMsgNewerPage`: what it returns, by direction.
   Avoid: `ChatFilter` (it doesn't filter), `offset`, `cursor` as a field name.
