@@ -1,5 +1,7 @@
 import { ObjectId, type Document, type Sort } from 'mongodb'
 import { sharedUtilService, type SortByDirection } from '@cat-store/shared'
+import { z } from 'zod'
+import { HttpError } from '../models/http-error.ts'
 
 // null for a malformed id, so the caller answers 404 instead of new ObjectId() throwing a 500
 function toObjectId(id: string): ObjectId | null {
@@ -43,9 +45,23 @@ function buildLookup(
   }
 }
 
+// Parses with a Zod schema, or throws a 400 VALIDATION_FAILED with fieldErrors. Shared by the HTTP
+// validate middlewares and validatePayload for socket events. `what` names the input in the
+// message: 'request body', 'payload'
+function parseOrThrow(schema: z.ZodType, value: unknown, what: string): unknown {
+  const result = schema.safeParse(value)
+  if (result.success) return result.data
+
+  // formErrors are the object-level ones (a .refine across fields), which have no field to sit under
+  const { formErrors, fieldErrors } = z.flattenError(result.error)
+  const message = [`Invalid ${what}`, ...formErrors].join(': ')
+  throw new HttpError(400, 'VALIDATION_FAILED', message, fieldErrors)
+}
+
 export const utilService = {
   toObjectId,
   escapeRegex,
   buildSort,
   buildLookup,
+  parseOrThrow,
 }

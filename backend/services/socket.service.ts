@@ -39,6 +39,12 @@ function getIo(): AppServer {
   return io
 }
 
+// One room per cat. catId must already be lowercased (the chat schemas do it, or toHexString()),
+// since room names compare as strings: cat:ABC… and cat:abc… would be two rooms
+function getCatRoomName(catId: string): string {
+  return `cat:${catId}`
+}
+
 // Site-wide emit for REST controllers. Does nothing until setup runs, so Supertest files need
 // no change when their controllers start emitting. In prod server.ts always sets io
 function emit(event: string, data: unknown): void {
@@ -136,6 +142,7 @@ export const socketService = {
   setup,
   getIo,
   on,
+  getCatRoomName,
   emit,
   close,
 }
