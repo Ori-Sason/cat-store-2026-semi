@@ -1,12 +1,10 @@
 import { MongoServerError, ObjectId } from 'mongodb'
 import { PUBLIC_USER_FIELDS } from '@cat-store/shared'
 import { HttpError } from '../../models/http-error.ts'
+import { DUPLICATE_KEY_ERROR_CODE } from '../../models/mongodb.ts'
 import { USER_COLLECTION, type PublicUserDoc, type UserDoc } from '../../models/user.ts'
 import { mongoService } from '../../services/mongodb.service.ts'
 import { utilService } from '../../services/util.service.ts'
-
-// Mongo's code for a unique index violation
-const _DUPLICATE_KEY_ERROR_CODE = 11000
 
 // null for a malformed id too. Unlike catService.getById this doesn't throw: getMe treats a
 // missing user as a guest.
@@ -41,7 +39,7 @@ async function add(input: Omit<UserDoc, '_id' | 'createdAt' | 'updatedAt'>): Pro
     // No findOne first: the unique index decides, so two signups racing for one name can't both win
     await collection.insertOne(user)
   } catch (err) {
-    if (err instanceof MongoServerError && err.code === _DUPLICATE_KEY_ERROR_CODE) {
+    if (err instanceof MongoServerError && err.code === DUPLICATE_KEY_ERROR_CODE) {
       throw new HttpError(409, 'USERNAME_TAKEN', `Username "${input.username}" is taken`) // 409 Conflict
     }
     throw err

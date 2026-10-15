@@ -8,13 +8,13 @@ import {
   type ChatMsgOlderPage,
 } from '@cat-store/shared'
 import { CHAT_MSG_COLLECTION, type ChatMsgDoc, type ChatMsgJoinedDoc } from '../../models/chat.ts'
+import { DUPLICATE_KEY_ERROR_CODE } from '../../models/mongodb.ts'
 import { USER_COLLECTION } from '../../models/user.ts'
 import { mongoService } from '../../services/mongodb.service.ts'
 import { utilService } from '../../services/util.service.ts'
 import { catService } from '../cat/cat.service.ts'
 
 const _PAGE_SIZE = 50
-const _DUPLICATE_KEY_ERROR_CODE = 11000
 
 // One page of a cat's chat, oldest first in both directions:
 // - neither cursor → the newest page, beforeId → the page before it ("load older"),
@@ -71,7 +71,7 @@ async function add(
     await collection.insertOne(doc)
     return { msg: await _getJoinedById(doc._id), isNew: true }
   } catch (err) {
-    if (!(err instanceof MongoServerError && err.code === _DUPLICATE_KEY_ERROR_CODE)) throw err
+    if (!(err instanceof MongoServerError && err.code === DUPLICATE_KEY_ERROR_CODE)) throw err
     const saved = await collection.findOne({ userId: doc.userId, clientMsgId })
     if (!saved) throw err // the unique index is the only one that can throw 11000 here
     return { msg: await _getJoinedById(saved._id), isNew: false }
