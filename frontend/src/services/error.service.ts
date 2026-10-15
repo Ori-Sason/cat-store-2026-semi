@@ -10,6 +10,7 @@ const ERROR_MSG_MAP: Record<ClientErrorCode, string> = {
   CAT_NOT_FOUND: "Cat doesn't exist (anymore).",
   REVIEW_NOT_FOUND: "Review doesn't exist (anymore).",
   USER_NOT_FOUND: "User doesn't exist (anymore).",
+  CHAT_MSG_NOT_FOUND: "Message doesn't exist (anymore).",
 
   INVALID_CREDENTIALS: 'Wrong username or password.', // deliberately vague - don't reveal which one was wrong
   USERNAME_TAKEN: 'This username is already taken.',

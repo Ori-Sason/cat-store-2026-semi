@@ -1,6 +1,7 @@
 export * from './models/cat.ts'
 export * from './models/user.ts'
 export * from './models/review.ts'
+export * from './models/chat.ts'
 export * from './models/util.ts'
 export * from './models/error.ts'
 export * from './services/cat-filter.service.ts'
