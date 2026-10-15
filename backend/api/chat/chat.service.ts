@@ -1,8 +1,9 @@
-import type { Document, Filter } from 'mongodb'
+import { MongoServerError, ObjectId, type Document, type Filter } from 'mongodb'
 import {
   USER_REF_FIELDS,
   type ChatHistoryQuery,
   type ChatMsg,
+  type ChatMsgInput,
   type ChatMsgNewerPage,
   type ChatMsgOlderPage,
 } from '@cat-store/shared'
@@ -13,6 +14,7 @@ import { utilService } from '../../services/util.service.ts'
 import { catService } from '../cat/cat.service.ts'
 
 const _PAGE_SIZE = 50
+const _DUPLICATE_KEY_ERROR_CODE = 11000
 
 // One page of a cat's chat, oldest first in both directions:
 // - neither cursor → the newest page, beforeId → the page before it ("load older"),
@@ -42,6 +44,47 @@ async function query(
   // Fetched newest first (so the limit keeps the newest), sent oldest first
   const msgs = docs.slice(0, _PAGE_SIZE).reverse().map(_toWireMsg)
   return { msgs, nextBeforeId: isMore ? msgs[0]!._id : null }
+}
+
+// Saves a msg and returns it joined, as the wire ChatMsg. isNew is false for a retry of a msg
+// that was already saved (same userId + clientMsgId): the unique index rejects the second
+// insert, and the saved msg comes back instead of an error. The controller broadcasts only a new one.
+// The cat isn't read: chat:join is the gate, and requireRoomMember already checked membership
+async function add(
+  { catId, clientMsgId, text }: ChatMsgInput,
+  userId: string,
+): Promise<{ msg: ChatMsg; isNew: boolean }> {
+  const collection = await mongoService.getCollection<ChatMsgDoc>(CHAT_MSG_COLLECTION)
+  const now = Date.now()
+  const doc: ChatMsgDoc = {
+    _id: new ObjectId(),
+    catId: new ObjectId(catId),
+    userId: new ObjectId(userId),
+    clientMsgId,
+    text,
+    isDeleted: false,
+    createdAt: now,
+    updatedAt: now,
+  }
+  try {
+    // No findOne first: the unique index decides, so two retries racing can't both insert
+    await collection.insertOne(doc)
+    return { msg: await _getJoinedById(doc._id), isNew: true }
+  } catch (err) {
+    if (!(err instanceof MongoServerError && err.code === _DUPLICATE_KEY_ERROR_CODE)) throw err
+    const saved = await collection.findOne({ userId: doc.userId, clientMsgId })
+    if (!saved) throw err // the unique index is the only one that can throw 11000 here
+    return { msg: await _getJoinedById(saved._id), isNew: false }
+  }
+}
+
+// The doc has only userId. For the user details we need to aggregate
+async function _getJoinedById(_id: ObjectId): Promise<ChatMsg> {
+  const collection = await mongoService.getCollection<ChatMsgDoc>(CHAT_MSG_COLLECTION)
+  const [doc] = await collection
+    .aggregate<ChatMsgJoinedDoc>([{ $match: { _id } }, ..._userStages()])
+    .toArray()
+  return _toWireMsg(doc!)
 }
 
 // $match + $sort + $limit come first, so Mongo reads them off the index and joins only the page.
@@ -97,4 +140,5 @@ function _toWireMsg({
 
 export const chatService = {
   query,
+  add,
 }
