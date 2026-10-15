@@ -59,7 +59,7 @@ describe('socketService handshake', () => {
     })
   })
 
-  it('sets the token user and exp from the loginToken cookie, with no DB read', async () => {
+  it('sets the token user and exp from the loginToken cookie', async () => {
     const loginToken = authService.createLoginToken(LOGGED_IN_USER, false)
     const { exp } = authService.verifyLoginTokenWithExp(loginToken)!
     const client = await server.connectClient(`loginToken=${loginToken}`)

@@ -30,7 +30,7 @@ function _objectId(invalidError: string, requiredError = invalidError) {
 const _catId = _objectId('Invalid cat', 'Cat is required')
 const _msgId = _objectId('Invalid message', 'Message is required')
 
-const _msgTxt = z
+const _msgText = z
   .string({ error: 'Message is required' })
   .trim()
   .min(1, { error: 'Message is required' })
@@ -46,7 +46,7 @@ const _msgTxt = z
 export const chatMsgSchema = z.object({
   catId: _catId,
   clientMsgId: z.uuid({ error: 'Invalid message id' }),
-  text: _msgTxt,
+  text: _msgText,
 })
 
 export type ChatMsgInput = z.infer<typeof chatMsgSchema>
@@ -55,7 +55,7 @@ export type ChatMsgInput = z.infer<typeof chatMsgSchema>
 export const chatMsgUpdateSchema = z.object({
   catId: _catId,
   msgId: _msgId,
-  text: _msgTxt,
+  text: _msgText,
 })
 
 export type ChatMsgUpdateInput = z.infer<typeof chatMsgUpdateSchema>

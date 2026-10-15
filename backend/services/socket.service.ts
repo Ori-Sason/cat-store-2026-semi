@@ -61,7 +61,10 @@ function emit(event: string, data: unknown): void {
 // So it replaces http.close(), not sits next to it: a second http.close() gets
 // ERR_SERVER_NOT_RUNNING, and http.close() alone would wait on open WebSockets forever.
 // It sends no DISCONNECT packet, so clients see "transport close" and keep auto-reconnecting.
-// Resets the holder too, so a later emit in the same test file takes the no-op path
+// Resets the holder too, so a later emit in the same test file takes the no-op path.
+// The holder is cleared before the await, so a chat write still in flight during shutdown saves
+// to the DB, then fails on getIo() and logs a 500 with no broadcast. The msg isn't lost: clients
+// reconnect to the new instance and the gap fill brings it
 async function close(): Promise<void> {
   if (!io) return
   const oldIo = io
