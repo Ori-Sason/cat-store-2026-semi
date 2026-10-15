@@ -10,6 +10,7 @@ import { errorHandler } from './middlewares/error.middleware.ts'
 
 import { authRoutes } from './api/auth/auth.routes.ts'
 import { catRoutes } from './api/cat/cat.routes.ts'
+import { chatRoutes } from './api/chat/chat.routes.ts'
 import { reviewRoutes } from './api/review/review.routes.ts'
 import { userRoutes } from './api/user/user.routes.ts'
 
@@ -31,6 +32,7 @@ app.use(attachTokenUser)
 
 /* ROUTES */
 app.use('/api/auth', authRoutes)
+app.use('/api/cats/:id/chat-msgs', chatRoutes)
 app.use('/api/cats', catRoutes)
 app.use('/api/reviews', reviewRoutes)
 app.use('/api/users', userRoutes)

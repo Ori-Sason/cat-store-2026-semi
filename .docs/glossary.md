@@ -52,8 +52,8 @@ don't assume it.
 | `*Input` | what the client sends, inferred from `<entity>Schema` | `shared/` | `CatInput`, `UserInput`, `ReviewInput`, `ChatMsgInput` |
 | `*WithRefs` | the wire type with refs joined in place of their ids (`ownerId` → `owner`) | `shared/` | `CatWithRefs`, `ReviewWithRefs` |
 | `*Ref` | the slice of an entity a join carries, from `<ENTITY>_REF_FIELDS` | `shared/` | `CatRef`, `UserRef` |
-| `*Doc` | the DB shape of any of the above, with `ObjectId` ids | `backend/models/` | `CatDoc`, `UserDoc` (with the hash), `ReviewDoc`, `CatRefDoc`, `UserRefDoc`, `PublicUserDoc` |
-| `*JoinedDoc` | the aggregation output behind a `*WithRefs` | `backend/models/` | `CatJoinedDoc`, `ReviewJoinedDoc` |
+| `*Doc` | the DB shape of any of the above, with `ObjectId` ids | `backend/models/` | `CatDoc`, `UserDoc` (with the hash), `ReviewDoc`, `ChatMsgDoc`, `CatRefDoc`, `UserRefDoc`, `PublicUserDoc` |
+| `*JoinedDoc` | the aggregation output behind a `*WithRefs` | `backend/models/` | `CatJoinedDoc`, `ReviewJoinedDoc`, `ChatMsgJoinedDoc` |
 
 Avoid for all of them: `*Dto`, `New*`, `*Payload`, `*ToSave`, `Populated*`, `*Summary`, and
 page names (`CatDetails`, `Profile`, `ReviewDetails`) as type names. Also avoid:

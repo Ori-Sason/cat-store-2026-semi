@@ -3,6 +3,7 @@ import { MongoClient } from 'mongodb'
 import { config } from '../config/index.ts'
 import { REVIEW_COLLECTION } from '../models/review.ts'
 import { CAT_COLLECTION } from '../models/cat.ts'
+import { CHAT_MSG_COLLECTION } from '../models/chat.ts'
 import { USER_COLLECTION } from '../models/user.ts'
 
 interface IndexDef {
@@ -22,6 +23,16 @@ const INDEXES: IndexDef[] = [
   // an _id tiebreak that isn't in the key, so the newest-first order still sorts in memory.
   // Fine at one user's cat count
   { collection: CAT_COLLECTION, key: { ownerId: 1, createdAt: -1 } },
+  // A cat's chat paged by _id, in both directions. No `unique`: _id already is.
+  // Its catId prefix also serves the cascade deleteMany({ catId })
+  { collection: CHAT_MSG_COLLECTION, key: { catId: 1, _id: -1 } },
+  // The retry dedupe: a second insert with the same clientMsgId hits a duplicate-key error, and
+  // the server answers with the saved msg. Per user, so one user can't block another's id
+  {
+    collection: CHAT_MSG_COLLECTION,
+    key: { userId: 1, clientMsgId: 1 },
+    options: { unique: true },
+  },
 ]
 
 let client: MongoClient | null = null
