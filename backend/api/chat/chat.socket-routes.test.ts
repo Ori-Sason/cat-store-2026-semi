@@ -442,6 +442,28 @@ describe('chat:msg-update', () => {
     expect(ack).toEqual({ error: expect.objectContaining({ code: 'UNAUTHORIZED' }) })
   })
 
+  // The author's own msg, from a socket that never joined: membership, not authorship, decides
+  it('rejects the author from a socket outside the room with FORBIDDEN', async () => {
+    const author = await _joinedClient(MAYA)
+    const msg = await _addMsg(author)
+    const outside = await server.connectClient(_loginCookie(MAYA))
+
+    const ack = await outside.emitWithAck(CHAT_MSG_UPDATE, _payload(msg))
+
+    expect(ack).toEqual({ error: expect.objectContaining({ code: 'FORBIDDEN' }) })
+  })
+
+  it('rejects an author deleted since the handshake with UNAUTHORIZED', async () => {
+    const author = await _joinedClient(MAYA)
+    const msg = await _addMsg(author)
+    const users = await mongoService.getCollection<UserDoc>(USER_COLLECTION)
+    await users.deleteOne({ _id: MAYA._id })
+
+    const ack = await author.emitWithAck(CHAT_MSG_UPDATE, _payload(msg))
+
+    expect(ack).toEqual({ error: expect.objectContaining({ code: 'UNAUTHORIZED' }) })
+  })
+
   it('rejects a bad payload with VALIDATION_FAILED', async () => {
     const author = await _joinedClient(MAYA)
     const msg = await _addMsg(author)
@@ -473,7 +495,6 @@ describe('chat:msg-remove', () => {
     await _flush(author)
     await _flush(other)
 
-    // updatedAt unchanged too: remove never touches it, so "Edited at" stays true
     expect(ack).toEqual({ msg: _tombstone(msg) })
     expect(ack.msg).not.toHaveProperty('text')
     expect(authorRemoved).toEqual([ack.msg])
@@ -496,6 +517,24 @@ describe('chat:msg-remove', () => {
     expect(ack).toEqual({ msg: _tombstone(msg) })
     expect(authorRemoved).toEqual([ack.msg])
     expect(ack.msg.user._id).toBe(MAYA._id.toHexString())
+  })
+
+  // Remove never sets updatedAt, so "Edited at" stays true for a msg edited and then deleted
+  it("keeps an edited msg's updatedAt", async () => {
+    const author = await _joinedClient(MAYA)
+    const msg = await _addMsg(author)
+    await author.emitWithAck(CHAT_MSG_UPDATE, { catId, msgId: msg._id, text: 'Still available?' })
+    // Pinned after the edit, so a remove that set updatedAt to now can't match it by landing in
+    // the same ms
+    const chatMsgs = await mongoService.getCollection<ChatMsgDoc>(CHAT_MSG_COLLECTION)
+    await chatMsgs.updateOne(
+      { _id: new ObjectId(msg._id) },
+      { $set: { createdAt: 1, updatedAt: 2 } },
+    )
+
+    const ack = await author.emitWithAck(CHAT_MSG_REMOVE, _payload(msg))
+
+    expect(ack.msg).toMatchObject({ isDeleted: true, createdAt: 1, updatedAt: 2 })
   })
 
   it("rejects another user's remove with FORBIDDEN, and changes nothing", async () => {
@@ -550,6 +589,39 @@ describe('chat:msg-remove', () => {
     const ack = await guest.emitWithAck(CHAT_MSG_REMOVE, _payload(msg))
 
     expect(ack).toEqual({ error: expect.objectContaining({ code: 'UNAUTHORIZED' }) })
+  })
+
+  it('rejects the author from a socket outside the room with FORBIDDEN', async () => {
+    const author = await _joinedClient(MAYA)
+    const msg = await _addMsg(author)
+    const outside = await server.connectClient(_loginCookie(MAYA))
+
+    const ack = await outside.emitWithAck(CHAT_MSG_REMOVE, _payload(msg))
+
+    expect(ack).toEqual({ error: expect.objectContaining({ code: 'FORBIDDEN' }) })
+  })
+
+  it('rejects an author deleted since the handshake with UNAUTHORIZED', async () => {
+    const author = await _joinedClient(MAYA)
+    const msg = await _addMsg(author)
+    const users = await mongoService.getCollection<UserDoc>(USER_COLLECTION)
+    await users.deleteOne({ _id: MAYA._id })
+
+    const ack = await author.emitWithAck(CHAT_MSG_REMOVE, _payload(msg))
+
+    expect(ack).toEqual({ error: expect.objectContaining({ code: 'UNAUTHORIZED' }) })
+  })
+
+  // The token still says admin, the DB says not: the admin path must trust the DB re-read
+  it('rejects a user demoted since the handshake with FORBIDDEN', async () => {
+    const author = await _joinedClient(MAYA)
+    const msg = await _addMsg(author)
+    const demoted = await server.connectClient(_loginCookie({ ...NOAM, isAdmin: true }))
+    await demoted.emitWithAck(CHAT_JOIN, { catId })
+
+    const ack = await demoted.emitWithAck(CHAT_MSG_REMOVE, _payload(msg))
+
+    expect(ack).toEqual({ error: expect.objectContaining({ code: 'FORBIDDEN' }) })
   })
 })
 
