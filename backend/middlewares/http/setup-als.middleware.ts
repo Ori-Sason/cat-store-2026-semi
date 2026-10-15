@@ -1,6 +1,6 @@
 import type { RequestHandler } from 'express'
 import { randomUUID } from 'node:crypto'
-import { alsService, type AlsStore } from '../services/als.service.ts'
+import { alsService, type AlsStore } from '../../services/als.service.ts'
 
 // Must be the first middleware - everything after it runs inside the request's store.
 // Tags every request with an ID - it's logged with errors and sent back to the client,

@@ -1,7 +1,7 @@
 import { type ErrorRequestHandler } from 'express'
 import type { ApiErrorBody } from '@cat-store/shared'
-import { alsService } from '../services/als.service.ts'
-import { errorService } from '../services/error.service.ts'
+import { alsService } from '../../services/als.service.ts'
+import { errorService } from '../../services/error.service.ts'
 
 // Central error handler - must be registered after all routes.
 // Express recognizes it as an error handler by its 4 arguments (err, req, res, next).

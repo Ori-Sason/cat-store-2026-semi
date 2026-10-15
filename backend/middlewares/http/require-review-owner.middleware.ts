@@ -1,8 +1,8 @@
 import type { RequestHandler } from 'express'
 import { reviewPermissionService } from '@cat-store/shared'
-import { reviewService } from '../api/review/review.service.ts'
-import { HttpError } from '../models/http-error.ts'
-import { alsService } from '../services/als.service.ts'
+import { reviewService } from '../../api/review/review.service.ts'
+import { HttpError } from '../../models/http-error.ts'
+import { alsService } from '../../services/als.service.ts'
 import { requireAuth } from './require-auth.middleware.ts'
 
 // A missing review is a 404 here, before the ownership check, so it never shows up as a 403

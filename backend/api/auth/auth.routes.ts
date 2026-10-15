@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import { loginSchema, signupSchema } from '@cat-store/shared'
-import { validateBody } from '../../middlewares/validate.middleware.ts'
+import { validateBody } from '../../middlewares/http/validate.middleware.ts'
 import { getMe, login, logout, signup } from './auth.controller.ts'
 
 export const authRoutes = Router()

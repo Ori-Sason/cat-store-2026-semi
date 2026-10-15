@@ -1,7 +1,7 @@
 import express from 'express'
 import request from 'supertest'
 import { describe, expect, it } from 'vitest'
-import { alsService } from '../services/als.service.ts'
+import { alsService } from '../../services/als.service.ts'
 import { setupAsyncLocalStorage } from './setup-als.middleware.ts'
 
 // A throwaway app whose route echoes the ALS store back - the test is about the middleware,

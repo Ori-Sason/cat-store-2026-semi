@@ -1,7 +1,7 @@
 import type { RequestHandler } from 'express'
-import { authService } from '../api/auth/auth.service.ts'
-import { LOGIN_TOKEN_COOKIE, LOGIN_TOKEN_COOKIE_OPTIONS } from '../models/auth.ts'
-import { alsService } from '../services/als.service.ts'
+import { authService } from '../../api/auth/auth.service.ts'
+import { LOGIN_TOKEN_COOKIE, LOGIN_TOKEN_COOKIE_OPTIONS } from '../../models/auth.ts'
+import { alsService } from '../../services/als.service.ts'
 
 // Reads the loginToken cookie into the ALS store as the token user. Never blocks: no cookie, or a
 // bad or expired token, just means a guest. Token-only (no DB), so it's for logs and /me's lookup,

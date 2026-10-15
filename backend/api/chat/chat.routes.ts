@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import { chatHistoryQuerySchema } from '@cat-store/shared'
-import { validateQuery } from '../../middlewares/validate.middleware.ts'
+import { validateQuery } from '../../middlewares/http/validate.middleware.ts'
 import { getChatMsgs } from './chat.controller.ts'
 
 // Mounted at /api/cats/:id/chat-msgs. A chat belongs to one cat

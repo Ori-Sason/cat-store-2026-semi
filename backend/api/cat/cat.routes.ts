@@ -1,8 +1,8 @@
 import { Router } from 'express'
 import { catSchema } from '@cat-store/shared'
-import { requireAuth } from '../../middlewares/require-auth.middleware.ts'
-import { requireCatOwner } from '../../middlewares/require-cat-owner.middleware.ts'
-import { validateBody } from '../../middlewares/validate.middleware.ts'
+import { requireAuth } from '../../middlewares/http/require-auth.middleware.ts'
+import { requireCatOwner } from '../../middlewares/http/require-cat-owner.middleware.ts'
+import { validateBody } from '../../middlewares/http/validate.middleware.ts'
 import {
   addCat,
   getCatById,

@@ -21,7 +21,7 @@
     ```
     So both dev and prod are same-origin, and the `cors` package can go.  
     I'd need it back for split hosting, e.g. the frontend on one domain and the API on another.
-* Central error handler — [error.middleware.ts](/backend/middlewares/error.middleware.ts)
+* Central error handler — [error.middleware.ts](/backend/middlewares/http/error.middleware.ts)
   * **Why it's registered last in [server.ts](/backend/server.ts).** Errors only travel *forward*. When something throws, Express skips all normal middleware and jumps to the next 4-arg `(err, req, res, next)` handler *below* that point. Last in the file = downstream of every route. At the top, nothing would reach it.
   ```
   express.json()
@@ -31,7 +31,7 @@
   errorHandler     ← first 4-arg handler downstream → runs
   ```
   * **`if (res.headersSent) return next(err)`.** Status + headers go out before the body and can't be taken back. If a **streamed** response fails midway, the client already has `200 OK`, and `res.status(500)` would throw `Cannot set headers after they are sent`. `next(err)` passes it to Express's default handler, which just kills the connection (the client sees a truncated response, not a fake-complete one).
-* Request validation with Zod — [validate.middleware.ts](/backend/middlewares/validate.middleware.ts)
+* Request validation with Zod — [validate.middleware.ts](/backend/middlewares/http/validate.middleware.ts)
   ```ts
   const catIdParams = z.object({ catId: objectIdSchema })
   router.put('/:catId', validate({ params: catIdParams, body: catSchema }), updateCat)

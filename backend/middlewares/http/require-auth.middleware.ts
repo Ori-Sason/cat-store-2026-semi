@@ -1,8 +1,8 @@
 import type { RequestHandler } from 'express'
-import { authService } from '../api/auth/auth.service.ts'
-import { LOGIN_TOKEN_COOKIE, LOGIN_TOKEN_COOKIE_OPTIONS } from '../models/auth.ts'
-import { HttpError } from '../models/http-error.ts'
-import { alsService } from '../services/als.service.ts'
+import { authService } from '../../api/auth/auth.service.ts'
+import { LOGIN_TOKEN_COOKIE, LOGIN_TOKEN_COOKIE_OPTIONS } from '../../models/auth.ts'
+import { HttpError } from '../../models/http-error.ts'
+import { alsService } from '../../services/als.service.ts'
 
 // Lets only logged-in users through. attachTokenUser trusts the token alone, so this re-reads
 // the user from the DB: a deleted user gets a 401, and a changed isAdmin applies right away.

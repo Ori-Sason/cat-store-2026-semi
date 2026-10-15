@@ -1,6 +1,6 @@
 import type { RequestHandler } from 'express'
 import type { z } from 'zod'
-import { utilService } from '../services/util.service.ts'
+import { utilService } from '../../services/util.service.ts'
 
 // Validates req.body against a Zod schema, then swaps in the parsed result.
 // Zod strips unknown keys, so server-set fields (_id, createdAt, ...) never reach the controller

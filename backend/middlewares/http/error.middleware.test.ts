@@ -1,8 +1,8 @@
 import express from 'express'
 import request from 'supertest'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { HttpError } from '../models/http-error.ts'
-import { alsService } from '../services/als.service.ts'
+import { HttpError } from '../../models/http-error.ts'
+import { alsService } from '../../services/als.service.ts'
 import { errorHandler } from './error.middleware.ts'
 
 const REQUEST_ID = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890'

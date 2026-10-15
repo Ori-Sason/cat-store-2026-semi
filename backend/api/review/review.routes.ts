@@ -1,8 +1,8 @@
 import { Router } from 'express'
 import { reviewContentSchema, reviewFilterSchema, reviewSchema } from '@cat-store/shared'
-import { requireAuth } from '../../middlewares/require-auth.middleware.ts'
-import { requireReviewOwner } from '../../middlewares/require-review-owner.middleware.ts'
-import { validateBody, validateQuery } from '../../middlewares/validate.middleware.ts'
+import { requireAuth } from '../../middlewares/http/require-auth.middleware.ts'
+import { requireReviewOwner } from '../../middlewares/http/require-review-owner.middleware.ts'
+import { validateBody, validateQuery } from '../../middlewares/http/validate.middleware.ts'
 import { addReview, getReviews, removeReview, updateReview } from './review.controller.ts'
 
 export const reviewRoutes = Router()
