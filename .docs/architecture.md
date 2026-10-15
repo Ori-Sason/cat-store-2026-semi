@@ -2,11 +2,12 @@
 
 ## Overview
 TypeScript monorepo (npm workspaces): `shared`, `frontend`, `backend`.
-One Express server serves both `/api` and the built FE in prod → same-origin, no CORS.
+One Express server serves `/api`, Socket.io and the built FE in prod → same-origin, no CORS.
 
 ```
 dev:  browser ──▶ Vite :5173 ──(proxy /api)──▶ Express :8000 ──▶ MongoDB `cats`
 test: Vitest + Supertest (in memory) ─────────────────────────▶ MongoDB `catsTest`
+      Vitest + socket.io-client ──▶ Express + Socket.io :0 ───▶ MongoDB `catsTest`
 e2e:  Playwright ──▶ Vite :5174 ──(proxy /api)──▶ Express :8001 ──▶ MongoDB `catsTest`
 prod: browser ──▶ Express (static FE + /api + socket.io) ──▶ MongoDB (Atlas)
 ```
@@ -17,7 +18,10 @@ prod: browser ──▶ Express (static FE + /api + socket.io) ──▶ MongoDB
 - `frontend/` — Vite + React SPA. Routes and server data via `react-router`, client state
   in Zustand, HTTP via axios with relative URLs only (`/api/...`).
 - `backend/` — Express 5, route → controller → service layers, native `mongodb` driver.
-- Collections: `cats`, `users`, `reviews`. Every doc has server-set `createdAt`/`updatedAt`.
+  Socket.io attaches to the same http server (in `server.ts`, not `app.ts`) for the cat chat.
+  Each socket event runs a chain of steps, like an Express route: validate → auth → room
+  membership → controller.
+- Collections: `cats`, `users`, `reviews`, `chatMsgs`. Every doc has server-set `createdAt`/`updatedAt`.
 
 ## Auth Boundary
 - JWT in an httpOnly cookie (`loginToken`): `sameSite: 'strict'`, `secure` in production.
@@ -31,6 +35,10 @@ prod: browser ──▶ Express (static FE + /api + socket.io) ──▶ MongoDB
 - The backend enforces guest / owner / admin rules on cats and reviews. The FE only hides UI.
   Both check edit / delete through the shared permission services, so they agree on the rule.
 - `_id`, `ownerId`, `userId` and the timestamps are server-set. Zod strips them from the body.
+- Socket.io: the handshake reads the same cookie into `socket.data.tokenUser` (a guest on a
+  missing or bad token, no DB read). A socket can outlive its token, so each event that needs a
+  user re-checks `exp`, and chat writes also re-read the user from the DB (`requireSocketUser`,
+  the socket `requireAuth`). A failed check rejects the event, never the connection.
 - Logout only clears the cookie. A copied token works until its `exp`. Revoking would need a
   denylist checked on every request, which is a session store again.
 
@@ -38,11 +46,12 @@ prod: browser ──▶ Express (static FE + /api + socket.io) ──▶ MongoDB
 Main libraries only. Exact versions and `@types/*` live in each `package.json`.
 - shared: zod. Its schemas are the validation for both FE and BE.
 - frontend: React, TypeScript, react-router 8, Zustand, axios, Vite, Sass, OpenLayers (`ol`).
-- backend: Express 5, native `mongodb` driver. No Mongoose, no `ts-node`/`tsx`.
+- backend: Express 5, native `mongodb` driver, socket.io. No Mongoose, no `ts-node`/`tsx`.
 - auth: jsonwebtoken, bcrypt, cookie-parser.
-- testing: Vitest everywhere, React Testing Library + jsdom (FE), Supertest (BE), Playwright (E2E).
+- testing: Vitest everywhere, React Testing Library + jsdom (FE), Supertest and socket.io-client
+  (BE), Playwright (E2E).
 - tooling: oxlint, oxfmt, lefthook.
-- planned: socket.io + socket.io-client (Part 6).
+- planned: socket.io-client in the FE (Part 6, the chat frontend).
 
 External services: MongoDB (local in dev, Atlas in prod), Render (hosting).
 Env: `node --env-file=.env.local`, no dotenv. Prod needs `JWT_SECRET`, Mongo URL,
@@ -100,3 +109,4 @@ Env: `node --env-file=.env.local`, no dotenv. Prod needs `JWT_SECRET`, Mongo URL
 - 2026-10-06 — Auth boundary: `/api/auth/*` routes, the `loginToken` cookie and `attachTokenUser`.
 - 2026-10-11 — Collections: `reviews`, read with its author and cat joined via `$lookup`.
 - 2026-10-12 — Compacted to cross-cutting decisions (a major doc edit, so it gets a log line). Module-level decisions moved to code comments, test how-to to the `writing-tests` skill.
+- 2026-10-15 — Socket.io on the Express http server, and the `chatMsgs` collection (the cat chat backend).
