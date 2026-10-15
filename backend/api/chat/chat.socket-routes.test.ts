@@ -6,6 +6,8 @@ import {
   CHAT_LEAVE,
   CHAT_MSG_ADD,
   CHAT_MSG_ADDED,
+  CHAT_MSG_UPDATE,
+  CHAT_MSG_UPDATED,
   type ChatMsg,
 } from '@cat-store/shared'
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -51,6 +53,7 @@ function _buildUser(username: string, isAdmin: boolean): UserDoc {
 
 const MAYA = _buildUser('maya', false)
 const NOAM = _buildUser('noam', false)
+const DANA = _buildUser('dana', true)
 
 // A signed loginToken cookie, the same one login sets
 function _loginCookie({ _id, username, fullname, isAdmin }: UserDoc): string {
@@ -79,7 +82,7 @@ beforeEach(async () => {
   const cats = await mongoService.getCollection<CatDoc>(CAT_COLLECTION)
   await cats.insertOne(cat)
   const users = await mongoService.getCollection<UserDoc>(USER_COLLECTION)
-  await users.insertMany([MAYA, NOAM])
+  await users.insertMany([MAYA, NOAM, DANA])
   // 4xx are logged as warnings by on() - keep test output clean
   vi.spyOn(console, 'warn').mockImplementation(() => {})
 })
@@ -101,11 +104,17 @@ async function _joinedClient(user: UserDoc): Promise<ClientSocket> {
   return client
 }
 
-// Every chat:msg-added the client gets from here on
-function _collectAdded(client: ClientSocket): ChatMsg[] {
+// Every msg the client gets in this event from here on
+function _collect(client: ClientSocket, event: string): ChatMsg[] {
   const msgs: ChatMsg[] = []
-  client.on(CHAT_MSG_ADDED, ({ msg }: { msg: ChatMsg }) => msgs.push(msg))
+  client.on(event, ({ msg }: { msg: ChatMsg }) => msgs.push(msg))
   return msgs
+}
+
+// A msg saved through the real chat:msg-add, by a client already in the room
+async function _addMsg(client: ClientSocket, text = 'Is she still available?'): Promise<ChatMsg> {
+  const { msg } = await client.emitWithAck(CHAT_MSG_ADD, { catId, clientMsgId: randomUUID(), text })
+  return msg
 }
 
 // A round trip on the client's own connection. The server writes a broadcast to a socket before
@@ -210,8 +219,8 @@ describe('chat:msg-add', () => {
   it('saves the msg, acks it, and broadcasts it to the room, the sender included', async () => {
     const sender = await _joinedClient(MAYA)
     const other = await _joinedClient(NOAM)
-    const senderAdded = _collectAdded(sender)
-    const otherAdded = _collectAdded(other)
+    const senderAdded = _collect(sender, CHAT_MSG_ADDED)
+    const otherAdded = _collect(other, CHAT_MSG_ADDED)
     const payload = _payload('  Is she still available?  ')
 
     const ack = await sender.emitWithAck(CHAT_MSG_ADD, payload)
@@ -238,7 +247,7 @@ describe('chat:msg-add', () => {
   // username is half a login: the handshake user has it, the wire never does
   it('sends no username, in the ack or the broadcast', async () => {
     const sender = await _joinedClient(MAYA)
-    const added = _collectAdded(sender)
+    const added = _collect(sender, CHAT_MSG_ADDED)
 
     const ack = await sender.emitWithAck(CHAT_MSG_ADD, _payload())
     await _flush(sender)
@@ -251,7 +260,7 @@ describe('chat:msg-add', () => {
   it('acks a retry with the saved msg, saves nothing new and broadcasts nothing new', async () => {
     const sender = await _joinedClient(MAYA)
     const other = await _joinedClient(NOAM)
-    const otherAdded = _collectAdded(other)
+    const otherAdded = _collect(other, CHAT_MSG_ADDED)
     const payload = _payload()
 
     const first = await sender.emitWithAck(CHAT_MSG_ADD, payload)
@@ -333,5 +342,108 @@ describe('chat:msg-add', () => {
     expect(ack).toEqual({ error: expect.objectContaining({ code: 'VALIDATION_FAILED' }) })
     const chatMsgs = await mongoService.getCollection<ChatMsgDoc>(CHAT_MSG_COLLECTION)
     expect(await chatMsgs.countDocuments()).toBe(0)
+  })
+})
+
+describe('chat:msg-update', () => {
+  function _payload(msg: ChatMsg, text = 'Still available?') {
+    return { catId, msgId: msg._id, text }
+  }
+
+  it('saves the new text, acks it, and broadcasts it to the room, the sender included', async () => {
+    const author = await _joinedClient(MAYA)
+    const other = await _joinedClient(NOAM)
+    const msg = await _addMsg(author)
+    // Backdated, so updatedAt > createdAt holds even when the add and the edit land in one ms
+    const chatMsgs = await mongoService.getCollection<ChatMsgDoc>(CHAT_MSG_COLLECTION)
+    await chatMsgs.updateOne(
+      { _id: new ObjectId(msg._id) },
+      { $set: { createdAt: 1, updatedAt: 1 } },
+    )
+    const authorUpdated = _collect(author, CHAT_MSG_UPDATED)
+    const otherUpdated = _collect(other, CHAT_MSG_UPDATED)
+
+    const ack = await author.emitWithAck(CHAT_MSG_UPDATE, _payload(msg, '  Still available?  '))
+    await _flush(author)
+    await _flush(other)
+
+    expect(ack).toEqual({
+      msg: { ...msg, text: 'Still available?', createdAt: 1, updatedAt: expect.any(Number) },
+    })
+    // "Edited at" is updatedAt > createdAt
+    expect(ack.msg.updatedAt).toBeGreaterThan(1)
+    expect(ack.msg.user).not.toHaveProperty('username')
+    expect(authorUpdated).toEqual([ack.msg])
+    expect(otherUpdated).toEqual([ack.msg])
+  })
+
+  it("rejects another user's edit with FORBIDDEN, and changes nothing", async () => {
+    const author = await _joinedClient(MAYA)
+    const other = await _joinedClient(NOAM)
+    const msg = await _addMsg(author)
+
+    const ack = await other.emitWithAck(CHAT_MSG_UPDATE, _payload(msg))
+
+    expect(ack).toEqual({ error: expect.objectContaining({ code: 'FORBIDDEN' }) })
+    const chatMsgs = await mongoService.getCollection<ChatMsgDoc>(CHAT_MSG_COLLECTION)
+    const saved = await chatMsgs.findOne({ _id: new ObjectId(msg._id) })
+    expect(saved?.text).toBe('Is she still available?')
+  })
+
+  // Unlike reviews: an admin rewriting someone's msg would put words in their mouth
+  it("rejects an admin's edit of another user's msg with FORBIDDEN", async () => {
+    const author = await _joinedClient(MAYA)
+    const admin = await _joinedClient(DANA)
+    const msg = await _addMsg(author)
+
+    const ack = await admin.emitWithAck(CHAT_MSG_UPDATE, _payload(msg))
+
+    expect(ack).toEqual({ error: expect.objectContaining({ code: 'FORBIDDEN' }) })
+  })
+
+  // The client names room B, where it's a member, for a msg in room A
+  it('rejects a msg from another room with CHAT_MSG_NOT_FOUND', async () => {
+    const author = await _joinedClient(MAYA)
+    const msg = await _addMsg(author)
+    const otherCat = _buildCat()
+    const cats = await mongoService.getCollection<CatDoc>(CAT_COLLECTION)
+    await cats.insertOne(otherCat)
+    const otherCatId = otherCat._id.toHexString()
+    await author.emitWithAck(CHAT_JOIN, { catId: otherCatId })
+
+    const ack = await author.emitWithAck(CHAT_MSG_UPDATE, { ..._payload(msg), catId: otherCatId })
+
+    expect(ack).toEqual({ error: expect.objectContaining({ code: 'CHAT_MSG_NOT_FOUND' }) })
+  })
+
+  it('rejects an edit of a deleted msg with CHAT_MSG_NOT_FOUND', async () => {
+    const author = await _joinedClient(MAYA)
+    const msg = await _addMsg(author)
+    const chatMsgs = await mongoService.getCollection<ChatMsgDoc>(CHAT_MSG_COLLECTION)
+    await chatMsgs.updateOne({ _id: new ObjectId(msg._id) }, { $set: { isDeleted: true } })
+
+    const ack = await author.emitWithAck(CHAT_MSG_UPDATE, _payload(msg))
+
+    expect(ack).toEqual({ error: expect.objectContaining({ code: 'CHAT_MSG_NOT_FOUND' }) })
+  })
+
+  it('rejects a guest with UNAUTHORIZED', async () => {
+    const author = await _joinedClient(MAYA)
+    const msg = await _addMsg(author)
+    const guest = await server.connectClient()
+    await guest.emitWithAck(CHAT_JOIN, { catId })
+
+    const ack = await guest.emitWithAck(CHAT_MSG_UPDATE, _payload(msg))
+
+    expect(ack).toEqual({ error: expect.objectContaining({ code: 'UNAUTHORIZED' }) })
+  })
+
+  it('rejects a bad payload with VALIDATION_FAILED', async () => {
+    const author = await _joinedClient(MAYA)
+    const msg = await _addMsg(author)
+
+    const ack = await author.emitWithAck(CHAT_MSG_UPDATE, _payload(msg, '   '))
+
+    expect(ack).toEqual({ error: expect.objectContaining({ code: 'VALIDATION_FAILED' }) })
   })
 })

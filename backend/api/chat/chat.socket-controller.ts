@@ -1,7 +1,9 @@
 import {
   CHAT_MSG_ADDED,
+  CHAT_MSG_UPDATED,
   type ChatMsg,
   type ChatMsgInput,
+  type ChatMsgUpdateInput,
   type ChatRoomInput,
 } from '@cat-store/shared'
 import type { SocketEvent } from '../../models/socket.ts'
@@ -55,8 +57,17 @@ async function addMsg({ payload }: SocketEvent<ChatMsgInput>): Promise<{ msg: Ch
   return { msg }
 }
 
+// chat:msg-update. Acks the edited msg and broadcasts it to the room, the sender included, like
+// addMsg. Not optimistic on the client: it waits for this ack
+async function updateMsg({ payload }: SocketEvent<ChatMsgUpdateInput>): Promise<{ msg: ChatMsg }> {
+  const msg = await chatService.update(payload)
+  socketService.getIo().to(socketService.getCatRoomName(msg.catId)).emit(CHAT_MSG_UPDATED, { msg })
+  return { msg }
+}
+
 export const chatSocketController = {
   join,
   leave,
   addMsg,
+  updateMsg,
 }

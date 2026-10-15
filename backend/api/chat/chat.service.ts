@@ -6,8 +6,10 @@ import {
   type ChatMsgInput,
   type ChatMsgNewerPage,
   type ChatMsgOlderPage,
+  type ChatMsgUpdateInput,
 } from '@cat-store/shared'
 import { CHAT_MSG_COLLECTION, type ChatMsgDoc, type ChatMsgJoinedDoc } from '../../models/chat.ts'
+import { HttpError } from '../../models/http-error.ts'
 import { DUPLICATE_KEY_ERROR_CODE } from '../../models/mongodb.ts'
 import { USER_COLLECTION } from '../../models/user.ts'
 import { mongoService } from '../../services/mongodb.service.ts'
@@ -78,6 +80,33 @@ async function add(
   }
 }
 
+// The stored doc, for requireChatMsgPermission (it needs the author's userId).
+// Filtered by catId too: a msg in another room is CHAT_MSG_NOT_FOUND, so a client can't name
+// room A (where it's a member) and reach a msg in room B.
+// A deleted msg still matches: remove acks the same tombstone on a repeat, and update filters it
+// out itself. The ids are already checked by the payload schema, so new ObjectId() can't throw
+async function getByIdAndRoom(msgId: string, catId: string): Promise<ChatMsgDoc> {
+  const collection = await mongoService.getCollection<ChatMsgDoc>(CHAT_MSG_COLLECTION)
+  const doc = await collection.findOne({ _id: new ObjectId(msgId), catId: new ObjectId(catId) })
+  if (!doc) throw _chatMsgNotFound(msgId)
+  return doc
+}
+
+// Sets the text and updatedAt ("Edited at" is updatedAt > createdAt). isDeleted: false is in the
+// filter, not checked before: a msg deleted between requireChatMsgPermission's read and this
+// write is caught here, atomically. From the user's view a deleted msg is gone, so it's
+// CHAT_MSG_NOT_FOUND
+async function update({ catId, msgId, text }: ChatMsgUpdateInput): Promise<ChatMsg> {
+  const collection = await mongoService.getCollection<ChatMsgDoc>(CHAT_MSG_COLLECTION)
+  const _id = new ObjectId(msgId)
+  const { matchedCount } = await collection.updateOne(
+    { _id, catId: new ObjectId(catId), isDeleted: false },
+    { $set: { text, updatedAt: Date.now() } },
+  )
+  if (!matchedCount) throw _chatMsgNotFound(msgId)
+  return _getJoinedById(_id)
+}
+
 // The doc has only userId. For the user details we need to aggregate
 async function _getJoinedById(_id: ObjectId): Promise<ChatMsg> {
   const collection = await mongoService.getCollection<ChatMsgDoc>(CHAT_MSG_COLLECTION)
@@ -138,7 +167,13 @@ function _toWireMsg({
   return isDeleted ? { ...base, isDeleted: true } : { ...base, isDeleted: false, text }
 }
 
+function _chatMsgNotFound(msgId: string): HttpError {
+  return new HttpError(404, 'CHAT_MSG_NOT_FOUND', `Chat msg ${msgId} not found`)
+}
+
 export const chatService = {
   query,
   add,
+  getByIdAndRoom,
+  update,
 }

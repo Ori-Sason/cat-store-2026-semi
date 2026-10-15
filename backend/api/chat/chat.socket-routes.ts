@@ -2,9 +2,13 @@ import {
   CHAT_JOIN,
   CHAT_LEAVE,
   CHAT_MSG_ADD,
+  CHAT_MSG_UPDATE,
   chatMsgSchema,
+  chatMsgUpdateSchema,
+  chatPermissionService,
   chatRoomSchema,
 } from '@cat-store/shared'
+import { requireChatMsgPermission } from '../../middlewares/socket/require-chat-msg-permission.socket-middleware.ts'
 import { requireRoomMember } from '../../middlewares/socket/require-room-member.socket-middleware.ts'
 import { requireSocketUser } from '../../middlewares/socket/require-socket-user.socket-middleware.ts'
 import { validatePayload } from '../../middlewares/socket/validate-payload.socket-middleware.ts'
@@ -25,5 +29,14 @@ export function registerChatSocketRoutes(socket: AppSocket): void {
     requireSocketUser,
     requireRoomMember,
     chatSocketController.addMsg,
+  )
+  socketService.on(
+    socket,
+    CHAT_MSG_UPDATE,
+    validatePayload(chatMsgUpdateSchema),
+    requireSocketUser,
+    requireRoomMember,
+    requireChatMsgPermission(chatPermissionService.canEditChatMsg),
+    chatSocketController.updateMsg,
   )
 }
