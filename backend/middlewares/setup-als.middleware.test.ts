@@ -26,6 +26,7 @@ describe('setupAsyncLocalStorage', () => {
     expect(res.headers['x-request-id']).toBeTypeOf('string')
     expect(res.body).toEqual({
       requestId: res.headers['x-request-id'],
+      socketId: null,
       tokenUser: null,
       verifiedUser: null,
     })

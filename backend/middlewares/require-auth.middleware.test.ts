@@ -103,6 +103,6 @@ describe('requireAuth', () => {
 
     expect(res.status).toBe(500)
     expect(res.body).toMatchObject({ code: 'INTERNAL' })
-    expect(res.body.message).toContain('missing requireAuth')
+    expect(res.body.message).toContain('No verified user')
   })
 })
