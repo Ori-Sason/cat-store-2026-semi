@@ -1,8 +1,10 @@
 import {
   CHAT_MSG_ADDED,
+  CHAT_MSG_REMOVED,
   CHAT_MSG_UPDATED,
   type ChatMsg,
   type ChatMsgInput,
+  type ChatMsgRemoveInput,
   type ChatMsgUpdateInput,
   type ChatRoomInput,
 } from '@cat-store/shared'
@@ -65,9 +67,23 @@ async function updateMsg({ payload }: SocketEvent<ChatMsgUpdateInput>): Promise<
   return { msg }
 }
 
+// chat:msg-remove. Acks the tombstone and broadcasts it to the room, the sender included.
+// A repeat remove acks only: the first one already broadcast it
+async function removeMsg({ payload }: SocketEvent<ChatMsgRemoveInput>): Promise<{ msg: ChatMsg }> {
+  const { msg, isNew } = await chatService.remove(payload)
+  if (isNew) {
+    socketService
+      .getIo()
+      .to(socketService.getCatRoomName(msg.catId))
+      .emit(CHAT_MSG_REMOVED, { msg })
+  }
+  return { msg }
+}
+
 export const chatSocketController = {
   join,
   leave,
   addMsg,
   updateMsg,
+  removeMsg,
 }

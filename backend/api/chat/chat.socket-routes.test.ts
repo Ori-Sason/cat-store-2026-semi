@@ -6,6 +6,8 @@ import {
   CHAT_LEAVE,
   CHAT_MSG_ADD,
   CHAT_MSG_ADDED,
+  CHAT_MSG_REMOVE,
+  CHAT_MSG_REMOVED,
   CHAT_MSG_UPDATE,
   CHAT_MSG_UPDATED,
   type ChatMsg,
@@ -445,5 +447,106 @@ describe('chat:msg-update', () => {
     const ack = await author.emitWithAck(CHAT_MSG_UPDATE, _payload(msg, '   '))
 
     expect(ack).toEqual({ error: expect.objectContaining({ code: 'VALIDATION_FAILED' }) })
+  })
+})
+
+describe('chat:msg-remove', () => {
+  function _payload(msg: ChatMsg) {
+    return { catId, msgId: msg._id }
+  }
+
+  // No text on the wire, the rest as it was
+  function _tombstone({ text: _text, ...msg }: ChatMsg & { text?: string }): ChatMsg {
+    return { ...msg, isDeleted: true }
+  }
+
+  it('acks the tombstone and broadcasts it to the room, keeping the text in the DB', async () => {
+    const author = await _joinedClient(MAYA)
+    const other = await _joinedClient(NOAM)
+    const msg = await _addMsg(author)
+    const authorRemoved = _collect(author, CHAT_MSG_REMOVED)
+    const otherRemoved = _collect(other, CHAT_MSG_REMOVED)
+
+    const ack = await author.emitWithAck(CHAT_MSG_REMOVE, _payload(msg))
+    await _flush(author)
+    await _flush(other)
+
+    // updatedAt unchanged too: remove never touches it, so "Edited at" stays true
+    expect(ack).toEqual({ msg: _tombstone(msg) })
+    expect(ack.msg).not.toHaveProperty('text')
+    expect(authorRemoved).toEqual([ack.msg])
+    expect(otherRemoved).toEqual([ack.msg])
+    const chatMsgs = await mongoService.getCollection<ChatMsgDoc>(CHAT_MSG_COLLECTION)
+    const saved = await chatMsgs.findOne({ _id: new ObjectId(msg._id) })
+    expect(saved).toMatchObject({ isDeleted: true, text: 'Is she still available?' })
+  })
+
+  // Removing is moderation. The tombstone's user comes from the doc's userId, never the remover
+  it("lets an admin remove another user's msg, and broadcasts the author, not the admin", async () => {
+    const author = await _joinedClient(MAYA)
+    const admin = await _joinedClient(DANA)
+    const msg = await _addMsg(author)
+    const authorRemoved = _collect(author, CHAT_MSG_REMOVED)
+
+    const ack = await admin.emitWithAck(CHAT_MSG_REMOVE, _payload(msg))
+    await _flush(author)
+
+    expect(ack).toEqual({ msg: _tombstone(msg) })
+    expect(authorRemoved).toEqual([ack.msg])
+    expect(ack.msg.user._id).toBe(MAYA._id.toHexString())
+  })
+
+  it("rejects another user's remove with FORBIDDEN, and changes nothing", async () => {
+    const author = await _joinedClient(MAYA)
+    const other = await _joinedClient(NOAM)
+    const msg = await _addMsg(author)
+
+    const ack = await other.emitWithAck(CHAT_MSG_REMOVE, _payload(msg))
+
+    expect(ack).toEqual({ error: expect.objectContaining({ code: 'FORBIDDEN' }) })
+    const chatMsgs = await mongoService.getCollection<ChatMsgDoc>(CHAT_MSG_COLLECTION)
+    const saved = await chatMsgs.findOne({ _id: new ObjectId(msg._id) })
+    expect(saved?.isDeleted).toBe(false)
+  })
+
+  // The client names room B, where it's a member, for a msg in room A
+  it('rejects a msg from another room with CHAT_MSG_NOT_FOUND', async () => {
+    const author = await _joinedClient(MAYA)
+    const msg = await _addMsg(author)
+    const otherCat = _buildCat()
+    const cats = await mongoService.getCollection<CatDoc>(CAT_COLLECTION)
+    await cats.insertOne(otherCat)
+    const otherCatId = otherCat._id.toHexString()
+    await author.emitWithAck(CHAT_JOIN, { catId: otherCatId })
+
+    const ack = await author.emitWithAck(CHAT_MSG_REMOVE, { ..._payload(msg), catId: otherCatId })
+
+    expect(ack).toEqual({ error: expect.objectContaining({ code: 'CHAT_MSG_NOT_FOUND' }) })
+  })
+
+  // The ack was lost, so the client retries
+  it('acks a repeat remove with the same tombstone, and broadcasts nothing new', async () => {
+    const author = await _joinedClient(MAYA)
+    const other = await _joinedClient(NOAM)
+    const msg = await _addMsg(author)
+    const otherRemoved = _collect(other, CHAT_MSG_REMOVED)
+
+    const first = await author.emitWithAck(CHAT_MSG_REMOVE, _payload(msg))
+    const repeat = await author.emitWithAck(CHAT_MSG_REMOVE, _payload(msg))
+    await _flush(other)
+
+    expect(repeat).toEqual(first)
+    expect(otherRemoved).toHaveLength(1)
+  })
+
+  it('rejects a guest with UNAUTHORIZED', async () => {
+    const author = await _joinedClient(MAYA)
+    const msg = await _addMsg(author)
+    const guest = await server.connectClient()
+    await guest.emitWithAck(CHAT_JOIN, { catId })
+
+    const ack = await guest.emitWithAck(CHAT_MSG_REMOVE, _payload(msg))
+
+    expect(ack).toEqual({ error: expect.objectContaining({ code: 'UNAUTHORIZED' }) })
   })
 })

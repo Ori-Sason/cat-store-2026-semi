@@ -2,7 +2,9 @@ import {
   CHAT_JOIN,
   CHAT_LEAVE,
   CHAT_MSG_ADD,
+  CHAT_MSG_REMOVE,
   CHAT_MSG_UPDATE,
+  chatMsgRemoveSchema,
   chatMsgSchema,
   chatMsgUpdateSchema,
   chatPermissionService,
@@ -38,5 +40,14 @@ export function registerChatSocketRoutes(socket: AppSocket): void {
     requireRoomMember,
     requireChatMsgPermission(chatPermissionService.canEditChatMsg),
     chatSocketController.updateMsg,
+  )
+  socketService.on(
+    socket,
+    CHAT_MSG_REMOVE,
+    validatePayload(chatMsgRemoveSchema),
+    requireSocketUser,
+    requireRoomMember,
+    requireChatMsgPermission(chatPermissionService.canRemoveChatMsg),
+    chatSocketController.removeMsg,
   )
 }

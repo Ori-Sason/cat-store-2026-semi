@@ -6,6 +6,7 @@ import {
   type ChatMsgInput,
   type ChatMsgNewerPage,
   type ChatMsgOlderPage,
+  type ChatMsgRemoveInput,
   type ChatMsgUpdateInput,
 } from '@cat-store/shared'
 import { CHAT_MSG_COLLECTION, type ChatMsgDoc, type ChatMsgJoinedDoc } from '../../models/chat.ts'
@@ -107,6 +108,25 @@ async function update({ catId, msgId, text }: ChatMsgUpdateInput): Promise<ChatM
   return _getJoinedById(_id)
 }
 
+// A soft delete: sets only isDeleted. The text stays in the DB, so an admin can check what a
+// disputed msg said (the wire mapper drops it). updatedAt isn't touched, so "Edited at" stays
+// true for a msg edited and then deleted.
+// An already deleted msg still matches, so a repeat remove acks the same tombstone. isNew is
+// false then (nothing changed), and the controller doesn't broadcast it again, like add's retry
+async function remove({
+  catId,
+  msgId,
+}: ChatMsgRemoveInput): Promise<{ msg: ChatMsg; isNew: boolean }> {
+  const collection = await mongoService.getCollection<ChatMsgDoc>(CHAT_MSG_COLLECTION)
+  const _id = new ObjectId(msgId)
+  const { matchedCount, modifiedCount } = await collection.updateOne(
+    { _id, catId: new ObjectId(catId) },
+    { $set: { isDeleted: true } },
+  )
+  if (!matchedCount) throw _chatMsgNotFound(msgId)
+  return { msg: await _getJoinedById(_id), isNew: modifiedCount > 0 }
+}
+
 // The doc has only userId. For the user details we need to aggregate
 async function _getJoinedById(_id: ObjectId): Promise<ChatMsg> {
   const collection = await mongoService.getCollection<ChatMsgDoc>(CHAT_MSG_COLLECTION)
@@ -176,4 +196,5 @@ export const chatService = {
   add,
   getByIdAndRoom,
   update,
+  remove,
 }
