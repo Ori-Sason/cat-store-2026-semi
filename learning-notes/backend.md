@@ -101,3 +101,12 @@
     With `transports: ['websocket']` there's no polling: the upgrade request is the first contact (no `sid` yet), and the handshake happens on it.
   * **Why it mattered for the handshake cookie.** The handshake can arrive on a polling `GET` or on a WebSocket upgrade, depending on the transport. `io.engine.use(cookieParser())` runs on every engine.io HTTP request, the upgrade included, so `socket.request.cookies` is there either way.
   * **Bottom line:** a few extra round trips at connect time, in exchange for "always connects fast, even on hostile networks". `transports: ['websocket']` skips them, at the cost of no fallback.
+* Socket acks: when the client asks for an answer — [socket.service.ts](/backend/services/socket.service.ts)
+  * **A client emit is two arguments:** the payload (the object the event's schema checks), then an optional ack function. `on()` takes the last argument as the ack only if it's a function, and the payload is what's left (`args[0]`).
+  * **The FE doesn't write the callback by hand.** `socket.timeout(5000).emitWithAck(event, payload)` adds it and returns a promise of the ack body.
+  * **The ack isn't only for errors. It carries the success answer too:**
+    * **Send:** the saved msg, with its `_id`. It replaces the pending one, and it's the proof the msg is stored.
+    * **Edit / delete:** the updated msg. The UI stays dimmed until it arrives.
+    * **Join:** `{}`. The FE waits for it before it fetches the history, so nothing sent in between is lost.
+  * **Leave and typing use a plain `socket.emit` (no ack).** Nothing depends on their result.
+  * **Bottom line:** without an ack, the FE can't tell "saved" from "lost". Use one wherever the next step depends on the answer.

@@ -1,9 +1,12 @@
 import type { Server as HttpServer } from 'node:http'
+import { randomUUID } from 'node:crypto'
 import cookieParser from 'cookie-parser'
 import { Server } from 'socket.io'
 import { authService } from '../api/auth/auth.service.ts'
 import { LOGIN_TOKEN_COOKIE } from '../models/auth.ts'
-import type { AppServer, AppSocket } from '../models/socket.ts'
+import type { AppServer, AppSocket, SocketEvent, SocketMiddleware } from '../models/socket.ts'
+import { alsService, type AlsStore } from './als.service.ts'
+import { errorService } from './error.service.ts'
 
 // Default 1MB. Zod caps a chat msg's text, but without this one frame could still be 1MB.
 // 16KB leaves room for 1000 chars × 4 bytes (UTF-8) plus the JSON around them
@@ -55,6 +58,67 @@ async function close(): Promise<void> {
   await oldIo.close()
 }
 
+// Binds one event on one socket to its chain, like an Express route with its middlewares:
+//   on(socket, CHAT_MSG_ADD, validatePayload(chatMsgSchema), requireSocketUser, controller.addMsg)
+// Each event runs in its own ALS store (setup-als never runs outside Express), so services read
+// alsService.getVerifiedUser() the same way as on HTTP.
+// The ack is optional: Socket.io passes one only when the client asks for it, and anyone can
+// emit with no ack from devtools. Calling a missing ack in the error path would throw inside it,
+// an unhandled rejection that crashes Node. So on() answers only when an ack exists, and wraps
+// everything, its own error path included, in a try/catch that logs.
+// Not socket.use((packet, next) => …): its next(err) fires a generic "error" event on the client
+// instead of the ack, so emitWithAck would wait out its timeout for what's really an auth error
+function on(socket: AppSocket, eventName: string, ...chain: SocketMiddleware<any>[]): void {
+  socket.on(eventName, async (...args: unknown[]) => {
+    // socket.emit(name, cb) puts the callback where the payload goes, so the ack is the last
+    // argument only if it's a function, and the payload is whatever comes before it
+    const ack = typeof args.at(-1) === 'function' ? (args.pop() as (body: unknown) => void) : null
+    const store: AlsStore = {
+      requestId: randomUUID(),
+      socketId: socket.id,
+      tokenUser: socket.data.tokenUser,
+      verifiedUser: null,
+    }
+
+    await alsService.run(store, async () => {
+      try {
+        const event: SocketEvent = { socket, payload: args[0] }
+        let ackBody: unknown
+        for (const step of chain) ackBody = await step(event)
+        ack?.(ackBody ?? {})
+      } catch (err) {
+        _answerError(err, eventName, store, ack)
+      }
+    })
+  })
+}
+
+// Logs like errorHandler (4xx: one warn line, 5xx: the stack), then acks { error } if the client
+// asked for an ack. Never throws: it's the last stop of an event's error path
+function _answerError(
+  err: unknown,
+  eventName: string,
+  { requestId, socketId }: AlsStore,
+  ack: ((body: unknown) => void) | null,
+): void {
+  try {
+    const { status, body } = errorService.toErrorResponse(err)
+    const logLine = `[${requestId}] [ws socket=${socketId}] ${eventName} -> ${status} ${body.code}`
+    if (status >= 500) {
+      console.error(logLine)
+      console.error(err)
+    } else {
+      console.warn(`${logLine}: ${body.message}`)
+    }
+    ack?.({ error: { ...body, requestId } })
+  } catch (answerErr) {
+    console.error(
+      `[${requestId}] [ws socket=${socketId}] ${eventName}: failed to answer`,
+      answerErr,
+    )
+  }
+}
+
 // The handshake. Token-only (no DB), like attachTokenUser: requireSocketUser re-reads the user
 // on writes. A missing, bad or expired token is a guest, never a rejected handshake: a guest can
 // still read the chat. Same-origin, so the browser sends the cookie on its own (sameSite strict)
@@ -71,6 +135,7 @@ function _attachSocketTokenUser(socket: AppSocket, next: (err?: Error) => void):
 export const socketService = {
   setup,
   getIo,
+  on,
   emit,
   close,
 }
