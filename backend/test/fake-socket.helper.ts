@@ -13,7 +13,7 @@ export function createFakeSocket({
 
   const socket = {
     id: 'fake-socket-id',
-    data: { tokenUser, tokenExp },
+    data: { tokenUser, tokenExp, wantedCatIds: new Set<string>() },
     rooms: new Set(rooms),
     on(eventName: string, handler: (...args: unknown[]) => Promise<void>) {
       handlers.set(eventName, handler)

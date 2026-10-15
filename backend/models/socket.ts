@@ -9,6 +9,10 @@ export interface SocketData {
   // The token's exp, in seconds (JWT). A socket can stay open past it, so each event that needs
   // a user checks it against Date.now() / 1000. null for a guest
   tokenExp: number | null
+  // The cats whose chat this socket asked to join and hasn't left since. chat:join is async (it
+  // reads the cat) and chat:leave isn't, so a fast cat switch can run leave A before join A
+  // finishes. Join checks this after the read, so it doesn't join a room that was already left
+  wantedCatIds: Set<string>
 }
 
 // Event maps stay loose: each payload is validated by its own Zod schema at the event

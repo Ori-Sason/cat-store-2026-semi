@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto'
 import cookieParser from 'cookie-parser'
 import { Server } from 'socket.io'
 import { authService } from '../api/auth/auth.service.ts'
+import { registerChatSocketRoutes } from '../api/chat/chat.socket-routes.ts'
 import { LOGIN_TOKEN_COOKIE } from '../models/auth.ts'
 import type { AppServer, AppSocket, SocketEvent, SocketMiddleware } from '../models/socket.ts'
 import { alsService, type AlsStore } from './als.service.ts'
@@ -28,6 +29,10 @@ function setup(httpServer: HttpServer): AppServer {
   // WebSocket upgrade included, so the handshake below sees req.cookies on either transport
   newIo.engine.use(cookieParser())
   newIo.use(_attachSocketTokenUser)
+  // Every event's chain is declared in its *.socket-routes.ts, like an Express router
+  newIo.on('connection', (socket) => {
+    registerChatSocketRoutes(socket)
+  })
 
   io = newIo
   return newIo
@@ -135,6 +140,7 @@ function _attachSocketTokenUser(socket: AppSocket, next: (err?: Error) => void):
 
   socket.data.tokenUser = decoded?.loggedInUser ?? null
   socket.data.tokenExp = decoded?.exp ?? null
+  socket.data.wantedCatIds = new Set()
   next()
 }
 

@@ -52,7 +52,11 @@ describe('socketService handshake', () => {
   it('connects a guest with no token user', async () => {
     const client = await server.connectClient()
 
-    expect(await _serverSocketDataFor(client.id)).toEqual({ tokenUser: null, tokenExp: null })
+    expect(await _serverSocketDataFor(client.id)).toEqual({
+      tokenUser: null,
+      tokenExp: null,
+      wantedCatIds: new Set(),
+    })
   })
 
   it('sets the token user and exp from the loginToken cookie, with no DB read', async () => {
@@ -63,6 +67,7 @@ describe('socketService handshake', () => {
     expect(await _serverSocketDataFor(client.id)).toEqual({
       tokenUser: LOGGED_IN_USER,
       tokenExp: exp,
+      wantedCatIds: new Set(),
     })
   })
 
@@ -75,7 +80,11 @@ describe('socketService handshake', () => {
     const client = await server.connectClient(`loginToken=${expiredLoginToken}`)
 
     expect(client.connected).toBe(true)
-    expect(await _serverSocketDataFor(client.id)).toEqual({ tokenUser: null, tokenExp: null })
+    expect(await _serverSocketDataFor(client.id)).toEqual({
+      tokenUser: null,
+      tokenExp: null,
+      wantedCatIds: new Set(),
+    })
   })
 
   // The handshake arrives on the WebSocket upgrade then, not a polling GET. engine.use must
