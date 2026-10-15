@@ -2,6 +2,7 @@ import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 import type { LoggedInUser, LoginInput, UserInput } from '@cat-store/shared'
 import { config } from '../../config/index.ts'
+import type { DecodedLoginToken } from '../../models/auth.ts'
 import { HttpError } from '../../models/http-error.ts'
 import type { UserDoc } from '../../models/user.ts'
 import { userService } from '../user/user.service.ts'
@@ -63,13 +64,27 @@ function createLoginToken(loggedInUser: LoggedInUser, isRemembered: boolean): st
   })
 }
 
+// Most callers need only the user (attachTokenUser)
 function verifyLoginToken(loginToken: string): LoggedInUser | null {
+  return _verifyLoginTokenPayload(loginToken)?.loggedInUser ?? null
+}
+
+// The socket handshake also needs exp: a socket stays open for hours, so each event checks the
+// token's expiry itself. exp is in seconds (JWT), so compare it to Date.now() / 1000
+function verifyLoginTokenWithExp(loginToken: string): DecodedLoginToken | null {
+  return _verifyLoginTokenPayload(loginToken)
+}
+
+// The one jwt.verify, so both views above check the token the same way
+function _verifyLoginTokenPayload(loginToken: string): DecodedLoginToken | null {
   try {
     // Pinning the algorithm blocks tokens signed with another one (e.g. "none")
     const payload = jwt.verify(loginToken, config.jwtSecret, { algorithms: [_JWT_ALGORITHM] })
     if (typeof payload === 'string') return null // type guard: createLoginToken only signs objects (not strings)
-    const { _id, username, fullname, isAdmin } = payload
-    return { _id, username, fullname, isAdmin } // drops iat and exp
+    // createLoginToken always sets expiresIn, so a token without exp isn't one of ours
+    if (payload.exp === undefined) return null
+    const { _id, username, fullname, isAdmin, exp } = payload
+    return { loggedInUser: { _id, username, fullname, isAdmin }, exp } // drops iat
   } catch {
     return null
   }
@@ -87,4 +102,5 @@ export const authService = {
   getLoginTokenTtlMs,
   createLoginToken,
   verifyLoginToken,
+  verifyLoginTokenWithExp,
 }

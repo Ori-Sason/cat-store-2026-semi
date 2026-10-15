@@ -98,6 +98,9 @@ The ones that don't follow the pattern:
   Avoid: `freshUser`, `dbUser`.
 - `loginToken`: the signed JWT, and the name of the cookie that holds it.
   Avoid: `token`, `jwt`, `accessToken`, `session`.
+- `DecodedLoginToken`: a verified `loginToken`'s user plus its `exp` (seconds). Backend-only, for
+  the socket handshake.
+  Avoid: `TokenPayload`, `JwtClaims`.
 - `isRemembered`: the "remember me" choice sent with login and signup. Not stored on the user.
   Avoid: `rememberMe`, `isPersistent`, `stayLoggedIn`.
 - `isAdmin`: the admin flag on a user.

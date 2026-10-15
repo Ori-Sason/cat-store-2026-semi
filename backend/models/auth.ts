@@ -1,4 +1,5 @@
 import type { CookieOptions } from 'express'
+import type { LoggedInUser } from '@cat-store/shared'
 
 // The cookie that holds the signed JWT. Same name as the token itself (see glossary)
 export const LOGIN_TOKEN_COOKIE = 'loginToken'
@@ -10,4 +11,10 @@ export const LOGIN_TOKEN_COOKIE_OPTIONS: CookieOptions = {
   sameSite: 'strict',
   secure: process.env.NODE_ENV === 'production', // Secure is for HTTPS. Dev runs on http://localhost
   path: '/',
+}
+
+// A verified loginToken: the user it carries and its expiry, in seconds (JWT's exp)
+export interface DecodedLoginToken {
+  loggedInUser: LoggedInUser
+  exp: number
 }
