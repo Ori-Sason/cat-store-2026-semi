@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto'
 import { ObjectId } from 'mongodb'
 import request from 'supertest'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -11,6 +12,7 @@ import {
 } from '@cat-store/shared'
 import { app } from '../../app.ts'
 import { CAT_COLLECTION, type CatDoc } from '../../models/cat.ts'
+import { CHAT_MSG_COLLECTION, type ChatMsgDoc } from '../../models/chat.ts'
 import { REVIEW_COLLECTION, type ReviewDoc } from '../../models/review.ts'
 import { USER_COLLECTION, type UserDoc } from '../../models/user.ts'
 import { mongoService } from '../../services/mongodb.service.ts'
@@ -397,6 +399,34 @@ describe('DELETE /api/cats/:id', () => {
 
     expect(res.status).toBe(204)
     expect(await reviews.find().toArray()).toEqual([otherCatReview])
+  })
+
+  it("deletes the cat's chat msgs with it, and only those", async () => {
+    const cat = _buildCat({ name: 'Mitzi' })
+    const otherCat = _buildCat({ name: 'Tom' })
+    const collection = await _insertCat(cat)
+    await collection.insertOne(otherCat)
+    const chatMsgs = await mongoService.getCollection<ChatMsgDoc>(CHAT_MSG_COLLECTION)
+    const _buildChatMsg = (catId: ObjectId, isDeleted = false): ChatMsgDoc => ({
+      _id: new ObjectId(),
+      catId,
+      userId: NON_CAT_OWNER_USER._id,
+      clientMsgId: randomUUID(),
+      text: 'Is she still available?',
+      isDeleted,
+      createdAt: 1_000,
+      updatedAt: 1_000,
+    })
+    const otherCatMsg = _buildChatMsg(otherCat._id)
+    // A tombstone goes too: the cat's whole log is deleted, not only the visible msgs
+    await chatMsgs.insertMany([_buildChatMsg(cat._id), _buildChatMsg(cat._id, true), otherCatMsg])
+
+    const res = await request(app)
+      .delete(`/api/cats/${cat._id.toHexString()}`)
+      .set('Cookie', _loginCookie(CAT_OWNER))
+
+    expect(res.status).toBe(204)
+    expect(await chatMsgs.find().toArray()).toEqual([otherCatMsg])
   })
 
   it('returns 401 UNAUTHORIZED for a guest and keeps the cat', async () => {

@@ -7,6 +7,7 @@ import {
   type CatLabelStats,
 } from '@cat-store/shared'
 import { CAT_COLLECTION, type CatDoc, type CatJoinedDoc } from '../../models/cat.ts'
+import { CHAT_MSG_COLLECTION, type ChatMsgDoc } from '../../models/chat.ts'
 import { HttpError } from '../../models/http-error.ts'
 import { REVIEW_COLLECTION, type ReviewDoc } from '../../models/review.ts'
 import { USER_COLLECTION } from '../../models/user.ts'
@@ -105,6 +106,12 @@ async function remove(catId: string): Promise<void> {
   if (!_id || !result?.deletedCount) throw _catNotFound(catId)
   const reviews = await mongoService.getCollection<ReviewDoc>(REVIEW_COLLECTION)
   await reviews.deleteMany({ catId: _id }) // served by the { catId: 1, createdAt: -1 } index prefix
+
+  // A hard delete on chat, unlike a removed msg's tombstone: with the cat gone, no one can read its chat.
+  // A send in flight can still insert an orphan after this.
+  // The history route (/api/cats/:id/chat-msgs) 404s for a missing cat, so an orphan is never shown
+  const chatMsgs = await mongoService.getCollection<ChatMsgDoc>(CHAT_MSG_COLLECTION)
+  await chatMsgs.deleteMany({ catId: _id }) // served by the { catId: 1, _id: -1 } index prefix
 }
 
 // One row per label, over the whole catalog. A cat counts once in each of its labels,
