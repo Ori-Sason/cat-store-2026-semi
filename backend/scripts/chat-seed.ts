@@ -33,6 +33,15 @@ export const SEED_CHAT_EDIT_DELAY_MS = 5 * 60 * 1000
 export const SEED_CHAT_NEWEST_AGE_MS = 2 * 60 * 60 * 1000
 const _PAGING_THREAD_GAP_MS = 2 * 24 * 60 * 60 * 1000
 
+// The background cats' logs: about 1 in 5 stays empty, the rest get 3-20 msgs. States and the
+// ghost are plain rolls with no guarantee, since nothing checks them by hand
+export const SEED_RANDOM_CHAT_EMPTY_CHANCE = 0.2
+export const SEED_RANDOM_CHAT_MIN_SIZE = 3
+export const SEED_RANDOM_CHAT_MAX_SIZE = 20
+const _RANDOM_EDIT_CHANCE = 0.1
+const _RANDOM_DELETE_CHANCE = 0.05
+const _RANDOM_GHOST_CHANCE = 0.1
+
 // The 4 newest cats, i.e. the top of /cat's default sort, in that order. Fixed fixtures for the
 // manual checks of "load older", so the same log comes back on every re-seed. Sized around the
 // history page (50): 120 → 2 loads, 70 → 1, 50 → no button, 51 → 1 load that brings only the ghost.
@@ -180,6 +189,68 @@ export function buildPagingChatLog(
   return buildChatLog(cat, plannedThreads, spec.size, (offsetFromNewest) =>
     _pickShowcaseState(offsetFromNewest, spec.size),
   )
+}
+
+// A background cat's log, different on every build:
+// - Empty, or SEED_RANDOM_CHAT_MIN_SIZE to _MAX_SIZE msgs from distinct random threads.
+// - Each thread's slots get distinct users from its own shuffle of `users`. With a small chance,
+//   one slot in one thread is the ghost.
+// - Threads end at random times between the cat's createdAt and now, like reviews. The low end
+//   leaves room for the whole log behind it, even if every thread rolls it and the core pushes
+//   them back one after another. So a cat listed less than ~3 hours ago doesn't fit, and the
+//   core throws (the seed cats are years old).
+// - Each msg rolls its own edit and delete. Both → edited then deleted
+export function buildRandomChatLog(
+  cat: Pick<CatDoc, '_id' | 'createdAt'>,
+  users: { _id: ObjectId }[],
+  threads: ChatThread[],
+): ChatMsgDoc[] {
+  if (Math.random() < SEED_RANDOM_CHAT_EMPTY_CHANCE) return []
+  const sizeRange = SEED_RANDOM_CHAT_MAX_SIZE - SEED_RANDOM_CHAT_MIN_SIZE + 1
+  const size = SEED_RANDOM_CHAT_MIN_SIZE + Math.floor(Math.random() * sizeRange)
+
+  const picked: ChatThread[] = []
+  let lineCount = 0
+  for (const thread of _shuffle(threads)) {
+    if (lineCount >= size) break
+    picked.push(thread)
+    lineCount += thread.lines.length
+  }
+
+  const earliestEndAt = cat.createdAt + SEED_RANDOM_CHAT_MAX_SIZE * SEED_CHAT_LINE_GAP_MS
+  const latestEndAt = Date.now() - SEED_CHAT_NEWEST_AGE_MS
+  const endTimes = picked
+    .map(() => earliestEndAt + Math.floor(Math.random() * (latestEndAt - earliestEndAt)))
+    .sort((a, b) => b - a)
+
+  const ghostThreadIdx =
+    Math.random() < _RANDOM_GHOST_CHANCE ? Math.floor(Math.random() * picked.length) : -1
+  const plannedThreads = picked.map((thread, idx): PlannedChatThread => {
+    const speakerIds = _shuffle(users).map(({ _id }) => _id)
+    if (idx === ghostThreadIdx) {
+      const slotCount = Math.max(...thread.lines.map(({ speaker }) => speaker)) + 1
+      speakerIds[Math.floor(Math.random() * slotCount)] = new ObjectId()
+    }
+    return { thread, speakerIds, endAt: endTimes[idx]! }
+  })
+
+  return buildChatLog(cat, plannedThreads, size, () => {
+    const isEdited = Math.random() < _RANDOM_EDIT_CHANCE
+    const isDeleted = Math.random() < _RANDOM_DELETE_CHANCE
+    if (isEdited && isDeleted) return 'editedThenDeleted'
+    if (isEdited) return 'edited'
+    return isDeleted ? 'deleted' : 'plain'
+  })
+}
+
+// A shuffled copy (Fisher-Yates)
+function _shuffle<T>(items: T[]): T[] {
+  const shuffled = [...items]
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[shuffled[i], shuffled[j]] = [shuffled[j]!, shuffled[i]!]
+  }
+  return shuffled
 }
 
 // A page is CHAT_MSG_PAGE_SIZE msgs counted from the newest, the last one possibly shorter

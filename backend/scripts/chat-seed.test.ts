@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { ObjectId } from 'mongodb'
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { CHAT_MSG_TEXT_MAX_LENGTH } from '@cat-store/shared'
 import { CHAT_MSG_PAGE_SIZE } from '../api/chat/chat.service.ts'
 import type { ChatMsgDoc } from '../models/chat.ts'
@@ -9,10 +9,13 @@ import type { RawCat } from './cat-seed.ts'
 import {
   buildChatLog,
   buildPagingChatLog,
+  buildRandomChatLog,
   buildSeedChatMsg,
   PAGING_CHAT_SPECS,
   SEED_CHAT_EDIT_DELAY_MS,
   SEED_CHAT_LINE_GAP_MS,
+  SEED_RANDOM_CHAT_MAX_SIZE,
+  SEED_RANDOM_CHAT_MIN_SIZE,
   type ChatThread,
   type PlannedChatThread,
   type SeedChatMsgState,
@@ -277,5 +280,79 @@ describe('buildPagingChatLog', () => {
       (spec) => buildPagingChatLog(cat, users, threads, spec).at(-1)!.text,
     )
     expect(new Set(newestTexts).size).toBe(PAGING_CHAT_SPECS.length)
+  })
+})
+
+describe('buildRandomChatLog', () => {
+  const HOUR_MS = 60 * 60 * 1000
+  const users = SEED_USERS.map(() => ({ _id: new ObjectId() }))
+  const cat = { _id: new ObjectId(), createdAt: Date.now() - 2 * 365 * 24 * HOUR_MS }
+  // Enough builds that a 10% ghost or a 20% empty log shows up for sure in practice
+  const BUILD_COUNT = 300
+
+  const _isUser = (userId: ObjectId) => users.some(({ _id }) => _id.equals(userId))
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  it('builds an empty log, or one in the size range', () => {
+    const sizes = Array.from(
+      { length: BUILD_COUNT },
+      () => buildRandomChatLog(cat, users, threads).length,
+    )
+    expect(sizes).toContain(0)
+    for (const size of sizes.filter((size) => size > 0)) {
+      expect(size).toBeGreaterThanOrEqual(SEED_RANDOM_CHAT_MIN_SIZE)
+      expect(size).toBeLessThanOrEqual(SEED_RANDOM_CHAT_MAX_SIZE)
+    }
+  })
+
+  it('hits both ends of the size range on the extreme rolls', () => {
+    // The first roll is the empty check, the second the size, the rest don't matter here
+    vi.spyOn(Math, 'random').mockReturnValueOnce(0.99).mockReturnValueOnce(0)
+    expect(buildRandomChatLog(cat, users, threads)).toHaveLength(SEED_RANDOM_CHAT_MIN_SIZE)
+    vi.spyOn(Math, 'random').mockReturnValue(0.9999)
+    expect(buildRandomChatLog(cat, users, threads)).toHaveLength(SEED_RANDOM_CHAT_MAX_SIZE)
+    vi.spyOn(Math, 'random').mockReturnValue(0)
+    expect(buildRandomChatLog(cat, users, threads)).toEqual([])
+  })
+
+  it("keeps times and ids ascending, between the cat's createdAt and now", () => {
+    for (let i = 0; i < BUILD_COUNT; i++) {
+      const log = buildRandomChatLog(cat, users, threads)
+      _expectAscending(log)
+      _expectUpdatedAtRules(log)
+      for (const { createdAt, updatedAt } of log) {
+        expect(createdAt).toBeGreaterThanOrEqual(cat.createdAt)
+        expect(updatedAt).toBeLessThan(Date.now())
+      }
+    }
+  })
+
+  // The low end of the thread times leaves room for a full log pushed back behind it
+  it('fits a full log on a cat listed 3 hours ago, every thread on the earliest time', () => {
+    const newCat = { ...cat, createdAt: Date.now() - 3 * HOUR_MS }
+    vi.spyOn(Math, 'random')
+      .mockReturnValueOnce(0.99)
+      .mockReturnValueOnce(0.9999)
+      .mockReturnValue(0)
+    const log = buildRandomChatLog(newCat, users, threads)
+    expect(log).toHaveLength(SEED_RANDOM_CHAT_MAX_SIZE)
+    _expectAscending(log)
+    expect(log[0]!.createdAt).toBeGreaterThanOrEqual(newCat.createdAt)
+  })
+
+  it('sometimes has a ghost, at most one per log, matching no user', () => {
+    let ghostLogCount = 0
+    for (let i = 0; i < BUILD_COUNT; i++) {
+      const log = buildRandomChatLog(cat, users, threads)
+      const ghostIds = new Set(
+        log.filter(({ userId }) => !_isUser(userId)).map(({ userId }) => userId.toHexString()),
+      )
+      expect(ghostIds.size).toBeLessThanOrEqual(1)
+      if (ghostIds.size) ghostLogCount++
+    }
+    expect(ghostLogCount).toBeGreaterThan(0)
   })
 })
