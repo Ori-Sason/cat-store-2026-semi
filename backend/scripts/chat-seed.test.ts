@@ -3,7 +3,20 @@ import { join } from 'node:path'
 import { ObjectId } from 'mongodb'
 import { describe, expect, it } from 'vitest'
 import { CHAT_MSG_TEXT_MAX_LENGTH } from '@cat-store/shared'
-import { buildSeedChatMsg, type ChatThread } from './chat-seed.ts'
+import { CHAT_MSG_PAGE_SIZE } from '../api/chat/chat.service.ts'
+import type { ChatMsgDoc } from '../models/chat.ts'
+import type { RawCat } from './cat-seed.ts'
+import {
+  buildChatLog,
+  buildPagingChatLog,
+  buildSeedChatMsg,
+  PAGING_CHAT_SPECS,
+  SEED_CHAT_EDIT_DELAY_MS,
+  SEED_CHAT_LINE_GAP_MS,
+  type ChatThread,
+  type PlannedChatThread,
+  type SeedChatMsgState,
+} from './chat-seed.ts'
 import { SEED_USERS } from './user-seed.ts'
 
 const CREATED_AT = 1700000000000
@@ -80,5 +93,189 @@ describe('chat-threads.json', () => {
         expect(speaker).toBeLessThan(SEED_USERS.length)
       }
     }
+  })
+})
+
+// A log oldest first is sorted when each msg is later, with a bigger _id, than the one before
+function _expectAscending(log: ChatMsgDoc[]) {
+  for (let i = 1; i < log.length; i++) {
+    expect(log[i]!.createdAt).toBeGreaterThan(log[i - 1]!.createdAt)
+    expect(log[i]!._id.toHexString() > log[i - 1]!._id.toHexString()).toBe(true)
+  }
+}
+
+// An edit moves updatedAt by exactly the edit delay, and a delete never moves it
+function _expectUpdatedAtRules(log: ChatMsgDoc[]) {
+  for (const { createdAt, updatedAt } of log) {
+    expect([createdAt, createdAt + SEED_CHAT_EDIT_DELAY_MS]).toContain(updatedAt)
+  }
+}
+
+function _toState({ isDeleted, createdAt, updatedAt }: ChatMsgDoc): SeedChatMsgState {
+  const isEdited = updatedAt > createdAt
+  if (isEdited && isDeleted) return 'editedThenDeleted'
+  if (isEdited) return 'edited'
+  return isDeleted ? 'deleted' : 'plain'
+}
+
+describe('buildChatLog', () => {
+  const NOW = Date.now()
+  const cat = { _id: new ObjectId(), createdAt: NOW - 30 * 24 * 60 * 60 * 1000 }
+  const [alice, bob] = [new ObjectId(), new ObjectId()]
+  const _thread = (...texts: string[]): ChatThread => ({
+    lines: texts.map((text, idx) => ({ speaker: idx % 2, text })),
+  })
+  // Newest first, the newer thread a day after the older one
+  const planned: PlannedChatThread[] = [
+    { thread: _thread('b1', 'b2', 'b3'), speakerIds: [alice, bob], endAt: NOW - 60 * 60 * 1000 },
+    {
+      thread: _thread('a1', 'a2', 'a3'),
+      speakerIds: [bob, alice],
+      endAt: NOW - 25 * 60 * 60 * 1000,
+    },
+  ]
+  const _plain = (): SeedChatMsgState => 'plain'
+
+  it('builds oldest first, trimming the head of the oldest thread', () => {
+    const log = buildChatLog(cat, planned, 5, _plain)
+    expect(log.map(({ text }) => text)).toEqual(['a2', 'a3', 'b1', 'b2', 'b3'])
+    expect(log.map(({ userId }) => userId)).toEqual([alice, bob, alice, bob, alice])
+    expect(log.every((msg) => msg.catId === cat._id)).toBe(true)
+  })
+
+  it('spaces lines in a thread by the line gap, back from its endAt', () => {
+    const log = buildChatLog(cat, planned, 3, _plain)
+    expect(log.map(({ createdAt }) => createdAt)).toEqual([
+      planned[0]!.endAt - 2 * SEED_CHAT_LINE_GAP_MS,
+      planned[0]!.endAt - SEED_CHAT_LINE_GAP_MS,
+      planned[0]!.endAt,
+    ])
+  })
+
+  it('keeps times and ids ascending when a thread overlaps the newer one', () => {
+    const overlapping = planned.map((plannedThread) => ({
+      ...plannedThread,
+      endAt: planned[0]!.endAt,
+    }))
+    const log = buildChatLog(cat, overlapping, 6, _plain)
+    _expectAscending(log)
+  })
+
+  it('applies the picked state by offset from the newest msg', () => {
+    const states: SeedChatMsgState[] = ['plain', 'edited', 'deleted', 'editedThenDeleted']
+    const log = buildChatLog(cat, planned, 4, (offset) => states[offset]!)
+    expect(log.toReversed().map(_toState)).toEqual(states)
+    _expectUpdatedAtRules(log)
+  })
+
+  it('throws when the threads run short of the size', () => {
+    expect(() => buildChatLog(cat, planned, 7, _plain)).toThrow()
+  })
+
+  it("throws on a msg before the cat's createdAt or an edit after now", () => {
+    const lateCat = { ...cat, createdAt: planned[1]!.endAt }
+    expect(() => buildChatLog(lateCat, planned, 6, _plain)).toThrow()
+    const tooNew = [{ ...planned[0]!, endAt: NOW }]
+    expect(() => buildChatLog(cat, tooNew, 3, () => 'edited')).toThrow()
+  })
+
+  it('throws on a speaker slot with no user', () => {
+    const missingSlot = [{ ...planned[0]!, speakerIds: [alice] }]
+    expect(() => buildChatLog(cat, missingSlot, 3, _plain)).toThrow()
+  })
+})
+
+describe('buildPagingChatLog', () => {
+  const users = SEED_USERS.map(() => ({ _id: new ObjectId() }))
+  const rawCats: RawCat[] = JSON.parse(
+    readFileSync(join(import.meta.dirname, 'data', 'cats.json'), 'utf8'),
+  )
+  // The newest seed cat: the strictest createdAt any paging cat can have
+  const cat = { _id: new ObjectId(), createdAt: Math.max(...rawCats.map((raw) => raw.createdAt)) }
+
+  // A user's index in `users`, or 'ghost' for an id with no user
+  const _toAuthor = ({ userId }: ChatMsgDoc) => {
+    const idx = users.findIndex(({ _id }) => _id.equals(userId))
+    return idx === -1 ? 'ghost' : idx
+  }
+
+  // History pages, newest first, each page newest first: the order offsets count in
+  const _toPages = (log: ChatMsgDoc[]) => {
+    const newestFirst = log.toReversed()
+    const pages: ChatMsgDoc[][] = []
+    for (let i = 0; i < newestFirst.length; i += CHAT_MSG_PAGE_SIZE) {
+      pages.push(newestFirst.slice(i, i + CHAT_MSG_PAGE_SIZE))
+    }
+    return pages
+  }
+
+  describe.each(PAGING_CHAT_SPECS)('the $size msgs spec', (spec) => {
+    const log = buildPagingChatLog(cat, users, threads, spec)
+    const pages = _toPages(log)
+    const showcasePages = pages.filter((page) => page.length >= 20)
+
+    it('has the exact size', () => {
+      expect(log).toHaveLength(spec.size)
+    })
+
+    it('builds the same texts, authors and states every time', () => {
+      const _toFixture = (msgs: ChatMsgDoc[]) =>
+        msgs.map((msg) => [msg.text, _toAuthor(msg), _toState(msg)])
+      expect(_toFixture(buildPagingChatLog(cat, users, threads, spec))).toEqual(_toFixture(log))
+    })
+
+    it('puts the showcase states at their offsets on every page of 20 or more', () => {
+      expect(showcasePages.length).toBeGreaterThan(0)
+      for (const page of showcasePages) {
+        const states = page.map(_toState)
+        expect(states[1]).toBe('edited')
+        expect(states[4]).toBe('deleted')
+        expect(states[7]).toBe('editedThenDeleted')
+        expect(states.filter((state) => state !== 'plain')).toHaveLength(3)
+      }
+    })
+
+    it('has a ghost and every seed user on every page of 20 or more', () => {
+      for (const page of showcasePages) {
+        const authors = new Set(page.map(_toAuthor))
+        expect(authors).toEqual(new Set(['ghost', ...users.keys()]))
+      }
+    })
+
+    it('uses one ghost id for the whole log', () => {
+      const ghostIds = new Set(
+        log.filter((msg) => _toAuthor(msg) === 'ghost').map(({ userId }) => userId.toHexString()),
+      )
+      expect(ghostIds.size).toBe(1)
+    })
+
+    it("keeps times and ids ascending, between the cat's createdAt and now", () => {
+      _expectAscending(log)
+      _expectUpdatedAtRules(log)
+      expect(log[0]!.createdAt).toBeGreaterThan(cat.createdAt)
+      expect(log.at(-1)!.updatedAt).toBeLessThan(Date.now())
+    })
+
+    it('uses each thread at most once', () => {
+      // A thread's first line is unique enough across the pool to stand for it
+      const threadStarts = new Set(threads.map(({ lines }) => lines[0]!.text))
+      const startsInLog = log.map(({ text }) => text).filter((text) => threadStarts.has(text))
+      expect(new Set(startsInLog).size).toBe(startsInLog.length)
+    })
+  })
+
+  it('gives the 51 msgs cat a single older msg, by the ghost', () => {
+    const spec = PAGING_CHAT_SPECS.find(({ size }) => size === 51)!
+    const pages = _toPages(buildPagingChatLog(cat, users, threads, spec))
+    expect(pages.map((page) => page.length)).toEqual([50, 1])
+    expect(_toAuthor(pages[1]![0]!)).toBe('ghost')
+    expect(_toState(pages[1]![0]!)).toBe('plain')
+  })
+
+  it('starts each spec at a different thread', () => {
+    const newestTexts = PAGING_CHAT_SPECS.map(
+      (spec) => buildPagingChatLog(cat, users, threads, spec).at(-1)!.text,
+    )
+    expect(new Set(newestTexts).size).toBe(PAGING_CHAT_SPECS.length)
   })
 })

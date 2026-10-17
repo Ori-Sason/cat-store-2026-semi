@@ -17,7 +17,8 @@ import { mongoService } from '../../services/mongodb.service.ts'
 import { utilService } from '../../services/util.service.ts'
 import { catService } from '../cat/cat.service.ts'
 
-const _PAGE_SIZE = 50
+// Exported for the seed, whose paging cats are sized around it
+export const CHAT_MSG_PAGE_SIZE = 50
 
 // One page of a cat's chat, oldest first in both directions:
 // - neither cursor → the newest page, beforeId → the page before it ("load older"),
@@ -36,16 +37,16 @@ async function query(
   if (afterId) {
     criteria._id = { $gt: utilService.toObjectId(afterId)! }
     const docs = await _queryJoined(criteria, 1)
-    const isMore = docs.length > _PAGE_SIZE
-    const msgs = docs.slice(0, _PAGE_SIZE).map(_toWireMsg)
+    const isMore = docs.length > CHAT_MSG_PAGE_SIZE
+    const msgs = docs.slice(0, CHAT_MSG_PAGE_SIZE).map(_toWireMsg)
     return { msgs, nextAfterId: isMore ? msgs.at(-1)!._id : null }
   }
 
   if (beforeId) criteria._id = { $lt: utilService.toObjectId(beforeId)! }
   const docs = await _queryJoined(criteria, -1)
-  const isMore = docs.length > _PAGE_SIZE
+  const isMore = docs.length > CHAT_MSG_PAGE_SIZE
   // Fetched newest first (so the limit keeps the newest), sent oldest first
-  const msgs = docs.slice(0, _PAGE_SIZE).reverse().map(_toWireMsg)
+  const msgs = docs.slice(0, CHAT_MSG_PAGE_SIZE).reverse().map(_toWireMsg)
   return { msgs, nextBeforeId: isMore ? msgs[0]!._id : null }
 }
 
@@ -150,7 +151,7 @@ async function _queryJoined(
   const pipeline: Document[] = [
     { $match: criteria },
     { $sort: { _id: sortDir } },
-    { $limit: _PAGE_SIZE + 1 },
+    { $limit: CHAT_MSG_PAGE_SIZE + 1 },
     ..._userStages(),
   ]
   return collection.aggregate<ChatMsgJoinedDoc>(pipeline).toArray()
