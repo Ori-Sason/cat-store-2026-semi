@@ -1,3 +1,4 @@
+import { ERROR_CODES, type ApiErrorBody } from '@cat-store/shared'
 import { ApiError, type ClientErrorCode } from '../models/api-error'
 
 const GENERIC_MSG = 'Something went wrong. Please try again.'
@@ -38,7 +39,20 @@ const getErrorMsg = (err: unknown, overrides: ErrorMsgOverrides = {}) => {
   return `${msg}\nRef: ${err.requestId.slice(0, 8)}`
 }
 
+// Whether a response body (HTTP) or an ack's error (socket) is our ApiErrorBody, and not e.g. an
+// HTML 502 page from a proxy
+function isApiErrorBody(data: unknown): data is ApiErrorBody {
+  return (
+    typeof data === 'object' &&
+    data !== null &&
+    'code' in data &&
+    typeof data.code === 'string' &&
+    (ERROR_CODES as readonly string[]).includes(data.code)
+  )
+}
+
 export const errorService = {
   ERROR_MSG_MAP,
   getErrorMsg,
+  isApiErrorBody,
 }

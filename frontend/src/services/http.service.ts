@@ -1,7 +1,7 @@
 import Axios from 'axios'
-import { ERROR_CODES, type ApiErrorBody } from '@cat-store/shared'
 import { ApiError } from '../models/api-error'
 import { useLoggedInUserStore } from '../store/logged-in-user.store'
+import { errorService } from './error.service'
 
 const BASE_URL = '/api'
 const SECRET_FIELDS = new Set(['password', 'confirmPassword'])
@@ -63,22 +63,12 @@ const _toApiError = (err: unknown): ApiError => {
   if (!err.response) return new ApiError(0, 'NETWORK_ERROR', err.message)
 
   const { status, data } = err.response
-  if (_isApiErrorBody(data)) {
+  if (errorService.isApiErrorBody(data)) {
     return new ApiError(status, data.code, data.message, data.fieldErrors, data.requestId)
   }
 
   // A response that isn't ours - e.g. an HTML 502 page from a proxy
   return new ApiError(status, 'UNKNOWN', err.message)
-}
-
-const _isApiErrorBody = (data: unknown): data is ApiErrorBody => {
-  return (
-    typeof data === 'object' &&
-    data !== null &&
-    'code' in data &&
-    typeof data.code === 'string' &&
-    (ERROR_CODES as readonly string[]).includes(data.code)
-  )
 }
 
 const _logError = (method: string, endpoint: string, data: unknown, apiError: ApiError) => {

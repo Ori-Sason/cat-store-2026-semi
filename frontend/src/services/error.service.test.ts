@@ -42,3 +42,21 @@ describe('errorService.getErrorMsg', () => {
     expect(getErrorMsg(err)).toBe(ERROR_MSG_MAP.INVALID_CREDENTIALS)
   })
 })
+
+describe('errorService.isApiErrorBody', () => {
+  it('accepts a body with a known code', () => {
+    expect(errorService.isApiErrorBody({ code: 'CAT_NOT_FOUND', message: 'Cat not found' })).toBe(
+      true,
+    )
+  })
+
+  it.each([
+    ['an unknown code', { code: 'NOPE', message: 'x' }],
+    ['a non-string code', { code: 404 }],
+    ['no code', { message: 'x' }],
+    ['an HTML page', '<html>502</html>'],
+    ['null', null],
+  ])('rejects %s', (_name, data) => {
+    expect(errorService.isApiErrorBody(data)).toBe(false)
+  })
+})
