@@ -1,5 +1,10 @@
 import { io } from 'socket.io-client'
+import { ApiError } from '../models/api-error'
 import { useLoggedInUserStore } from '../store/logged-in-user.store'
+import { errorService } from './error.service'
+
+// The server's DB write is awaited before the ack (~ms), so 5s means the connection is the problem
+const ACK_TIMEOUT_MS = 5_000
 
 // One socket for the whole app: the cat chat joins rooms on it, and site-wide notifications
 // (roadmap Part 6 item 2) need it on every page.
@@ -12,6 +17,8 @@ type LoggedInUserState = ReturnType<typeof useLoggedInUserStore.getState>
 
 export const socketService = {
   connect,
+  emit,
+  emitWithAck,
 }
 
 // Called once in main.tsx, after the logged-in user is loaded, so the handshake sends the
@@ -32,4 +39,27 @@ function _reconnectOnUserChange(state: LoggedInUserState, prevState: LoggedInUse
   const prevUserId = prevState.loggedInUser?._id ?? null
   if (userId === prevUserId) return
   _socket.disconnect().connect()
+}
+
+// For events with no ack (chat:leave, chat:typing)
+function emit(event: string, payload: unknown): void {
+  _socket.emit(event, payload)
+}
+
+// Resolves with the ack, or throws an ApiError like http.service: an error ack keeps its code, and
+// a timeout or a lost connection is NETWORK_ERROR.
+// No client retries / ackTimeout options: they resend on their own, and stacked on a manual retry
+// the attempts multiply. A failed call stays failed, and the caller decides about a retry
+async function emitWithAck<T>(event: string, payload: unknown): Promise<T> {
+  let ack: unknown
+  try {
+    ack = await _socket.timeout(ACK_TIMEOUT_MS).emitWithAck(event, payload)
+  } catch (err) {
+    throw new ApiError(0, 'NETWORK_ERROR', err instanceof Error ? err.message : String(err))
+  }
+  const error = (ack as { error?: unknown } | null)?.error
+  if (error === undefined) return ack as T
+  if (!errorService.isApiErrorBody(error))
+    throw new ApiError(0, 'UNKNOWN', `Unexpected ${event} ack`)
+  throw new ApiError(0, error.code, error.message, error.fieldErrors, error.requestId)
 }

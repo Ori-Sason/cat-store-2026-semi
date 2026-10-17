@@ -4,7 +4,7 @@ export type ClientErrorCode = ErrorCode | 'NETWORK_ERROR' | 'UNKNOWN'
 
 // The only error type pages see from the http layer - they never deal with Axios directly
 export class ApiError extends Error {
-  status: number // 0 = no response (server down, offline)
+  status: number // 0 = no HTTP response: server down, offline, or a socket ack (it has no status)
   code: ClientErrorCode
   fieldErrors: Record<string, string[]> | undefined
   requestId: string | undefined
