@@ -32,7 +32,7 @@ for one file's own logic stay in it, as `_` functions. Each package's rule lists
   `catFilterService`, `catPermissionService`, `reviewPermissionService`, `chatPermissionService`,
   `sharedUtilService`.
   No build step.
-- `frontend/` — Vite + React + TS SPA. `react-router` v8, Zustand, axios, SCSS.
+- `frontend/` — Vite + React + TS SPA. `react-router` v8, Zustand, axios, socket.io-client, SCSS.
   Not Next.js.
 - `backend/` — Express 5 + native `mongodb` driver (no Mongoose) + Socket.io. Node runs `.ts`
   directly (type stripping), env via `--env-file`.

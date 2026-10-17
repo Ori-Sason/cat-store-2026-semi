@@ -5,10 +5,10 @@ TypeScript monorepo (npm workspaces): `shared`, `frontend`, `backend`.
 One Express server serves `/api`, Socket.io and the built FE in prod → same-origin, no CORS.
 
 ```
-dev:  browser ──▶ Vite :5173 ──(proxy /api)──▶ Express :8000 ──▶ MongoDB `cats`
+dev:  browser ──▶ Vite :5173 ──(proxy /api, /socket.io)──▶ Express :8000 ──▶ MongoDB `cats`
 test: Vitest + Supertest (in memory) ─────────────────────────▶ MongoDB `catsTest`
       Vitest + socket.io-client ──▶ Express + Socket.io :0 ───▶ MongoDB `catsTest`
-e2e:  Playwright ──▶ Vite :5174 ──(proxy /api)──▶ Express :8001 ──▶ MongoDB `catsTest`
+e2e:  Playwright ──▶ Vite :5174 ──(proxy /api, /socket.io)──▶ Express :8001 ──▶ MongoDB `catsTest`
 prod: browser ──▶ Express (static FE + /api + socket.io) ──▶ MongoDB (Atlas)
 ```
 
@@ -45,13 +45,13 @@ prod: browser ──▶ Express (static FE + /api + socket.io) ──▶ MongoDB
 ## Stack
 Main libraries only. Exact versions and `@types/*` live in each `package.json`.
 - shared: zod. Its schemas are the validation for both FE and BE.
-- frontend: React, TypeScript, react-router 8, Zustand, axios, Vite, Sass, OpenLayers (`ol`).
+- frontend: React, TypeScript, react-router 8, Zustand, axios, socket.io-client, Vite, Sass,
+  OpenLayers (`ol`).
 - backend: Express 5, native `mongodb` driver, socket.io. No Mongoose, no `ts-node`/`tsx`.
 - auth: jsonwebtoken, bcrypt, cookie-parser.
 - testing: Vitest everywhere, React Testing Library + jsdom (FE), Supertest and socket.io-client
   (BE), Playwright (E2E).
 - tooling: oxlint, oxfmt, lefthook.
-- planned: socket.io-client in the FE (Part 6, the chat frontend).
 
 External services: MongoDB (local in dev, Atlas in prod), Render (hosting).
 Env: `node --env-file=.env.local`, no dotenv. Prod needs `JWT_SECRET`, Mongo URL,
