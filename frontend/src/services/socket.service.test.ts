@@ -11,6 +11,8 @@ const fakeSocket = vi.hoisted(() => {
     connect: vi.fn(() => socket),
     disconnect: vi.fn(() => socket),
     emit: vi.fn(),
+    on: vi.fn(),
+    off: vi.fn(),
     timeout: vi.fn(() => ({ emitWithAck })),
     emitWithAck,
   }
@@ -110,6 +112,36 @@ describe('socketService.emitWithAck', () => {
 
     expect(err).toBeInstanceOf(ApiError)
     expect(err).toMatchObject({ code: 'CAT_NOT_FOUND', requestId: 'req-1' })
+  })
+
+  it('clears the logged-in user on an UNAUTHORIZED ack', async () => {
+    useLoggedInUserStore.setState({ loggedInUser: _USER })
+    fakeSocket.emitWithAck.mockResolvedValue({
+      error: { code: 'UNAUTHORIZED', message: 'Log in first', requestId: 'req-1' },
+    })
+
+    await expect(socketService.emitWithAck('chat:msg-add', {})).rejects.toMatchObject({
+      code: 'UNAUTHORIZED',
+    })
+    expect(store().loggedInUser).toBeNull()
+  })
+
+  it('keeps the logged-in user on another error ack', async () => {
+    useLoggedInUserStore.setState({ loggedInUser: _USER })
+    fakeSocket.emitWithAck.mockResolvedValue({
+      error: { code: 'FORBIDDEN', message: 'Not allowed', requestId: 'req-1' },
+    })
+
+    await expect(socketService.emitWithAck('chat:msg-add', {})).rejects.toThrow(ApiError)
+    expect(store().loggedInUser).toEqual(_USER)
+  })
+
+  it('keeps the logged-in user on a timeout', async () => {
+    useLoggedInUserStore.setState({ loggedInUser: _USER })
+    fakeSocket.emitWithAck.mockRejectedValue(new Error('operation has timed out'))
+
+    await expect(socketService.emitWithAck('chat:msg-add', {})).rejects.toThrow(ApiError)
+    expect(store().loggedInUser).toEqual(_USER)
   })
 
   it('throws a timeout as NETWORK_ERROR', async () => {

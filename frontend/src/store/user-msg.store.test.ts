@@ -42,6 +42,12 @@ describe('useUserMsgStore', () => {
     expect(store().navigationMsg).toMatchObject({ txt: 'Logged in', type: 'success' })
   })
 
+  it('holds a queued error navigation msg', () => {
+    store().queueErrorNavigationMsg('This cat was deleted')
+
+    expect(store().navigationMsg).toMatchObject({ txt: 'This cat was deleted', type: 'error' })
+  })
+
   it('moves the queued msg to msg on flush', () => {
     store().queueSuccessNavigationMsg('Logged in')
     const queued = store().navigationMsg

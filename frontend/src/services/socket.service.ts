@@ -17,6 +17,8 @@ type LoggedInUserState = ReturnType<typeof useLoggedInUserStore.getState>
 
 export const socketService = {
   connect,
+  on,
+  off,
   emit,
   emitWithAck,
 }
@@ -41,13 +43,24 @@ function _reconnectOnUserChange(state: LoggedInUserState, prevState: LoggedInUse
   _socket.disconnect().connect()
 }
 
+// Server events, plus socket.io-client's own ('connect' fires on every reconnect too).
+// The socket is app-wide, so a listener must be removed with off() when its page is done
+function on<T>(event: string, listener: (payload: T) => void): void {
+  _socket.on(event, listener)
+}
+
+function off<T>(event: string, listener: (payload: T) => void): void {
+  _socket.off(event, listener)
+}
+
 // For events with no ack (chat:leave, chat:typing)
 function emit(event: string, payload: unknown): void {
   _socket.emit(event, payload)
 }
 
 // Resolves with the ack, or throws an ApiError like http.service: an error ack keeps its code, and
-// a timeout or a lost connection is NETWORK_ERROR.
+// a timeout or a lost connection is NETWORK_ERROR. An UNAUTHORIZED ack clears the user, like
+// http.service on a 401. Only that code does: a lost connection never logs the user out.
 // No client retries / ackTimeout options: they resend on their own, and stacked on a manual retry
 // the attempts multiply. A failed call stays failed, and the caller decides about a retry
 async function emitWithAck<T>(event: string, payload: unknown): Promise<T> {
@@ -61,5 +74,6 @@ async function emitWithAck<T>(event: string, payload: unknown): Promise<T> {
   if (error === undefined) return ack as T
   if (!errorService.isApiErrorBody(error))
     throw new ApiError(0, 'UNKNOWN', `Unexpected ${event} ack`)
+  if (error.code === 'UNAUTHORIZED') useLoggedInUserStore.getState().clearLoggedInUser()
   throw new ApiError(0, error.code, error.message, error.fieldErrors, error.requestId)
 }

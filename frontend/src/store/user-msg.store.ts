@@ -9,6 +9,7 @@ interface UserMsgState {
 
   navigationMsg: UserMsg | null
   queueSuccessNavigationMsg: (txt: string) => void
+  queueErrorNavigationMsg: (txt: string) => void
   flushNavigationMsg: () => void
 }
 
@@ -24,6 +25,7 @@ export const useUserMsgStore = create<UserMsgState>((set) => {
     navigationMsg: null,
     queueSuccessNavigationMsg: (txt) =>
       set({ navigationMsg: { id: msgId++, txt, type: 'success' } }),
+    queueErrorNavigationMsg: (txt) => set({ navigationMsg: { id: msgId++, txt, type: 'error' } }),
     flushNavigationMsg: () =>
       set((state) =>
         state.navigationMsg ? { msg: state.navigationMsg, navigationMsg: null } : state,
