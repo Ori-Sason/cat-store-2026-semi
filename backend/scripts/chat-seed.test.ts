@@ -115,6 +115,47 @@ function _expectUpdatedAtRules(log: ChatMsgDoc[]) {
   }
 }
 
+// Splits a log back into the pool threads it came from, walking from the newest msg. Each run
+// is a thread's last lines in full, except the oldest run, which the trim may have cut short.
+// Fails the test when a stretch of the log matches no pool thread
+function _toThreadRuns(log: ChatMsgDoc[]) {
+  const newestFirst = log.toReversed()
+  const runs: { thread: ChatThread; msgs: ChatMsgDoc[] }[] = []
+  for (let i = 0; i < newestFirst.length;) {
+    const thread = threads.find(({ lines }) =>
+      lines
+        .toReversed()
+        .every((line, k) => i + k >= newestFirst.length || newestFirst[i + k]!.text === line.text),
+    )
+    expect(thread).toBeDefined()
+    const msgs = newestFirst.slice(i, i + thread!.lines.length)
+    runs.push({ thread: thread!, msgs })
+    i += msgs.length
+  }
+  return runs
+}
+
+// In every thread, one user per speaker slot and a different user for each slot, so nobody
+// answers themselves (the ghost counts as one more user)
+function _expectOneUserPerSlot(log: ChatMsgDoc[]) {
+  for (const { thread, msgs } of _toThreadRuns(log)) {
+    const slotUserIds = new Map<number, string>()
+    msgs.forEach((msg, k) => {
+      const { speaker } = thread.lines[thread.lines.length - 1 - k]!
+      const userId = msg.userId.toHexString()
+      expect(slotUserIds.get(speaker) ?? userId).toBe(userId)
+      slotUserIds.set(speaker, userId)
+    })
+    const userIds = [...slotUserIds.values()]
+    expect(new Set(userIds).size).toBe(userIds.length)
+  }
+}
+
+function _expectDistinctThreads(log: ChatMsgDoc[]) {
+  const logThreads = _toThreadRuns(log).map(({ thread }) => thread)
+  expect(new Set(logThreads).size).toBe(logThreads.length)
+}
+
 function _toState({ isDeleted, createdAt, updatedAt }: ChatMsgDoc): SeedChatMsgState {
   const isEdited = updatedAt > createdAt
   if (isEdited && isDeleted) return 'editedThenDeleted'
@@ -261,10 +302,11 @@ describe('buildScriptedChatLog', () => {
     })
 
     it('uses each thread at most once', () => {
-      // A thread's first line is unique enough across the pool to stand for it
-      const threadStarts = new Set(threads.map(({ lines }) => lines[0]!.text))
-      const startsInLog = log.map(({ text }) => text).filter((text) => threadStarts.has(text))
-      expect(new Set(startsInLog).size).toBe(startsInLog.length)
+      _expectDistinctThreads(log)
+    })
+
+    it('gives each speaker slot in a thread its own user', () => {
+      _expectOneUserPerSlot(log)
     })
   })
 
@@ -342,6 +384,14 @@ describe('buildRandomChatLog', () => {
     expect(log).toHaveLength(SEED_RANDOM_CHAT_MAX_SIZE)
     _expectAscending(log)
     expect(log[0]!.createdAt).toBeGreaterThanOrEqual(newCat.createdAt)
+  })
+
+  it('uses distinct threads, each speaker slot with its own user', () => {
+    for (let i = 0; i < BUILD_COUNT; i++) {
+      const log = buildRandomChatLog(cat, users, threads)
+      _expectDistinctThreads(log)
+      _expectOneUserPerSlot(log)
+    }
   })
 
   it('sometimes has a ghost, at most one per log, matching no user', () => {
