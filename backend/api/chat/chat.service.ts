@@ -17,7 +17,7 @@ import { mongoService } from '../../services/mongodb.service.ts'
 import { utilService } from '../../services/util.service.ts'
 import { catService } from '../cat/cat.service.ts'
 
-// Exported for the seed, whose paging cats are sized around it
+// Exported for the seed, whose scripted cats are sized around it
 export const CHAT_MSG_PAGE_SIZE = 50
 
 // One page of a cat's chat, oldest first in both directions:

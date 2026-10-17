@@ -32,7 +32,8 @@ const CHAT_THREADS_FILE_PATH = join(import.meta.dirname, 'data', 'chat-threads.j
 // log and owner each (SCRIPTED_CHAT_SPECS), for the manual checks of "load older" and the msg
 // states. Every other cat gets a random log, maybe empty, from the JSON thread pool.
 // Re-running is safe: you always end up with the same users (same ids) and the same set of
-// cats (fresh ids, labels and owners), with fresh random reviews
+// cats (fresh ids, labels and owners), with fresh random reviews and chat logs (the scripted
+// cats' logs come back the same)
 async function seed() {
   try {
     // Read here, not in config: only the seed needs it, the server never does
