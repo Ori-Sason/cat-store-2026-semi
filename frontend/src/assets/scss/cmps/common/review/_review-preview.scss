@@ -27,23 +27,6 @@
     justify-self: start;
   }
 
-  // You (the viewer's own review) and Admin (written by staff) on a cat's page only, and Owner
-  // (written by the cat's owner)
-  .chip {
-    @include chip;
-    align-self: center;
-
-    &.owner {
-      color: $clr-black;
-      background-color: $clr-pink;
-    }
-
-    // Dark, so it stands apart from You (light blue): it marks whose edits carry authority
-    &.admin {
-      @include admin-chip;
-    }
-  }
-
   .author {
     font-weight: 700;
     color: $primary-clr-900;

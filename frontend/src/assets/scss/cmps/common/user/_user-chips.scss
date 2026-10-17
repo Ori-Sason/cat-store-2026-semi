@@ -1,0 +1,24 @@
+@use 'setup' as *;
+
+// You (the viewer), Owner (the cat's owner) and Admin (staff), next to a user's name.
+// Centered, so the chips sit mid-line in a header that lines its items up on the text baseline
+.user-chips {
+  display: inline-flex;
+  align-self: center;
+  align-items: center;
+  gap: $space-2;
+
+  .chip {
+    @include chip;
+
+    &.owner {
+      color: $clr-black;
+      background-color: $clr-pink;
+    }
+
+    // Dark, so it stands apart from You (light blue): it marks whose edits carry authority
+    &.admin {
+      @include admin-chip;
+    }
+  }
+}

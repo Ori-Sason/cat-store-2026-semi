@@ -129,6 +129,9 @@ The ones that don't follow the pattern:
   error message that pops up and closes by itself after a few seconds. A navigation msg
   (`navigationMsg`) is one queued to show once the next navigation finishes.
   Avoid: `toast`, `snackbar`, `alert`, `notification`.
+- **user chip** (`UserChips`): a small tag next to a user's name: You, Owner (of the cat) or
+  Admin. Each caller decides which ones show. Not a label chip (`LabelChip`, a cat's label).
+  Avoid: `badge`, `tag`, `role chip`.
 
 ## Update Triggers
 - Add a term when a new entity, type shape or shared concept appears, before it spreads.

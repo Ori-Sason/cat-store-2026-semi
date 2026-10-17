@@ -4,6 +4,7 @@ import { reviewPermissionService, type ReviewWithRefs } from '@cat-store/shared'
 import { utilService } from '../../../services/util.service'
 import { useLoggedInUserStore } from '../../../store/logged-in-user.store'
 import { CatImg } from '../cat/cat-img'
+import { UserChips } from '../user/user-chips'
 import { ReviewEditable } from './review-editable'
 
 // The page the row is on. Each page already shows one side of the review, so the row's header
@@ -43,9 +44,7 @@ export const ReviewPreview: React.FC<ReviewPreviewProps> = ({ review, shownOn })
             </Link>
           </span>
         )}
-        {isAdminShown && <span className="chip admin">Admin</span>}
-        {isByCatOwner && <span className="chip owner">Owner</span>}
-        {isYouShown && <span className="chip">You</span>}
+        <UserChips isAdmin={isAdminShown} isOwner={isByCatOwner} isYou={isYouShown} />
         <time dateTime={new Date(review.createdAt).toISOString()}>
           {utilService.formatDate(review.createdAt)}
         </time>
