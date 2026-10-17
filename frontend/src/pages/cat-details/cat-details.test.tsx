@@ -20,6 +20,8 @@ import { reviewLoader } from '../review/review.loader'
 
 vi.mock('../../services/cat.service')
 vi.mock('../../services/review.service')
+// The page mounts the chat, which joins its room. These tests are about the rest of the page
+vi.mock('../../services/socket.service')
 
 const CAT = {
   _id: 'cat-1',

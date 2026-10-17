@@ -2,6 +2,7 @@ import type React from 'react'
 import { useState } from 'react'
 import { Link, Outlet, useFetcher, useLoaderData, useLocation } from 'react-router'
 import { catPermissionService } from '@cat-store/shared'
+import { CatChat } from '../../cmps/cat-details/cat-chat'
 import { CatImg } from '../../cmps/common/cat/cat-img'
 import { LabelChip } from '../../cmps/common/cat/label-chip'
 import { ConfirmModal } from '../../cmps/common/util/confirm-modal'
@@ -73,6 +74,8 @@ export const CatDetails: React.FC = () => {
 
       {/* The reviews: a child route with its own loader (CatReviews) */}
       <Outlet />
+
+      <CatChat catId={cat._id} catName={cat.name} catOwnerId={cat.owner._id} />
 
       <ConfirmModal
         isOpen={isConfirmOpen}

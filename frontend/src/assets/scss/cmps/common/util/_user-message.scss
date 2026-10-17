@@ -4,6 +4,8 @@
 .user-message {
   min-width: 20rem;
   position: fixed;
+  // Above the chat icon and panel (20), which share its bottom-right corner
+  z-index: 30;
   bottom: 20px;
   right: -10px;
   transform: translateX(100%);

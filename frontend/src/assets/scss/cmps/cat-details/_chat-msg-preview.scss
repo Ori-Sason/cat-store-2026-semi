@@ -1,0 +1,87 @@
+@use 'setup' as *;
+
+// The row is full width, so the hover tint and the own rail reach the panel's edges
+.chat-msg-preview {
+  display: grid;
+  row-gap: 2px;
+  padding: 6px $space-4;
+  font-size: 0.9rem;
+
+  // A faint blue, not grey
+  &:hover {
+    background-color: rgba($primary-clr-500, 0.08);
+  }
+
+  // Own msgs: a faint tint and a 2px rail flush with the panel's left edge. Visual only, so the
+  // name carries a visually hidden "(you)". If the light rail reads too quiet, the fallback is
+  // the You chip
+  &.is-own {
+    background-color: rgba($primary-clr-500, 0.05);
+    box-shadow: inset 2px 0 0 $primary-clr-300;
+
+    // Deeper than the own tint, so the hover still reads
+    &:hover {
+      background-color: rgba($primary-clr-500, 0.14);
+    }
+  }
+
+  header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: $space-2;
+  }
+
+  .author {
+    font-weight: 700;
+    color: $primary-clr-900;
+
+    &.is-gone {
+      font-style: italic;
+      font-weight: 400;
+      color: $primary-clr-850;
+    }
+  }
+
+  time {
+    font-size: 0.78rem;
+    font-variant-numeric: tabular-nums;
+    color: $primary-clr-850;
+  }
+
+  // Keeps the typed line breaks. Long words wrap instead of overflowing
+  .text {
+    white-space: pre-line;
+    overflow-wrap: anywhere;
+    color: $clr-black;
+  }
+
+  // ⊘ before the text: a ring with a slash
+  .tombstone {
+    font-style: italic;
+    color: $primary-clr-850;
+
+    &::before {
+      content: '';
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      margin-right: 6px;
+      vertical-align: -1px;
+      border: 1.5px solid currentColor;
+      border-radius: 50%;
+      background: linear-gradient(
+        135deg,
+        transparent 44%,
+        currentColor 44% 56%,
+        transparent 56%
+      );
+    }
+  }
+
+  // Low-attention meta: the black token at reduced opacity
+  .edited {
+    font-size: 0.72rem;
+    color: rgba($clr-black, 0.5);
+  }
+}

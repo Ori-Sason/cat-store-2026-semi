@@ -14,6 +14,12 @@ const _priceFormatter = new Intl.NumberFormat('en-US', {
 })
 
 const _dateFormatter = new Intl.DateTimeFormat('en-US', { dateStyle: 'medium' })
+// 24-hour, like the chat mockup: '14:32', '09:05'
+const _timeFormatter = new Intl.DateTimeFormat('en-US', {
+  hour: '2-digit',
+  minute: '2-digit',
+  hourCycle: 'h23',
+})
 
 function formatPrice(price: number): string {
   return _priceFormatter.format(price)
@@ -21,6 +27,10 @@ function formatPrice(price: number): string {
 
 function formatDate(ms: number): string {
   return _dateFormatter.format(ms)
+}
+
+function formatTime(ms: number): string {
+  return _timeFormatter.format(ms)
 }
 
 // How many items fit in one row, keeping room for a trailing "+N" chip while any are left out
@@ -121,6 +131,7 @@ function getRandomUuid(): string {
 export const utilService = {
   formatPrice,
   formatDate,
+  formatTime,
   getFitCount,
   getLabelStyle,
   getFirstName,

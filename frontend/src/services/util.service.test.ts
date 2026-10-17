@@ -59,6 +59,18 @@ describe('utilService.formatDate', () => {
   })
 })
 
+describe('utilService.formatTime', () => {
+  // Local time on purpose: the time shows in the viewer's timezone
+  it('shows 24-hour hours and minutes', () => {
+    expect(utilService.formatTime(new Date(2026, 9, 4, 14, 32).getTime())).toBe('14:32')
+  })
+
+  it('pads a single-digit hour and keeps midnight as 00', () => {
+    expect(utilService.formatTime(new Date(2026, 9, 4, 9, 5).getTime())).toBe('09:05')
+    expect(utilService.formatTime(new Date(2026, 9, 4, 0, 7).getTime())).toBe('00:07')
+  })
+})
+
 describe('utilService.toActionError', () => {
   beforeEach(() => {
     useUserMsgStore.setState({ msg: null })

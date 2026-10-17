@@ -1,0 +1,78 @@
+@use 'setup' as *;
+
+.chat-log {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  // chat-log.tsx restores the scroll itself when older msgs load above. The browser's own
+  // anchoring would move it a second time
+  overflow-anchor: none;
+  padding: $space-1 0 $space-2;
+
+  &.is-empty {
+    display: grid;
+    place-content: center;
+    gap: $space-2;
+    padding: $space-5;
+    text-align: center;
+    font-size: 0.85rem;
+    color: $primary-clr-850;
+
+    .empty-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: $primary-clr-900;
+    }
+  }
+
+  .older {
+    display: flex;
+    justify-content: center;
+    padding: 10px $space-4 6px;
+
+    button {
+      padding: $space-1 $space-3;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: $primary-clr-600;
+      border: 1px solid $primary-clr-300;
+      border-radius: $radius-pill;
+      background-color: $clr-white;
+
+      &:hover:not(:disabled) {
+        background-color: $primary-clr-100;
+      }
+
+      &:disabled {
+        opacity: 0.6;
+        cursor: default;
+      }
+    }
+  }
+
+  // A line on each side of the label
+  .day-divider {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: $space-2 $space-4 2px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: $primary-clr-850;
+
+    &::before,
+    &::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background-color: $primary-clr-200;
+    }
+  }
+
+  // No dividers between rows, a small gap instead
+  li + li {
+    margin-top: 2px;
+  }
+}
