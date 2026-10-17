@@ -1,0 +1,265 @@
+[
+  {
+    "lines": [
+      { "speaker": 0, "text": "Is this cat ok with dogs?" },
+      { "speaker": 1, "text": "I asked the same thing last week. Apparently fine with calm dogs." },
+      { "speaker": 0, "text": "Mine is a very calm old lab, so that sounds promising." },
+      { "speaker": 2, "text": "Introduce them slowly though. A closed door for the first few days helps a lot." }
+    ]
+  },
+  {
+    "lines": [
+      { "speaker": 0, "text": "Anyone know if the vaccines are up to date?" },
+      { "speaker": 1, "text": "The listing says vaccinated, but I'd ask for the vet card." },
+      { "speaker": 2, "text": "I saw the card at the pickup point. All current, plus a chip." },
+      { "speaker": 0, "text": "Great, thanks!" }
+    ]
+  },
+  {
+    "lines": [
+      { "speaker": 0, "text": "Those eyes though 😍" },
+      { "speaker": 1, "text": "Right? The second photo got me." },
+      { "speaker": 2, "text": "Same. I keep coming back to this page." }
+    ]
+  },
+  {
+    "lines": [
+      { "speaker": 0, "text": "How does this cat do with small kids?" },
+      { "speaker": 1, "text": "Mine are 4 and 7 and we visited together. Very patient with them." },
+      { "speaker": 0, "text": "Any scratching?" },
+      { "speaker": 1, "text": "None. Just walked away when it got too loud." },
+      { "speaker": 2, "text": "That's honestly the best you can ask for." }
+    ]
+  },
+  {
+    "lines": [
+      { "speaker": 0, "text": "Is the price negotiable?" },
+      { "speaker": 1, "text": "Probably not much. It covers the vet bills." },
+      { "speaker": 2, "text": "Worth asking anyway, the worst they can say is no." },
+      { "speaker": 0, "text": "Fair. I'll send a message." }
+    ]
+  },
+  {
+    "lines": [
+      { "speaker": 0, "text": "What food is this cat on right now?" },
+      { "speaker": 1, "text": "Dry food in the morning, wet in the evening, from what I heard." },
+      { "speaker": 0, "text": "Any particular brand?" },
+      { "speaker": 2, "text": "Doesn't really matter, just switch slowly over a week or so." },
+      { "speaker": 3, "text": "+1. Our cat had an upset stomach when we switched overnight." }
+    ]
+  },
+  {
+    "lines": [
+      { "speaker": 0, "text": "Does this cat get along with other cats?" },
+      { "speaker": 1, "text": "Lived with two others before, no fights." },
+      { "speaker": 0, "text": "Good to know. I already have one, a bit territorial." },
+      { "speaker": 2, "text": "Separate food bowls and litter boxes, at least at first." },
+      { "speaker": 3, "text": "And a tall cat tree, so each one has its own spot." },
+      { "speaker": 0, "text": "Noted, thanks everyone!" }
+    ]
+  },
+  {
+    "lines": [
+      { "speaker": 0, "text": "Indoor only, or used to going outside?" },
+      { "speaker": 1, "text": "Indoor, as far as I know." },
+      { "speaker": 0, "text": "Perfect, we're on the 6th floor anyway." },
+      { "speaker": 1, "text": "Just put a net on the balcony. Cats are braver than they look." }
+    ]
+  },
+  {
+    "lines": [
+      { "speaker": 0, "text": "Has anyone actually met this cat in person?" },
+      { "speaker": 1, "text": "I did, on Friday." },
+      { "speaker": 0, "text": "And? Shy or outgoing?" },
+      { "speaker": 1, "text": "Shy for about five minutes, then came over for treats." },
+      { "speaker": 2, "text": "Treats solve everything." }
+    ]
+  },
+  {
+    "lines": [
+      { "speaker": 0, "text": "Is there an adoption contract?" },
+      { "speaker": 1, "text": "Yes, a short one. Mostly about not reselling and returning if it doesn't work out." },
+      { "speaker": 2, "text": "That's a good sign, honestly. Means they care where the cat ends up." }
+    ]
+  },
+  {
+    "lines": [
+      { "speaker": 0, "text": "Long hair means a lot of brushing, right?" },
+      { "speaker": 1, "text": "A few times a week is enough for most cats." },
+      { "speaker": 2, "text": "Daily in spring. The shedding is no joke." },
+      { "speaker": 0, "text": "Ok, adding a brush to the shopping list." },
+      { "speaker": 3, "text": "Get a metal comb too, it works better on the undercoat." }
+    ]
+  },
+  {
+    "lines": [
+      { "speaker": 0, "text": "Can I come visit this weekend?" },
+      { "speaker": 1, "text": "Send a message through the profile, visits are by appointment." },
+      { "speaker": 0, "text": "Will do. Saturday morning would be ideal." }
+    ]
+  },
+  {
+    "lines": [
+      { "speaker": 0, "text": "Does this cat like being picked up?" },
+      { "speaker": 1, "text": "Not really. Prefers sitting next to you rather than on you." },
+      { "speaker": 2, "text": "Plenty of cats are like that. Give it time." },
+      { "speaker": 0, "text": "Mine took a year to become a lap cat, so I get it." }
+    ]
+  },
+  {
+    "lines": [
+      { "speaker": 0, "text": "Any health issues I should know about?" },
+      { "speaker": 1, "text": "Nothing in the listing." },
+      { "speaker": 2, "text": "Ask for the last vet visit date, it tells you a lot." },
+      { "speaker": 3, "text": "And whether it's neutered. The price usually includes it." },
+      { "speaker": 1, "text": "Neutered, it's in the description." },
+      { "speaker": 3, "text": "Oh, missed that. Thanks." }
+    ]
+  },
+  {
+    "lines": [
+      { "speaker": 0, "text": "Is this cat noisy at night?" },
+      { "speaker": 1, "text": "Every cat has a 3am zoomies phase 😅" },
+      { "speaker": 0, "text": "Ha, fair enough." },
+      { "speaker": 2, "text": "A good play session before bed helps a lot." }
+    ]
+  },
+  {
+    "lines": [
+      { "speaker": 0, "text": "What a gorgeous coat." },
+      { "speaker": 1, "text": "Even nicer in person, the photos are a bit dark." },
+      { "speaker": 2, "text": "Agreed, I saw this cat at the pickup point." }
+    ]
+  },
+  {
+    "lines": [
+      { "speaker": 0, "text": "Does this cat use a scratching post, or the sofa? 😬" },
+      { "speaker": 1, "text": "Post, from what I was told." },
+      { "speaker": 0, "text": "Phew. Our last cat destroyed two sofas." },
+      { "speaker": 2, "text": "Put the post right next to the sofa at first. They go for whatever's closest." },
+      { "speaker": 3, "text": "And a bit of catnip on it. Works every time." }
+    ]
+  },
+  {
+    "lines": [
+      { "speaker": 0, "text": "Is it ok for a small apartment?" },
+      { "speaker": 1, "text": "Cats care more about vertical space than square meters." },
+      { "speaker": 0, "text": "So shelves and a cat tree?" },
+      { "speaker": 1, "text": "Exactly. And a window to watch birds from." }
+    ]
+  },
+  {
+    "lines": [
+      { "speaker": 0, "text": "How old is this cat exactly?" },
+      { "speaker": 1, "text": "The listing has the birth date." },
+      { "speaker": 0, "text": "Oh, I see it now. Younger than I thought." },
+      { "speaker": 2, "text": "Young cats are a lot of energy, just so you know." },
+      { "speaker": 0, "text": "That's fine, so are my kids." }
+    ]
+  },
+  {
+    "lines": [
+      { "speaker": 0, "text": "Anyone else adopt from this seller before?" },
+      { "speaker": 1, "text": "Yes, two years ago. Very honest about the cat's temper." },
+      { "speaker": 2, "text": "Same here. They even called a month later to check in." },
+      { "speaker": 0, "text": "That's reassuring, thanks." }
+    ]
+  },
+  {
+    "lines": [
+      { "speaker": 0, "text": "Does this cat travel well? I visit my parents a lot." },
+      { "speaker": 1, "text": "Most cats hate the car, honestly." },
+      { "speaker": 2, "text": "Leave the carrier open at home so it's not a scary box." },
+      { "speaker": 3, "text": "That worked for us. Ours naps in it now." },
+      { "speaker": 0, "text": "Smart, I'll try that." }
+    ]
+  },
+  {
+    "lines": [
+      { "speaker": 0, "text": "Is the cat still available?" },
+      { "speaker": 1, "text": "The listing is still up, so I guess so." },
+      { "speaker": 0, "text": "Hope so 🤞" }
+    ]
+  },
+  {
+    "lines": [
+      { "speaker": 0, "text": "Is this cat a big eater?" },
+      { "speaker": 1, "text": "Normal, I think. Two meals a day." },
+      { "speaker": 2, "text": "Watch the treats, it adds up fast." },
+      { "speaker": 0, "text": "Ha, my last cat got chubby exactly like that." },
+      { "speaker": 2, "text": "Happens to the best of us." }
+    ]
+  },
+  {
+    "lines": [
+      { "speaker": 0, "text": "What toys does this cat like?" },
+      { "speaker": 1, "text": "Feather wands, for sure. I saw it go crazy for one." },
+      { "speaker": 2, "text": "Cardboard boxes. Every cat likes boxes." },
+      { "speaker": 3, "text": "The box the toy came in, not the toy itself 😂" },
+      { "speaker": 0, "text": "Classic." }
+    ]
+  },
+  {
+    "lines": [
+      { "speaker": 0, "text": "Is this breed hypoallergenic? My partner has mild allergies." },
+      { "speaker": 1, "text": "No cat is fully hypoallergenic, sadly." },
+      { "speaker": 2, "text": "Spend an hour with the cat before deciding. That's the real test." },
+      { "speaker": 0, "text": "Good idea, we'll visit together." },
+      { "speaker": 3, "text": "An air purifier helps too. We have one in the bedroom." },
+      { "speaker": 1, "text": "And keep the cat out of the bedroom, if you can." },
+      { "speaker": 0, "text": "Thanks, all very helpful." }
+    ]
+  },
+  {
+    "lines": [
+      { "speaker": 0, "text": "Litter trained?" },
+      { "speaker": 1, "text": "Yes, no accidents according to the description." },
+      { "speaker": 0, "text": "Clumping or pellets?" },
+      { "speaker": 1, "text": "No idea. Use the same kind for the first weeks to be safe." }
+    ]
+  },
+  {
+    "lines": [
+      { "speaker": 0, "text": "I'm a first-time cat owner. Is this a good cat for a beginner?" },
+      { "speaker": 1, "text": "Calm, healthy and litter trained, so yes, I'd say so." },
+      { "speaker": 2, "text": "Read up on cat body language. It saves a lot of scratches." },
+      { "speaker": 3, "text": "And find a vet before the cat comes home, not after." },
+      { "speaker": 4, "text": "Also cat-proof the cables. Learned that one the hard way." },
+      { "speaker": 0, "text": "Wow, thanks everyone, saving all of this." },
+      { "speaker": 2, "text": "Good luck! Post a photo if you adopt." },
+      { "speaker": 0, "text": "Will do 😊" }
+    ]
+  },
+  {
+    "lines": [
+      { "speaker": 0, "text": "Does this cat like water? Asking for my fish tank 😅" },
+      { "speaker": 1, "text": "Get a lid for the tank, whatever the answer is." },
+      { "speaker": 0, "text": "Already ordered one, just in case." }
+    ]
+  },
+  {
+    "lines": [
+      { "speaker": 0, "text": "How long does the adoption process take?" },
+      { "speaker": 1, "text": "For me it was a visit, then the contract a few days later." },
+      { "speaker": 2, "text": "Same. About a week in total." },
+      { "speaker": 0, "text": "Faster than I expected." },
+      { "speaker": 1, "text": "Have the carrier and litter box ready before pickup day." }
+    ]
+  },
+  {
+    "lines": [
+      { "speaker": 0, "text": "Can't stop looking at this one. That face!" },
+      { "speaker": 1, "text": "Tell me about it. I'm trying to convince my partner." },
+      { "speaker": 0, "text": "Show them the photo with the yarn, that's the one." },
+      { "speaker": 1, "text": "Good call 😄" }
+    ]
+  },
+  {
+    "lines": [
+      { "speaker": 0, "text": "Does this cat shed a lot?" },
+      { "speaker": 1, "text": "Short coat, so not too bad." },
+      { "speaker": 2, "text": "Every cat sheds more than you think. Buy a lint roller." },
+      { "speaker": 3, "text": "Or two. One for home, one for the car." }
+    ]
+  }
+]
