@@ -106,6 +106,18 @@ function getBackTo(location: Location): string {
   return (location.state as BackToLocationState | null)?.backTo ?? '/cat'
 }
 
+// A random v4 UUID, e.g. a chat msg's clientMsgId. Not crypto.randomUUID(): it exists only in a
+// secure context (HTTPS or localhost), and dev runs on http://<vm-ip>:5173, where it's undefined.
+// E2E runs on localhost, so it wouldn't catch that. getRandomValues works anywhere, and its
+// cryptographic RNG is what makes 122 random bits unique in practice (Math.random() wouldn't be)
+function getRandomUuid(): string {
+  const bytes = crypto.getRandomValues(new Uint8Array(16))
+  bytes[6] = (bytes[6] & 0x0f) | 0x40 // version 4
+  bytes[8] = (bytes[8] & 0x3f) | 0x80 // the RFC 9562 variant (10xx)
+  const hex = Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('')
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`
+}
+
 export const utilService = {
   formatPrice,
   formatDate,
@@ -119,4 +131,5 @@ export const utilService = {
   getSafeRedirectTo,
   buildBackToState,
   getBackTo,
+  getRandomUuid,
 }

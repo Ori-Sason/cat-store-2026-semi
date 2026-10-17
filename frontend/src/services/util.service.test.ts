@@ -1,5 +1,6 @@
 import type { Location, ShouldRevalidateFunctionArgs } from 'react-router'
-import { beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { z } from 'zod'
 import { ApiError } from '../models/api-error'
 import { useUserMsgStore } from '../store/user-msg.store'
 import { utilService } from './util.service'
@@ -176,5 +177,46 @@ describe('utilService.getBackTo', () => {
 
   it('falls back to the plain list with no state', () => {
     expect(utilService.getBackTo(_location('/cat/1', '', null))).toBe('/cat')
+  })
+})
+
+describe('utilService.getRandomUuid', () => {
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  it('makes valid v4 UUIDs', () => {
+    const uuidV4 = z.uuid({ version: 'v4' })
+
+    for (let i = 0; i < 100; i++) {
+      expect(uuidV4.safeParse(utilService.getRandomUuid()).success).toBe(true)
+    }
+  })
+
+  it('makes a different UUID each time', () => {
+    const uuids = new Set(Array.from({ length: 100 }, () => utilService.getRandomUuid()))
+
+    expect(uuids.size).toBe(100)
+  })
+
+  // The two extremes pin the version and variant bits, whatever the random bytes are
+  it.each([
+    [0x00, '00000000-0000-4000-8000-000000000000'],
+    [0xff, 'ffffffff-ffff-4fff-bfff-ffffffffffff'],
+  ])('sets the version and variant bits over random byte %i', (byte, uuid) => {
+    vi.spyOn(crypto, 'getRandomValues').mockImplementation((array) => {
+      ;(array as Uint8Array).fill(byte)
+      return array
+    })
+
+    expect(utilService.getRandomUuid()).toBe(uuid)
+  })
+
+  it('works without crypto.randomUUID (an insecure context)', () => {
+    vi.spyOn(crypto, 'randomUUID').mockImplementation(() => {
+      throw new Error('randomUUID is not available here')
+    })
+
+    expect(z.uuid().safeParse(utilService.getRandomUuid()).success).toBe(true)
   })
 })
