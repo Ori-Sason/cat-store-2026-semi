@@ -302,6 +302,23 @@ function _getNewestMsgId(newestMsgId: string | null, msgs: ChatMsg[]): string | 
 // server only go up, so _id order is the order the ids were generated, close enough for display
 function _mergeMsgs(heldMsgs: ChatMsg[], newMsgs: ChatMsg[]): ChatMsg[] {
   const msgById = new Map(heldMsgs.map((msg) => [msg._id, msg]))
-  for (const msg of newMsgs) msgById.set(msg._id, msg)
+  for (const msg of newMsgs) {
+    const heldMsg = msgById.get(msg._id)
+    if (!heldMsg || _isNewerCopy(msg, heldMsg)) msgById.set(msg._id, msg)
+  }
   return [...msgById.values()].sort((a, b) => _compareIds(a._id, b._id))
+}
+
+// The same msg can arrive twice with different content: a fetch that read the DB before an edit
+// can land after that edit's live event. Arrival order isn't content order, so the content
+// decides:
+// 1. A tombstone is final (a deleted msg can't be edited), and it must win on its own:
+//    a remove doesn't touch updatedAt.
+// 2. Otherwise the later updatedAt wins.
+// 3. A tie keeps the held copy.
+// updatedAt comes from the one server clock, and only the author edits, one ack at a time
+function _isNewerCopy(incomingMsg: ChatMsg, heldMsg: ChatMsg) {
+  if (heldMsg.isDeleted) return false
+  if (incomingMsg.isDeleted) return true
+  return incomingMsg.updatedAt > heldMsg.updatedAt
 }

@@ -394,6 +394,52 @@ describe('useCatChat live msgs', () => {
   })
 })
 
+// The race: the chat is closed, so a live copy lands first, then the first open's fetch brings a
+// copy it read earlier or later. The content decides, not the arrival order
+describe('useCatChat merge of two copies of one msg', () => {
+  async function _openAfterLiveCopy(liveMsg: ChatMsg, fetchedMsg: ChatMsg) {
+    vi.mocked(chatService.getOlderPage).mockResolvedValue({
+      msgs: [fetchedMsg],
+      nextBeforeId: null,
+    })
+    const { result, rerender } = _render()
+    act(() => _serverEmit('chat:msg-added', { msg: liveMsg }))
+    rerender({ catId: _CAT_ID, isOpen: true })
+    await waitFor(() => expect(result.current.status).toBe('ready'))
+    return result.current.msgs
+  }
+
+  const _edited: ChatMsg = { ..._msg(1), isDeleted: false, updatedAt: 100, text: 'edited' }
+  // Built field by field: the wire tombstone has no text
+  const { _id, catId, clientMsgId, createdAt, updatedAt, user } = _msg(1)
+  const _tombstone: ChatMsg = {
+    _id,
+    catId,
+    clientMsgId,
+    createdAt,
+    updatedAt,
+    user,
+    isDeleted: true,
+  }
+
+  it('keeps an edit when a stale copy lands after it', async () => {
+    expect(await _openAfterLiveCopy(_edited, _msg(1))).toEqual([_edited])
+  })
+
+  it('takes a copy with a later updatedAt', async () => {
+    expect(await _openAfterLiveCopy(_msg(1), _edited)).toEqual([_edited])
+  })
+
+  // A remove doesn't touch updatedAt, so the tombstone can't win by the timestamp
+  it('takes a tombstone over a live copy with the same updatedAt', async () => {
+    expect(await _openAfterLiveCopy(_msg(1), _tombstone)).toEqual([_tombstone])
+  })
+
+  it('never brings a deleted msg back', async () => {
+    expect(await _openAfterLiveCopy(_tombstone, _edited)).toEqual([_tombstone])
+  })
+})
+
 describe('useCatChat unread count', () => {
   it("counts others' msgs while the panel is closed", () => {
     const { result } = _render()
