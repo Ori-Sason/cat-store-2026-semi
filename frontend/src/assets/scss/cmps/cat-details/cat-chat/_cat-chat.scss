@@ -9,47 +9,6 @@ $_panel-height: 620px;
 // Mobile-first: below $bp-md the panel is a full-screen sheet. From $bp-md it floats bottom right,
 // in the icon's corner (the icon is hidden while it's open)
 .cat-chat {
-  .chat-icon {
-    position: fixed;
-    right: $space-4;
-    bottom: $space-4;
-    z-index: 20;
-    display: grid;
-    place-items: center;
-    width: 56px;
-    height: 56px;
-    color: $clr-white;
-    border-radius: 50%;
-    background-color: $primary-clr-600;
-    box-shadow: 0 6px 16px rgba($primary-clr-600, 0.4);
-
-    &:hover {
-      background-color: $primary-clr-800;
-    }
-
-    @include from($bp-md) {
-      right: $space-5;
-      bottom: $space-5;
-    }
-  }
-
-  .badge {
-    position: absolute;
-    top: -3px;
-    right: -3px;
-    display: grid;
-    place-items: center;
-    min-width: 22px;
-    height: 22px;
-    padding: 0 6px;
-    font-size: 0.72rem;
-    font-weight: 700;
-    font-variant-numeric: tabular-nums;
-    border: 2px solid $clr-white;
-    border-radius: $radius-pill;
-    background-color: $clr-danger;
-  }
-
   // Not .panel: cat-details already styles its own .panel, and this sits inside it
   .chat-panel {
     position: fixed;
@@ -75,52 +34,6 @@ $_panel-height: 620px;
       box-shadow:
         0 16px 40px rgba($primary-clr-900, 0.22),
         0 2px 6px rgba($primary-clr-900, 0.1);
-    }
-  }
-
-  .chat-panel > header {
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    gap: $space-2;
-    padding: 14px $space-2 14px $space-4;
-    color: $clr-white;
-    background-color: $primary-clr-850;
-
-    @include from($bp-md) {
-      padding-block: 10px;
-    }
-  }
-
-  .title {
-    display: grid;
-    flex: 1;
-    min-width: 0;
-    line-height: 1.2;
-
-    h2 {
-      font-size: 1rem;
-    }
-
-    p {
-      overflow: hidden;
-      font-size: 0.75rem;
-      white-space: nowrap;
-      text-overflow: ellipsis;
-      color: $primary-clr-200;
-    }
-  }
-
-  .close-btn {
-    display: grid;
-    place-items: center;
-    width: 32px;
-    height: 32px;
-    color: $primary-clr-100;
-    border-radius: 50%;
-
-    &:hover {
-      background-color: rgba($clr-white, 0.14);
     }
   }
 

@@ -1,13 +1,12 @@
 import type React from 'react'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { Link, useLocation } from 'react-router'
-import { useCatChat } from '../../hooks/use-cat-chat'
-import { useLoggedInUserStore } from '../../store/logged-in-user.store'
-import { ReviewListSkeleton } from '../common/review/review-list-skeleton'
+import { useCatChat } from '../../../hooks/use-cat-chat'
+import { useLoggedInUserStore } from '../../../store/logged-in-user.store'
+import { ReviewListSkeleton } from '../../common/review/review-list-skeleton'
+import { ChatHeader } from './chat-header'
+import { ChatIcon } from './chat-icon'
 import { ChatLog } from './chat-log'
-
-// More than this shows as "99+", so the badge stays one small pill
-const _MAX_BADGE_COUNT = 99
 
 interface CatChatProps {
   catId: string
@@ -25,7 +24,8 @@ export const CatChat: React.FC<CatChatProps> = ({ catId, catName, catOwnerId }) 
   const location = useLocation()
   const iconRef = useRef<HTMLButtonElement>(null)
   const panelRef = useRef<HTMLElement>(null)
-  // Without isToggledRef, chat-icon is focuses on mount: a closed chat never steals focus from the page
+  const titleId = useId()
+  // Without isToggledRef, the chat icon is focused on mount: a closed chat never steals focus from the page
   const isToggledRef = useRef(false)
 
   useEffect(() => {
@@ -45,28 +45,9 @@ export const CatChat: React.FC<CatChatProps> = ({ catId, catName, catOwnerId }) 
   }
 
   if (!isOpen) {
-    const { unreadCount } = chat
     return (
       <div className="cat-chat">
-        <button
-          ref={iconRef}
-          type="button"
-          className="chat-icon"
-          aria-label={unreadCount ? `Open chat, ${unreadCount} unread` : 'Open chat'}
-          onClick={() => toggle(true)}
-        >
-          <svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true">
-            <path
-              fill="currentColor"
-              d="M12 3C6.9 3 3 6.6 3 11c0 2.3 1.1 4.4 2.9 5.9L5 21l4.4-2.3c.8.2 1.7.3 2.6.3 5.1 0 9-3.6 9-8s-3.9-8-9-8Z"
-            />
-          </svg>
-          {unreadCount > 0 && (
-            <span className="badge" aria-hidden="true">
-              {unreadCount > _MAX_BADGE_COUNT ? `${_MAX_BADGE_COUNT}+` : unreadCount}
-            </span>
-          )}
-        </button>
+        <ChatIcon ref={iconRef} unreadCount={chat.unreadCount} onOpen={() => toggle(true)} />
       </div>
     )
   }
@@ -76,35 +57,11 @@ export const CatChat: React.FC<CatChatProps> = ({ catId, catName, catOwnerId }) 
       <section
         ref={panelRef}
         className="chat-panel"
-        aria-labelledby="cat-chat-title"
+        aria-labelledby={titleId}
         tabIndex={-1}
         onKeyDown={onPanelKeyDown}
       >
-        <header>
-          <div className="title">
-            <h2 id="cat-chat-title">Chat</h2>
-            <p>About {catName}</p>
-          </div>
-          <button
-            type="button"
-            className="close-btn"
-            aria-label="Close chat"
-            onClick={() => toggle(false)}
-          >
-            <svg
-              viewBox="0 0 24 24"
-              width="18"
-              height="18"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.2"
-              strokeLinecap="round"
-              aria-hidden="true"
-            >
-              <path d="M6 6l12 12M18 6L6 18" />
-            </svg>
-          </button>
-        </header>
+        <ChatHeader titleId={titleId} catName={catName} onClose={() => toggle(false)} />
 
         {chat.status === 'error' && (
           <div className="join-error" role="alert">

@@ -1,8 +1,8 @@
 import type React from 'react'
 import type { ChatMsg } from '@cat-store/shared'
-import { utilService } from '../../services/util.service'
-import { useLoggedInUserStore } from '../../store/logged-in-user.store'
-import { UserChips } from '../common/user/user-chips'
+import { utilService } from '../../../services/util.service'
+import { useLoggedInUserStore } from '../../../store/logged-in-user.store'
+import { UserChips } from '../../common/user/user-chips'
 
 interface ChatMsgPreviewProps {
   msg: ChatMsg

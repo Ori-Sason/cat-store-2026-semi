@@ -15,6 +15,8 @@ paths:
 - Each page gets a folder: `pages/<page>/` holds the page, its loader/action and their tests.
   Pages compose. Components are the building blocks and live in `cmps/`:
   - `cmps/<page>/`: components only that page uses. The folder name matches `pages/<page>/`.
+    A feature with several components gets its own subfolder, named for its top component:
+    `cmps/cat-details/cat-chat/`.
   - `cmps/common/<group>/`: components used by 2+ pages, grouped by entity (`cat/`) or
     `util/` for domain-free UI. Move a component here when a second page needs it.
     It's `common`, not `shared`, because `shared/` is the workspace package.

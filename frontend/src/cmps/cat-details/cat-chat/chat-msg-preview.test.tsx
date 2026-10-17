@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react'
 import type { ChatMsg, LoggedInUser } from '@cat-store/shared'
 import { beforeEach, describe, expect, it } from 'vitest'
-import { useLoggedInUserStore } from '../../store/logged-in-user.store'
+import { useLoggedInUserStore } from '../../../store/logged-in-user.store'
 import { ChatMsgPreview } from './chat-msg-preview'
 
 const AUTHOR: LoggedInUser = {

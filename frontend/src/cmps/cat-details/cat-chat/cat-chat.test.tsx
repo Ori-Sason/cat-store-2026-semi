@@ -3,12 +3,12 @@ import userEvent from '@testing-library/user-event'
 import type { ChatMsg, LoggedInUser } from '@cat-store/shared'
 import { createMemoryRouter, RouterProvider } from 'react-router'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { useCatChat } from '../../hooks/use-cat-chat'
-import { useLoggedInUserStore } from '../../store/logged-in-user.store'
+import { useCatChat } from '../../../hooks/use-cat-chat'
+import { useLoggedInUserStore } from '../../../store/logged-in-user.store'
 import { CatChat } from './cat-chat'
 
 // The hook has its own tests. Here it's a stand-in, so each test sets the state it needs
-vi.mock('../../hooks/use-cat-chat')
+vi.mock('../../../hooks/use-cat-chat')
 
 const USER: LoggedInUser = {
   _id: 'user-1',
