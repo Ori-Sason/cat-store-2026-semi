@@ -31,7 +31,7 @@ export const SEED_CHAT_LINE_GAP_MS = 2 * 60 * 1000
 export const SEED_CHAT_EDIT_DELAY_MS = 5 * 60 * 1000
 // The newest msg of a log is at least this old, so its edit still lands before now
 export const SEED_CHAT_NEWEST_AGE_MS = 2 * 60 * 60 * 1000
-const _PAGING_THREAD_GAP_MS = 2 * 24 * 60 * 60 * 1000
+const _SCRIPTED_THREAD_GAP_MS = 2 * 24 * 60 * 60 * 1000
 
 // The background cats' logs: about 1 in 5 stays empty, the rest get 3-20 msgs. States and the
 // ghost are plain rolls with no guarantee, since nothing checks them by hand
@@ -42,25 +42,26 @@ const _RANDOM_EDIT_CHANCE = 0.1
 const _RANDOM_DELETE_CHANCE = 0.05
 const _RANDOM_GHOST_CHANCE = 0.1
 
-// The 4 newest cats, i.e. the top of /cat's default sort, in that order. Fixed fixtures for the
-// manual checks of "load older", so the same log comes back on every re-seed. Sized around the
+// The scripted cats: the 4 newest, i.e. the top of /cat's default sort, in that order. Their logs
+// are fixed fixtures for the manual checks of "load older" and the msg states, so the same log
+// comes back on every re-seed (the other cats' logs are random). Sized around the
 // history page (50): 120 → 2 loads, 70 → 1, 50 → no button, 51 → 1 load that brings only the ghost.
 // The owners replace the random ones, so each owner gets a cat with chips to check.
 // firstThreadIdx spreads the specs over the pool, so the 4 logs don't read the same
-export interface PagingChatSpec {
+export interface ScriptedChatSpec {
   size: number
   ownerUsername: 'user' | 'admin'
   firstThreadIdx: number
 }
 
-export const PAGING_CHAT_SPECS: PagingChatSpec[] = [
+export const SCRIPTED_CHAT_SPECS: ScriptedChatSpec[] = [
   { size: 120, ownerUsername: 'user', firstThreadIdx: 0 },
   { size: 70, ownerUsername: 'admin', firstThreadIdx: 8 },
   { size: 50, ownerUsername: 'user', firstThreadIdx: 16 },
   { size: 51, ownerUsername: 'admin', firstThreadIdx: 24 },
 ]
 
-// The showcase every page of the paging cats carries, by offset from that page's newest msg.
+// The showcase every page of the scripted cats carries, by offset from that page's newest msg.
 // A page shorter than _SHOWCASE_MIN_PAGE_SIZE is too thin for it, and gets only the ghost
 const _SHOWCASE_MIN_PAGE_SIZE = 20
 const _SHOWCASE_STATES: Partial<Record<number, SeedChatMsgState>> = {
@@ -70,15 +71,15 @@ const _SHOWCASE_STATES: Partial<Record<number, SeedChatMsgState>> = {
 }
 const _SHOWCASE_GHOST_OFFSET = 10
 
-// The cats that get PAGING_CHAT_SPECS, in spec order: the top of /cat's default sort (createdAt
+// The cats that get SCRIPTED_CHAT_SPECS, in spec order: the top of /cat's default sort (createdAt
 // desc, _id asc as the tiebreak, like utilService.buildSort). Picked by sort, not by name, so they
 // stay on top whatever cats.json holds. A cat added in the UI sorts above them until a re-seed
-export function pickPagingCats<T extends Pick<CatDoc, '_id' | 'createdAt'>>(cats: T[]): T[] {
+export function pickScriptedChatCats<T extends Pick<CatDoc, '_id' | 'createdAt'>>(cats: T[]): T[] {
   return cats
     .toSorted(
       (a, b) => b.createdAt - a.createdAt || a._id.toHexString().localeCompare(b._id.toHexString()),
     )
-    .slice(0, PAGING_CHAT_SPECS.length)
+    .slice(0, SCRIPTED_CHAT_SPECS.length)
 }
 
 // One plain msg. The planner owns the times and the states: it passes createdAt and applies an
@@ -163,20 +164,20 @@ export function buildChatLog(
     })
 }
 
-// A paging cat's log, the same on every build (ids and clock aside):
+// A scripted cat's log, the same on every build (ids and clock aside):
 // - Threads from the pool in order, starting at the spec's firstThreadIdx, distinct within the log.
 // - Times count back from now: the newest msg SEED_CHAT_NEWEST_AGE_MS ago, threads
-//   _PAGING_THREAD_GAP_MS apart.
+//   _SCRIPTED_THREAD_GAP_MS apart.
 // - Speaker slots are filled from one rotation of `users`, a running pointer across threads, so
 //   every page (~20 slots) hears from all of them: the owner, `admin` and the reviewer-only users.
 // - Each page gets the showcase states and one ghost (a fresh ObjectId with no user doc, shown as
 //   "[Deleted User]"). The ghost takes one whole slot in its thread, so it reads like one person
 // `users` are the seed users, in SEED_USERS order
-export function buildPagingChatLog(
+export function buildScriptedChatLog(
   cat: Pick<CatDoc, '_id' | 'createdAt'>,
   users: { _id: ObjectId }[],
   threads: ChatThread[],
-  spec: PagingChatSpec,
+  spec: ScriptedChatSpec,
 ): ChatMsgDoc[] {
   const ghostId = new ObjectId()
   const ghostOffsets = _getGhostOffsets(spec.size)
@@ -194,7 +195,7 @@ export function buildPagingChatLog(
     const speakerIds = Array.from({ length: slotCount }, (_, slot) =>
       slot === ghostLine?.speaker ? ghostId : users[userIdx++ % users.length]!._id,
     )
-    plannedThreads.push({ thread, speakerIds, endAt: newestAt - i * _PAGING_THREAD_GAP_MS })
+    plannedThreads.push({ thread, speakerIds, endAt: newestAt - i * _SCRIPTED_THREAD_GAP_MS })
     offset += lines.length
   }
   return buildChatLog(cat, plannedThreads, spec.size, (offsetFromNewest) =>

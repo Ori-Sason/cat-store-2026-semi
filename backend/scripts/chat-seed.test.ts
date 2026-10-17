@@ -8,11 +8,11 @@ import type { ChatMsgDoc } from '../models/chat.ts'
 import type { RawCat } from './cat-seed.ts'
 import {
   buildChatLog,
-  buildPagingChatLog,
+  buildScriptedChatLog,
   buildRandomChatLog,
   buildSeedChatMsg,
-  PAGING_CHAT_SPECS,
-  pickPagingCats,
+  SCRIPTED_CHAT_SPECS,
+  pickScriptedChatCats,
   SEED_CHAT_EDIT_DELAY_MS,
   SEED_CHAT_LINE_GAP_MS,
   SEED_RANDOM_CHAT_MAX_SIZE,
@@ -189,12 +189,12 @@ describe('buildChatLog', () => {
   })
 })
 
-describe('buildPagingChatLog', () => {
+describe('buildScriptedChatLog', () => {
   const users = SEED_USERS.map(() => ({ _id: new ObjectId() }))
   const rawCats: RawCat[] = JSON.parse(
     readFileSync(join(import.meta.dirname, 'data', 'cats.json'), 'utf8'),
   )
-  // The newest seed cat: the strictest createdAt any paging cat can have
+  // The newest seed cat: the strictest createdAt any scripted cat can have
   const cat = { _id: new ObjectId(), createdAt: Math.max(...rawCats.map((raw) => raw.createdAt)) }
 
   // A user's index in `users`, or 'ghost' for an id with no user
@@ -213,8 +213,8 @@ describe('buildPagingChatLog', () => {
     return pages
   }
 
-  describe.each(PAGING_CHAT_SPECS)('the $size msgs spec', (spec) => {
-    const log = buildPagingChatLog(cat, users, threads, spec)
+  describe.each(SCRIPTED_CHAT_SPECS)('the $size msgs spec', (spec) => {
+    const log = buildScriptedChatLog(cat, users, threads, spec)
     const pages = _toPages(log)
     const showcasePages = pages.filter((page) => page.length >= 20)
 
@@ -225,7 +225,7 @@ describe('buildPagingChatLog', () => {
     it('builds the same texts, authors and states every time', () => {
       const _toFixture = (msgs: ChatMsgDoc[]) =>
         msgs.map((msg) => [msg.text, _toAuthor(msg), _toState(msg)])
-      expect(_toFixture(buildPagingChatLog(cat, users, threads, spec))).toEqual(_toFixture(log))
+      expect(_toFixture(buildScriptedChatLog(cat, users, threads, spec))).toEqual(_toFixture(log))
     })
 
     it('puts the showcase states at their offsets on every page of 20 or more', () => {
@@ -269,18 +269,18 @@ describe('buildPagingChatLog', () => {
   })
 
   it('gives the 51 msgs cat a single older msg, by the ghost', () => {
-    const spec = PAGING_CHAT_SPECS.find(({ size }) => size === 51)!
-    const pages = _toPages(buildPagingChatLog(cat, users, threads, spec))
+    const spec = SCRIPTED_CHAT_SPECS.find(({ size }) => size === 51)!
+    const pages = _toPages(buildScriptedChatLog(cat, users, threads, spec))
     expect(pages.map((page) => page.length)).toEqual([50, 1])
     expect(_toAuthor(pages[1]![0]!)).toBe('ghost')
     expect(_toState(pages[1]![0]!)).toBe('plain')
   })
 
   it('starts each spec at a different thread', () => {
-    const newestTexts = PAGING_CHAT_SPECS.map(
-      (spec) => buildPagingChatLog(cat, users, threads, spec).at(-1)!.text,
+    const newestTexts = SCRIPTED_CHAT_SPECS.map(
+      (spec) => buildScriptedChatLog(cat, users, threads, spec).at(-1)!.text,
     )
-    expect(new Set(newestTexts).size).toBe(PAGING_CHAT_SPECS.length)
+    expect(new Set(newestTexts).size).toBe(SCRIPTED_CHAT_SPECS.length)
   })
 })
 
@@ -358,20 +358,20 @@ describe('buildRandomChatLog', () => {
   })
 })
 
-describe('pickPagingCats', () => {
+describe('pickScriptedChatCats', () => {
   const _cat = (createdAt: number) => ({ _id: new ObjectId(), createdAt })
   const cats = [_cat(5), _cat(1), _cat(4), _cat(2), _cat(3), _cat(6)]
 
   it('picks one cat per spec, newest first, whatever the array order', () => {
     const newestFirst = [cats[5], cats[0], cats[2], cats[4]]
-    expect(pickPagingCats(cats)).toEqual(newestFirst)
-    expect(pickPagingCats(cats.toReversed())).toEqual(newestFirst)
-    expect(newestFirst).toHaveLength(PAGING_CHAT_SPECS.length)
+    expect(pickScriptedChatCats(cats)).toEqual(newestFirst)
+    expect(pickScriptedChatCats(cats.toReversed())).toEqual(newestFirst)
+    expect(newestFirst).toHaveLength(SCRIPTED_CHAT_SPECS.length)
   })
 
   // The /cat sort breaks a createdAt tie by _id ascending
   it('breaks a createdAt tie by the smaller _id first', () => {
     const [first, second] = [_cat(9), _cat(9)]
-    expect(pickPagingCats([second!, first!, ...cats]).slice(0, 2)).toEqual([first, second])
+    expect(pickScriptedChatCats([second!, first!, ...cats]).slice(0, 2)).toEqual([first, second])
   })
 })
