@@ -70,6 +70,17 @@ const _SHOWCASE_STATES: Partial<Record<number, SeedChatMsgState>> = {
 }
 const _SHOWCASE_GHOST_OFFSET = 10
 
+// The cats that get PAGING_CHAT_SPECS, in spec order: the top of /cat's default sort (createdAt
+// desc, _id asc as the tiebreak, like utilService.buildSort). Picked by sort, not by name, so they
+// stay on top whatever cats.json holds. A cat added in the UI sorts above them until a re-seed
+export function pickPagingCats<T extends Pick<CatDoc, '_id' | 'createdAt'>>(cats: T[]): T[] {
+  return cats
+    .toSorted(
+      (a, b) => b.createdAt - a.createdAt || a._id.toHexString().localeCompare(b._id.toHexString()),
+    )
+    .slice(0, PAGING_CHAT_SPECS.length)
+}
+
 // One plain msg. The planner owns the times and the states: it passes createdAt and applies an
 // edit or a delete on the returned doc. Validates with the shared schema, so a bad line in
 // chat-threads.json fails here instead of landing in the DB.

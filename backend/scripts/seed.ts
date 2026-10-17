@@ -3,14 +3,23 @@ import { join } from 'node:path'
 import type { ObjectId } from 'mongodb'
 import { config, requireEnv } from '../config/index.ts'
 import { CAT_COLLECTION, type CatDoc } from '../models/cat.ts'
+import { CHAT_MSG_COLLECTION, type ChatMsgDoc } from '../models/chat.ts'
 import { REVIEW_COLLECTION, type ReviewDoc } from '../models/review.ts'
 import { mongoService } from '../services/mongodb.service.ts'
 import { buildSeedCat, type RawCat } from './cat-seed.ts'
+import {
+  buildPagingChatLog,
+  buildRandomChatLog,
+  PAGING_CHAT_SPECS,
+  pickPagingCats,
+  type ChatThread,
+} from './chat-seed.ts'
 import { buildSeedReview, pickRandomReviewers } from './review-seed.ts'
 import { SEED_CAT_OWNER_USERNAMES, seedUsers, type SeededUser } from './user-seed.ts'
 
 const CATS_FILE_PATH = join(import.meta.dirname, 'data', 'cats.json')
 const REVIEWS_FILE_PATH = join(import.meta.dirname, 'data', 'reviews.json')
+const CHAT_THREADS_FILE_PATH = join(import.meta.dirname, 'data', 'chat-threads.json')
 
 // Users: creates the seed users that are missing, keeps the existing ones.
 // Cats: wipes the collection and re-inserts every cat from the JSON file, each owned by a random
@@ -19,6 +28,9 @@ const REVIEWS_FILE_PATH = join(import.meta.dirname, 'data', 'reviews.json')
 // Reviews: wiped with the cats, since the cats get fresh ids and old reviews would point at dead
 // catIds. Every seed user, owners included, may review each cat, at most once per cat, with a
 // text from the JSON pool.
+// Chat msgs: wiped with the cats too. The 4 cats on top of /cat are the paging cats: a fixed
+// log and owner each (PAGING_CHAT_SPECS), for the manual checks of "load older" and the msg
+// states. Every other cat gets a random log, maybe empty, from the JSON thread pool.
 // Re-running is safe: you always end up with the same users (same ids) and the same set of
 // cats (fresh ids, labels and owners), with fresh random reviews
 async function seed() {
@@ -38,6 +50,12 @@ async function seed() {
     const catOwners = seededUsers.filter((user) => SEED_CAT_OWNER_USERNAMES.includes(user.username))
     const rawCats: RawCat[] = JSON.parse(await readFile(CATS_FILE_PATH, 'utf8'))
     const cats = rawCats.map((raw) => buildSeedCat(raw, _pickRandom(catOwners)._id))
+    // Owners fixed before reviews and chat are built, so both see each cat's final owner
+    const pagingCats = pickPagingCats(cats)
+    pagingCats.forEach((cat, idx) => {
+      const { ownerUsername } = PAGING_CHAT_SPECS[idx]!
+      cat.ownerId = catOwners.find(({ username }) => username === ownerUsername)!._id
+    })
 
     // Built before any wipe too, so a bad row in reviews.json fails with the DB untouched
     const reviewContents: string[] = JSON.parse(await readFile(REVIEWS_FILE_PATH, 'utf8'))
@@ -49,7 +67,18 @@ async function seed() {
       )
     })
 
-    // Reviews wiped first, so a run that fails halfway never leaves reviews on deleted cats
+    const chatThreads: ChatThread[] = JSON.parse(await readFile(CHAT_THREADS_FILE_PATH, 'utf8'))
+    const chatMsgs = cats.flatMap((cat) => {
+      const pagingIdx = pagingCats.indexOf(cat)
+      return pagingIdx === -1
+        ? buildRandomChatLog(cat, seededUsers, chatThreads)
+        : buildPagingChatLog(cat, seededUsers, chatThreads, PAGING_CHAT_SPECS[pagingIdx]!)
+    })
+
+    // Chat msgs and reviews wiped first, so a run that fails halfway never leaves them on
+    // deleted cats
+    const chatMsgCollection = await mongoService.getCollection<ChatMsgDoc>(CHAT_MSG_COLLECTION)
+    await chatMsgCollection.deleteMany({})
     const reviewCollection = await mongoService.getCollection<ReviewDoc>(REVIEW_COLLECTION)
     await reviewCollection.deleteMany({})
     const catCollection = await mongoService.getCollection<CatDoc>(CAT_COLLECTION)
@@ -72,6 +101,15 @@ async function seed() {
         seededUsers,
       )}`,
     )
+
+    // insertMany throws on an empty array. Only possible with a tiny cats.json
+    if (chatMsgs.length) await chatMsgCollection.insertMany(chatMsgs)
+    console.log(`Seeded ${chatMsgs.length} chat msgs: ${_countChatMsgStates(chatMsgs)}`)
+    for (const cat of pagingCats) {
+      const owner = catOwners.find(({ _id }) => _id.equals(cat.ownerId))!
+      const size = chatMsgs.filter(({ catId }) => catId.equals(cat._id)).length
+      console.log(`Paging cat: ${cat.name}, ${size} msgs, owned by ${owner.username}`)
+    }
   } catch (err) {
     console.error('Seed failed:', err)
     process.exitCode = 1
@@ -102,6 +140,21 @@ function _countPerUser(userIds: ObjectId[], users: SeededUser[]): string {
       const count = userIds.filter((userId) => userId.equals(_id)).length
       return `${username}: ${count}`
     })
+    .join(', ')
+}
+
+// e.g. "plain: 900, edited: 95, deleted: 40, edited then deleted: 12"
+function _countChatMsgStates(chatMsgs: ChatMsgDoc[]): string {
+  const counts = { plain: 0, edited: 0, deleted: 0, 'edited then deleted': 0 }
+  for (const { isDeleted, createdAt, updatedAt } of chatMsgs) {
+    const isEdited = updatedAt > createdAt
+    if (isEdited && isDeleted) counts['edited then deleted']++
+    else if (isEdited) counts.edited++
+    else if (isDeleted) counts.deleted++
+    else counts.plain++
+  }
+  return Object.entries(counts)
+    .map(([state, count]) => `${state}: ${count}`)
     .join(', ')
 }
 

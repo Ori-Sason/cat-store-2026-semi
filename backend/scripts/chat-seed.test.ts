@@ -12,6 +12,7 @@ import {
   buildRandomChatLog,
   buildSeedChatMsg,
   PAGING_CHAT_SPECS,
+  pickPagingCats,
   SEED_CHAT_EDIT_DELAY_MS,
   SEED_CHAT_LINE_GAP_MS,
   SEED_RANDOM_CHAT_MAX_SIZE,
@@ -354,5 +355,23 @@ describe('buildRandomChatLog', () => {
       if (ghostIds.size) ghostLogCount++
     }
     expect(ghostLogCount).toBeGreaterThan(0)
+  })
+})
+
+describe('pickPagingCats', () => {
+  const _cat = (createdAt: number) => ({ _id: new ObjectId(), createdAt })
+  const cats = [_cat(5), _cat(1), _cat(4), _cat(2), _cat(3), _cat(6)]
+
+  it('picks one cat per spec, newest first, whatever the array order', () => {
+    const newestFirst = [cats[5], cats[0], cats[2], cats[4]]
+    expect(pickPagingCats(cats)).toEqual(newestFirst)
+    expect(pickPagingCats(cats.toReversed())).toEqual(newestFirst)
+    expect(newestFirst).toHaveLength(PAGING_CHAT_SPECS.length)
+  })
+
+  // The /cat sort breaks a createdAt tie by _id ascending
+  it('breaks a createdAt tie by the smaller _id first', () => {
+    const [first, second] = [_cat(9), _cat(9)]
+    expect(pickPagingCats([second!, first!, ...cats]).slice(0, 2)).toEqual([first, second])
   })
 })

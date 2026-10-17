@@ -166,7 +166,7 @@ shows buttons that fail with 403. After 3, the UI matches the backend. 4 proves 
    feature commit.
    - [x] 1a. Backend: Socket.io on the http server, the history route, and the socket events
      for join / leave, send, edit, delete and typing.
-   - [ ] 1b. Seed: chat msgs for the seed cats, covering paging and every message state.
+   - [x] 1b. Seed: chat msgs for the seed cats, covering paging and every message state.
    - [ ] 1c. Frontend: the chat panel on `cat-details`, with send, edit, delete, typing and
      E2E.
      - Dev proxy first: Socket.io connects on `/socket.io/`, not `/api`. So add a
