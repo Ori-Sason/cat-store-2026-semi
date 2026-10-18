@@ -1,7 +1,7 @@
 import type { ChatMsg } from '@cat-store/shared'
 import type { PendingChatMsg } from '../../models/chat'
 
-// Pure list helpers for the chat log. No state, no socket: the join session decides when to call
+// Pure list helpers for the chat log. No state, no socket: the room tracker decides when to call
 // them
 
 export function removePendingMsgs(pendingMsgs: PendingChatMsg[], clientMsgIds: Set<string>) {

@@ -15,16 +15,16 @@ import { socketService } from '../../services/socket.service'
 import { utilService } from '../../services/util.service'
 import { useUserMsgStore } from '../../store/user-msg.store'
 import type { ChatMsgBusyAction, ChatMsgEvent } from './chat-state'
-import { addMsgs, changeMsg, type JoinSession, updateChat } from './join-session'
+import { addMsgs, changeMsg, type ChatRoomTracker, updateChat } from './chat-room-tracker'
 
 // The viewer's own writes: send and retry (optimistic), edit and remove (wait for the ack)
 
 // Optimistic: the msg shows at once as pending, and the ack or the broadcast replaces it with
 // the saved one. text is the composer's, already trimmed and checked
-export function sendNewMsg(session: JoinSession, loggedInUser: LoggedInUser, text: string) {
+export function sendNewMsg(roomTracker: ChatRoomTracker, loggedInUser: LoggedInUser, text: string) {
   const now = Date.now()
   const pendingMsg: PendingChatMsg = {
-    catId: session.catId,
+    catId: roomTracker.catId,
     clientMsgId: utilService.getRandomUuid(),
     createdAt: now,
     updatedAt: now,
@@ -37,36 +37,36 @@ export function sendNewMsg(session: JoinSession, loggedInUser: LoggedInUser, tex
     text,
     sendStatus: 'sending',
   }
-  updateChat(session, (prev) => ({ ...prev, pendingMsgs: [...prev.pendingMsgs, pendingMsg] }))
-  void _sendPendingMsg(session, pendingMsg)
+  updateChat(roomTracker, (prev) => ({ ...prev, pendingMsgs: [...prev.pendingMsgs, pendingMsg] }))
+  void _sendPendingMsg(roomTracker, pendingMsg)
 }
 
 // The same clientMsgId, so a msg that was saved after all (only the ack got lost) is deduped by
 // the server, which acks the saved copy. The caller checks it's failed and the viewer's own
-export function resendFailedMsg(session: JoinSession, failedMsg: PendingChatMsg) {
+export function resendFailedMsg(roomTracker: ChatRoomTracker, failedMsg: PendingChatMsg) {
   const retriedMsg: PendingChatMsg = { ...failedMsg, sendStatus: 'sending' }
-  updateChat(session, (prev) => ({
+  updateChat(roomTracker, (prev) => ({
     ...prev,
     pendingMsgs: prev.pendingMsgs.map((msg) =>
       msg.clientMsgId === retriedMsg.clientMsgId ? retriedMsg : msg,
     ),
   }))
-  void _sendPendingMsg(session, retriedMsg)
+  void _sendPendingMsg(roomTracker, retriedMsg)
 }
 
 // text is the inline editor's, already trimmed and checked. Only the author may edit: the UI
 // offers it per chatPermissionService, and the server enforces it
-export function emitMsgUpdate(session: JoinSession, msgId: string, text: string) {
-  const payload = { catId: session.catId, msgId, text } satisfies ChatMsgUpdateInput
-  return _emitMsgChange(session, msgId, 'updating', () =>
+export function emitMsgUpdate(roomTracker: ChatRoomTracker, msgId: string, text: string) {
+  const payload = { catId: roomTracker.catId, msgId, text } satisfies ChatMsgUpdateInput
+  return _emitMsgChange(roomTracker, msgId, 'updating', () =>
     socketService.emitWithAck<ChatMsgEvent>(CHAT_MSG_UPDATE, payload),
   )
 }
 
 // The ack is the tombstone. The author or an admin, like the edit's checks
-export function emitMsgRemove(session: JoinSession, msgId: string) {
-  const payload = { catId: session.catId, msgId } satisfies ChatMsgRemoveInput
-  return _emitMsgChange(session, msgId, 'removing', () =>
+export function emitMsgRemove(roomTracker: ChatRoomTracker, msgId: string) {
+  const payload = { catId: roomTracker.catId, msgId } satisfies ChatMsgRemoveInput
+  return _emitMsgChange(roomTracker, msgId, 'removing', () =>
     socketService.emitWithAck<ChatMsgEvent>(CHAT_MSG_REMOVE, payload),
   )
 }
@@ -76,7 +76,7 @@ export function emitMsgRemove(session: JoinSession, msgId: string) {
 // A failure marks it failed, unless the broadcast already saved it.
 // Only an UNAUTHORIZED logs the user out (socketService clears the user on it). A timeout or a
 // lost connection is a NETWORK_ERROR: failed, and the user stays logged in
-async function _sendPendingMsg(session: JoinSession, pendingMsg: PendingChatMsg) {
+async function _sendPendingMsg(roomTracker: ChatRoomTracker, pendingMsg: PendingChatMsg) {
   const { catId, clientMsgId, text } = pendingMsg
   try {
     const payload = { catId, clientMsgId, text }
@@ -84,9 +84,9 @@ async function _sendPendingMsg(session: JoinSession, pendingMsg: PendingChatMsg)
       CHAT_MSG_ADD,
       payload satisfies ChatMsgInput,
     )
-    addMsgs(session, [msg])
+    addMsgs(roomTracker, [msg])
   } catch (err) {
-    updateChat(session, (prev) => ({
+    updateChat(roomTracker, (prev) => ({
       ...prev,
       pendingMsgs: prev.pendingMsgs.map((prevPendingMsg) =>
         prevPendingMsg.clientMsgId === clientMsgId
@@ -94,7 +94,7 @@ async function _sendPendingMsg(session: JoinSession, pendingMsg: PendingChatMsg)
           : prevPendingMsg,
       ),
     }))
-    if (!session.isActive) return
+    if (!roomTracker.isActive) return
     if (err instanceof ApiError && err.code === 'UNAUTHORIZED') {
       // The composer turns into the guest CTA, and logging in leaves the page: keep the text
       chatService.saveDraft(catId, text)
@@ -108,19 +108,19 @@ async function _sendPendingMsg(session: JoinSession, pendingMsg: PendingChatMsg)
 // it was and says why. An UNAUTHORIZED needs no draft: the msg is already saved.
 // Resolves to whether it was saved, so the inline editor knows to close or to stay open
 async function _emitMsgChange(
-  session: JoinSession,
+  roomTracker: ChatRoomTracker,
   msgId: string,
   action: ChatMsgBusyAction,
   emit: () => Promise<ChatMsgEvent>,
 ) {
-  if (!session.isActive) return false
-  _setMsgBusy(session, msgId, action)
+  if (!roomTracker.isActive) return false
+  _setMsgBusy(roomTracker, msgId, action)
   try {
     const { msg } = await emit()
-    changeMsg(session, msg)
-    return session.isActive
+    changeMsg(roomTracker, msg)
+    return roomTracker.isActive
   } catch (err) {
-    if (!session.isActive) return false
+    if (!roomTracker.isActive) return false
     if (err instanceof ApiError && err.code === 'UNAUTHORIZED') {
       _showSessionExpiredMsg()
     } else {
@@ -129,12 +129,16 @@ async function _emitMsgChange(
     }
     return false
   } finally {
-    _setMsgBusy(session, msgId, null)
+    _setMsgBusy(roomTracker, msgId, null)
   }
 }
 
-function _setMsgBusy(session: JoinSession, msgId: string, action: ChatMsgBusyAction | null) {
-  updateChat(session, (prev) => {
+function _setMsgBusy(
+  roomTracker: ChatRoomTracker,
+  msgId: string,
+  action: ChatMsgBusyAction | null,
+) {
+  updateChat(roomTracker, (prev) => {
     const busyMsgs = { ...prev.busyMsgs }
     if (action) busyMsgs[msgId] = action
     else delete busyMsgs[msgId]
