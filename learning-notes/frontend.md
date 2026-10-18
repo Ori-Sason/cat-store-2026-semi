@@ -301,3 +301,23 @@
   **Gotcha: which action does a submit hit?** A submit to `/cat/42` matches both routes, and only the parent has an action. React Router sends it to the parent, unless the URL has `?index`, which targets the index route. So the cat delete fetcher in `<CatDetails />` still reaches `catDetailsAction`.
 
   **Bottom line:** an index child gives a section its own loader with no change to the URL, so a mutation can reload just that section.
+* React render vs browser paint  
+  These are two completely different phases of the browser update cycle. The shortest explanation is: **React renders, but the browser paints.**
+
+  | Feature | **Render (React Phase)** | **Paint (Browser Phase)** |
+  | :--- | :--- | :--- |
+  | **Who handles it?** | The **React engine** (JavaScript execution). | The **Browser engine** (Blink, Gecko, WebKit). |
+  | **What does it do?** | Calls component functions to calculate the **Virtual DOM** and figure out what changes need to be made. | Takes the final calculated layout and pixel-by-pixel **draws it onto the screen**. |
+  | **Visual changes?** | **No physical changes** are visible to the user yet. | **Changes become visible** to the user on the screen. |
+  | **Frequency** | Can happen frequently or multiple times before anything is drawn. | Happens once per frame refresh (usually capped at 60Hz/120Hz). |
+
+  **The full timeline: how a change reaches the screen**. To see exactly how they interact, look at the sequence of events when a state changes in your app:
+  1. **Trigger:** A state change or prop update occurs in a component.
+  2. **Render Phase (React):** React calls your components and builds a new **Virtual DOM** tree. It then compares this new tree with the old tree (a process called *reconciliation* or *diffing*) to calculate the minimum updates required.
+  3. **Commit Phase (React):** React takes those calculated changes and applies them directly to the real browser DOM (using methods like `appendChild` or `setAttribute`). **At this exact microsecond, the screen still hasn't updated visually.**
+  4. **Paint Phase (Browser):** The browser realizes the DOM has changed. It recalculates the layout (geometry and positions), determines the layering, and finally **paints** the actual pixels onto your physical screen monitor.
+
+  **Why this distinction matters for hooks**. Understanding this difference is critical for knowing when to use specific React hooks:
+  * **`useEffect`**: Runs **after** the browser has painted the changes. It is safe for API calls and state updates because it won't block the visual rendering of the page.
+    * Exception: when the update comes from a discrete user event (a click, a key press), React runs the effects **before** the paint, so the result of the event shows in the same frame.
+  * **`useLayoutEffect`**: Runs **after** React mutates the DOM (Commit phase) but **before** the browser paints. If you need to measure the size of an element and change the UI before the user sees a "flicker," you use this hook to block the paint phase until your adjustments are ready.

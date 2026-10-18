@@ -6,7 +6,7 @@ import {
   type ChatMsg,
   type ChatRoomInput,
 } from '@cat-store/shared'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useEffectEvent, useRef, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { socketService } from '../../services/socket.service'
 import { useLoggedInUserStore } from '../../store/logged-in-user.store'
@@ -30,26 +30,24 @@ export function useCatChat(catIdParam: string, isOpen: boolean) {
   const catId = catIdParam.toLowerCase()
   const [chat, setChat] = useState(() => getInitialChatState(catId))
   const sessionRef = useRef<JoinSession | null>(null)
-  // Read by the live listener, which is registered once per join and would see a stale prop
-  const isOpenRef = useRef(isOpen)
-  // Read by the session's onCatGone: navigate as a join effect dependency would rejoin the room
   const navigate = useNavigate()
-  const navigateRef = useRef(navigate)
 
   // A cat switch can reuse cat-details without an unmount. Resetting during render (not in an
   // effect) means the old cat's msgs never show under the new cat, not even for one frame
   if (chat.catId !== catId) setChat(getInitialChatState(catId))
 
-  useEffect(() => {
-    isOpenRef.current = isOpen
-    navigateRef.current = navigate
+  // Effect events - call them only from effect code: passed raw into the session, they'd be called from outside it
+  const countUnreadMsg = useEffectEvent((session: JoinSession, msg: ChatMsg) => {
+    if (isOpen || _isOwnMsg(msg)) return
+    updateChat(session, (prev) => ({ ...prev, unreadCount: prev.unreadCount + 1 }))
+  })
+  const goToCatList = useEffectEvent(() => {
+    useUserMsgStore.getState().queueErrorNavigationMsg('This cat was deleted')
+    void navigate('/cat', { replace: true })
   })
 
   useEffect(() => {
-    const session = createJoinSession(catId, setChat, () => {
-      useUserMsgStore.getState().queueErrorNavigationMsg('This cat was deleted')
-      void navigateRef.current('/cat', { replace: true })
-    })
+    const session = createJoinSession(catId, setChat, () => goToCatList())
     sessionRef.current = session
     join(session)
 
@@ -57,8 +55,7 @@ export function useCatChat(catIdParam: string, isOpen: boolean) {
     const onMsgAdded = ({ msg }: ChatMsgEvent) => {
       if (msg.catId !== session.catId) return
       addMsgs(session, [msg])
-      if (isOpenRef.current || _isOwnMsg(msg)) return
-      updateChat(session, (prev) => ({ ...prev, unreadCount: prev.unreadCount + 1 }))
+      countUnreadMsg(session, msg)
     }
     // An edit or a remove isn't new, so it never counts as unread
     const onMsgChanged = ({ msg }: ChatMsgEvent) => {
