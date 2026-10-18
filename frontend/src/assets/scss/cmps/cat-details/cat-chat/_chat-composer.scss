@@ -1,0 +1,79 @@
+@use 'setup' as *;
+
+// The tallest the textarea grows (about 5 lines) before it scrolls
+$_textarea-max-height: 120px;
+
+.chat-composer {
+  flex-shrink: 0;
+  padding: 6px $space-3 $space-3;
+
+  // The textarea and the send button share one bordered box. The send button sits at the bottom,
+  // next to the last line, as the textarea grows
+  .field {
+    display: flex;
+    align-items: flex-end;
+    gap: 6px;
+    padding: $space-1 $space-1 $space-1 $space-3;
+    border: 1px solid $primary-clr-300;
+    border-radius: $radius-lg;
+    background-color: $clr-white;
+
+    &:focus-within {
+      border-color: $primary-clr-500;
+      outline: 2px solid rgba($primary-clr-500, 0.3);
+    }
+  }
+
+  textarea {
+    flex: 1;
+    min-width: 0;
+    max-height: $_textarea-max-height;
+    padding: 6px 0;
+    font: inherit;
+    font-size: 0.9rem;
+    line-height: 1.35;
+    color: inherit;
+    border: none;
+    outline: none;
+    resize: none;
+    background: transparent;
+
+    &:disabled {
+      cursor: default;
+    }
+  }
+
+  .send {
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    display: grid;
+    place-items: center;
+    color: $clr-white;
+    border-radius: 50%;
+    background-color: $primary-clr-500;
+
+    &:hover:not(:disabled) {
+      background-color: $primary-clr-600;
+    }
+
+    &:disabled {
+      cursor: default;
+      background-color: $primary-clr-200;
+    }
+  }
+
+  .counter {
+    padding: $space-1 6px 0;
+    text-align: end;
+    font-size: 0.74rem;
+    font-variant-numeric: tabular-nums;
+    color: $primary-clr-850;
+
+    // Past the cap: the reason send is off
+    &.is-over {
+      font-weight: 700;
+      color: $clr-danger;
+    }
+  }
+}

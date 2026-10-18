@@ -1,6 +1,8 @@
 import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import type { ChatMsg, LoggedInUser } from '@cat-store/shared'
-import { beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import type { PendingChatMsg } from '../../../models/chat'
 import { useLoggedInUserStore } from '../../../store/logged-in-user.store'
 import { ChatMsgPreview } from './chat-msg-preview'
 
@@ -24,9 +26,15 @@ const MSG: ChatMsg = {
   text: 'Is she ok with dogs?',
 }
 
-function _render(msg: ChatMsg, loggedInUser: LoggedInUser | null = null) {
+function _render(
+  msg: ChatMsg | PendingChatMsg,
+  loggedInUser: LoggedInUser | null = null,
+  onRetry?: () => void,
+) {
   useLoggedInUserStore.setState({ loggedInUser })
-  const { container } = render(<ChatMsgPreview msg={msg} catOwnerId={CAT_OWNER_ID} />)
+  const { container } = render(
+    <ChatMsgPreview msg={msg} catOwnerId={CAT_OWNER_ID} onRetry={onRetry} />,
+  )
   // From this render's container: a test may render twice
   return container.querySelector('article')
 }
@@ -112,6 +120,40 @@ describe('ChatMsgPreview', () => {
       expect(screen.getByText('Maya Levi')).toBeInTheDocument()
       expect(screen.getByText('14:20')).toBeInTheDocument()
       expect(screen.queryByText(/Edited at/)).not.toBeInTheDocument()
+    })
+  })
+
+  describe('the pending states', () => {
+    function _pending(sendStatus: PendingChatMsg['sendStatus']): PendingChatMsg {
+      const { _id: _unused, ...rest } = MSG as Extract<ChatMsg, { isDeleted: false }>
+      const user = { _id: AUTHOR._id, fullname: AUTHOR.fullname, isAdmin: false }
+      return { ...rest, user, sendStatus }
+    }
+
+    it('shows "Sending…" on the own row while the ack is on its way', () => {
+      const row = _render(_pending('sending'), AUTHOR)
+      expect(row).toHaveClass('is-own', 'is-pending')
+      expect(screen.getByText('Sending…')).toBeInTheDocument()
+      expect(screen.queryByRole('button')).not.toBeInTheDocument()
+    })
+
+    it('offers a retry on a failed msg to its author', async () => {
+      const onRetry = vi.fn()
+      const row = _render(_pending('failed'), AUTHOR, onRetry)
+      expect(row).toHaveClass('is-failed')
+      expect(screen.queryByText('Sending…')).not.toBeInTheDocument()
+
+      await userEvent.click(screen.getByRole('button', { name: 'Not sent. Tap to retry' }))
+
+      expect(onRetry).toHaveBeenCalledOnce()
+    })
+
+    // After an expired session: the text stays on screen, but a guest can't send it
+    it('keeps a failed msg without a retry once the viewer is a guest', () => {
+      _render(_pending('failed'), null)
+      expect(screen.getByText('Not sent')).toBeInTheDocument()
+      expect(screen.getByText(MSG.text)).toBeInTheDocument()
+      expect(screen.queryByRole('button')).not.toBeInTheDocument()
     })
   })
 })

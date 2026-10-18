@@ -22,10 +22,14 @@
 @use './cmps/cat-dashboard/label-price-chart';
 @use './cmps/cat-dashboard/label-stock-chart';
 @use './cmps/cat-details/cat-chat/cat-chat';
+@use './cmps/cat-details/cat-chat/chat-composer';
+@use './cmps/cat-details/cat-chat/chat-guest-cta';
 @use './cmps/cat-details/cat-chat/chat-header';
 @use './cmps/cat-details/cat-chat/chat-icon';
 @use './cmps/cat-details/cat-chat/chat-log';
+@use './cmps/cat-details/cat-chat/chat-msg-not-sent';
 @use './cmps/cat-details/cat-chat/chat-msg-preview';
+@use './cmps/cat-details/cat-chat/chat-msg-status';
 @use './cmps/cat-details/cat-reviews';
 @use './cmps/cat-edit/cat-edit-form';
 @use './cmps/common/cat/cat-img';

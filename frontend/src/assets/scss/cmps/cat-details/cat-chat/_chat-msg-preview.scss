@@ -84,4 +84,12 @@
     font-size: 0.72rem;
     color: rgba($clr-black, 0.5);
   }
+
+  // Not confirmed yet: the text lighter than a saved msg's
+  &.is-pending,
+  &.is-failed {
+    .words {
+      color: $primary-clr-850;
+    }
+  }
 }

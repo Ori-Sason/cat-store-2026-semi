@@ -1,17 +1,21 @@
 import {
   CHAT_JOIN,
   CHAT_LEAVE,
+  CHAT_MSG_ADD,
   CHAT_MSG_ADDED,
   type ChatMsg,
+  type ChatMsgInput,
   type ChatMsgOlderPage,
   type ChatRoomInput,
 } from '@cat-store/shared'
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { ApiError } from '../models/api-error'
+import type { PendingChatMsg } from '../models/chat'
 import { chatService } from '../services/chat.service'
 import { errorService } from '../services/error.service'
 import { socketService } from '../services/socket.service'
+import { utilService } from '../services/util.service'
 import { useLoggedInUserStore } from '../store/logged-in-user.store'
 import { useUserMsgStore } from '../store/user-msg.store'
 
@@ -21,6 +25,7 @@ export type CatChatStatus = 'idle' | 'loading' | 'ready' | 'error'
 interface CatChatState {
   catId: string
   msgs: ChatMsg[] // by _id, oldest first
+  pendingMsgs: PendingChatMsg[] // own sends not confirmed yet, in send order, below the msgs
   status: CatChatStatus
   isOldestLoaded: boolean // the server said nothing older exists
   isLoadingOlder: boolean
@@ -42,7 +47,8 @@ interface JoinSession {
   isLoadingOlder: boolean
 }
 
-// The server event payloads for chat:msg-added (and, later, updated / removed)
+// The server event payloads for chat:msg-added (and, later, updated / removed), and the
+// chat:msg-add ack
 interface ChatMsgEvent {
   msg: ChatMsg
 }
@@ -76,11 +82,18 @@ export function useCatChat(catIdParam: string, isOpen: boolean) {
     setChat((prev) => (prev.catId === session.catId ? update(prev) : prev))
   }
 
-  // Every msg enters the state through here, so newestMsgId never misses one
+  // Every msg enters the state through here, so newestMsgId never misses one. A saved msg also
+  // replaces its pending copy, whichever path brings it: the ack, the broadcast, or a gap fill
+  // (a send that failed on a lost connection may have been saved before the drop)
   function addMsgs(session: JoinSession, msgs: ChatMsg[]) {
     if (sessionRef.current !== session || !msgs.length) return
     session.newestMsgId = _getNewestMsgId(session.newestMsgId, msgs)
-    updateChat(session, (prev) => ({ ...prev, msgs: _mergeMsgs(prev.msgs, msgs) }))
+    const clientMsgIds = new Set(msgs.map((msg) => msg.clientMsgId))
+    updateChat(session, (prev) => ({
+      ...prev,
+      msgs: _mergeMsgs(prev.msgs, msgs),
+      pendingMsgs: _removePendingMsgs(prev.pendingMsgs, clientMsgIds),
+    }))
   }
 
   // Every join (mount, reconnect, retry) goes through here. A CAT_NOT_FOUND means the cat was
@@ -180,6 +193,38 @@ export function useCatChat(catIdParam: string, isOpen: boolean) {
     }
   }
 
+  // One try of a pending msg, the first or a retry. The DB write is awaited on the server before
+  // the ack, so the ack means saved. The broadcast may land first: then this ack only dedupes.
+  // A failure marks it failed, unless the broadcast already saved it.
+  // Only an UNAUTHORIZED logs the user out (socketService clears the user on it). A timeout or a
+  // lost connection is a NETWORK_ERROR: failed, and the user stays logged in
+  async function sendPendingMsg(session: JoinSession, pendingMsg: PendingChatMsg) {
+    const { catId, clientMsgId, text } = pendingMsg
+    try {
+      const payload = { catId, clientMsgId, text }
+      const { msg } = await socketService.emitWithAck<ChatMsgEvent>(
+        CHAT_MSG_ADD,
+        payload satisfies ChatMsgInput,
+      )
+      addMsgs(session, [msg])
+    } catch (err) {
+      updateChat(session, (prev) => ({
+        ...prev,
+        pendingMsgs: prev.pendingMsgs.map((prevPendingMsg) =>
+          prevPendingMsg.clientMsgId === clientMsgId
+            ? { ...prevPendingMsg, sendStatus: 'failed' }
+            : prevPendingMsg,
+        ),
+      }))
+      if (sessionRef.current !== session) return
+      if (err instanceof ApiError && err.code === 'UNAUTHORIZED') {
+        // The composer turns into the guest CTA, and logging in leaves the page: keep the text
+        chatService.saveDraft(catId, text)
+        _showSessionExpiredMsg()
+      }
+    }
+  }
+
   useEffect(() => {
     isOpenRef.current = isOpen
     navigateRef.current = navigate
@@ -225,7 +270,7 @@ export function useCatChat(catIdParam: string, isOpen: boolean) {
   }, [catId, isOpen])
 
   // The error state's button: join again, then fetch. A reconnect also retries on its own
-  function retry() {
+  function retryLoadChat() {
     const session = sessionRef.current
     if (!session || chat.status !== 'error') return
     join(session)
@@ -254,16 +299,74 @@ export function useCatChat(catIdParam: string, isOpen: boolean) {
     }
   }
 
+  // Optimistic: the msg shows at once as pending, and the ack or the broadcast replaces it with
+  // the saved one. text is the composer's, already trimmed and checked
+  function sendMsg(text: string) {
+    const session = sessionRef.current
+    const loggedInUser = useLoggedInUserStore.getState().loggedInUser
+    if (!session || !loggedInUser) return
+    const now = Date.now()
+    const pendingMsg: PendingChatMsg = {
+      catId: session.catId,
+      clientMsgId: utilService.getRandomUuid(),
+      createdAt: now,
+      updatedAt: now,
+      user: {
+        _id: loggedInUser._id,
+        fullname: loggedInUser.fullname,
+        isAdmin: loggedInUser.isAdmin,
+      },
+      isDeleted: false,
+      text,
+      sendStatus: 'sending',
+    }
+    updateChat(session, (prev) => ({ ...prev, pendingMsgs: [...prev.pendingMsgs, pendingMsg] }))
+    void sendPendingMsg(session, pendingMsg)
+  }
+
+  // The same clientMsgId, so a msg that was saved after all (only the ack got lost) is deduped by
+  // the server, which acks the saved copy. Only its author can retry it: after a logout or a
+  // login as someone else, the row stays as failed
+  function retrySendMsg(clientMsgId: string) {
+    const session = sessionRef.current
+    const loggedInUser = useLoggedInUserStore.getState().loggedInUser
+    const pendingMsg = chat.pendingMsgs.find((msg) => msg.clientMsgId === clientMsgId)
+    if (!session || !pendingMsg || pendingMsg.sendStatus !== 'failed') return
+    if (pendingMsg.user._id !== loggedInUser?._id) return
+    const retriedMsg: PendingChatMsg = { ...pendingMsg, sendStatus: 'sending' }
+    updateChat(session, (prev) => ({
+      ...prev,
+      pendingMsgs: prev.pendingMsgs.map((msg) =>
+        msg.clientMsgId === clientMsgId ? retriedMsg : msg,
+      ),
+    }))
+    void sendPendingMsg(session, retriedMsg)
+  }
+
   return {
     msgs: chat.msgs,
+    pendingMsgs: chat.pendingMsgs,
     status: chat.status,
     isOlderAvailable: chat.status === 'ready' && !chat.isOldestLoaded && chat.msgs.length > 0,
     isLoadingOlder: chat.isLoadingOlder,
     // The badge sits on the closed chat icon, so it's 0 while the panel is open
     unreadCount: isOpen ? 0 : chat.unreadCount,
     loadOlder,
-    retry,
+    retryLoadChat,
+    sendMsg,
+    retrySendMsg,
   }
+}
+
+// Like a REST 401: socketService already cleared the user. No redirect: the user stays on the page
+// as a guest, and can still read
+function _showSessionExpiredMsg() {
+  useUserMsgStore.getState().showErrorMsg('Your session expired. Log in to keep chatting.')
+}
+
+function _removePendingMsgs(pendingMsgs: PendingChatMsg[], clientMsgIds: Set<string>) {
+  if (!pendingMsgs.some((msg) => clientMsgIds.has(msg.clientMsgId))) return pendingMsgs
+  return pendingMsgs.filter((msg) => !clientMsgIds.has(msg.clientMsgId))
 }
 
 // A guest owns nothing, and a msg whose author is gone (user: null) is nobody's own
@@ -276,6 +379,7 @@ function _getInitialState(catId: string): CatChatState {
   return {
     catId,
     msgs: [],
+    pendingMsgs: [],
     status: 'idle',
     isOldestLoaded: false,
     isLoadingOlder: false,

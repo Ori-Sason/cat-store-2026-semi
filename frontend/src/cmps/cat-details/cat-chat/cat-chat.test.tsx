@@ -4,6 +4,7 @@ import type { ChatMsg, LoggedInUser } from '@cat-store/shared'
 import { createMemoryRouter, RouterProvider } from 'react-router'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { useCatChat } from '../../../hooks/use-cat-chat'
+import type { PendingChatMsg } from '../../../models/chat'
 import { useLoggedInUserStore } from '../../../store/logged-in-user.store'
 import { CatChat } from './cat-chat'
 
@@ -34,12 +35,15 @@ type CatChatHook = ReturnType<typeof useCatChat>
 function _mockChat(overrides: Partial<CatChatHook> = {}) {
   const chat: CatChatHook = {
     msgs: [],
+    pendingMsgs: [],
     status: 'ready',
     isOlderAvailable: false,
     isLoadingOlder: false,
     unreadCount: 0,
     loadOlder: vi.fn(),
-    retry: vi.fn(),
+    retryLoadChat: vi.fn(),
+    sendMsg: vi.fn(),
+    retrySendMsg: vi.fn(),
     ...overrides,
   }
   vi.mocked(useCatChat).mockReturnValue(chat)
@@ -136,7 +140,7 @@ describe('CatChat', () => {
       await _open()
       expect(screen.getByRole('alert')).toHaveTextContent("Couldn't connect to the chat.")
       await userEvent.click(screen.getByRole('button', { name: 'Retry' }))
-      expect(chat.retry).toHaveBeenCalledOnce()
+      expect(chat.retryLoadChat).toHaveBeenCalledOnce()
     })
 
     it('shows the empty note on an empty log', async () => {
@@ -171,6 +175,55 @@ describe('CatChat', () => {
       _render()
       await _open()
       expect(screen.queryByRole('link', { name: 'Log in to chat' })).not.toBeInTheDocument()
+    })
+
+    it('gives a guest no composer', async () => {
+      _mockChat()
+      _render(null)
+      await _open()
+      expect(screen.queryByRole('textbox', { name: 'Message' })).not.toBeInTheDocument()
+    })
+  })
+
+  describe('sending', () => {
+    it('sends what the composer submits through the hook', async () => {
+      const chat = _mockChat()
+      _render()
+      await _open()
+      await userEvent.type(screen.getByRole('textbox', { name: 'Message' }), 'Hi{Enter}')
+      expect(chat.sendMsg).toHaveBeenCalledExactlyOnceWith('Hi')
+    })
+
+    // A send before the join ack would be refused
+    it('disables the composer until the chat is ready', async () => {
+      _mockChat({ status: 'loading' })
+      _render()
+      await _open()
+      expect(screen.getByRole('textbox', { name: 'Message' })).toBeDisabled()
+    })
+
+    it('shows a pending msg below the saved ones, and a failed one retries through the hook', async () => {
+      const failedMsg: PendingChatMsg = {
+        catId: CAT_ID,
+        clientMsgId: 'client-2',
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+        user: { _id: USER._id, fullname: USER.fullname, isAdmin: false },
+        isDeleted: false,
+        text: 'Can I visit on Sunday?',
+        sendStatus: 'failed',
+      }
+      const chat = _mockChat({ msgs: [MSG], pendingMsgs: [failedMsg] })
+      _render()
+      await _open()
+
+      const rows = screen.getAllByRole('article')
+      expect(rows.map((row) => row.querySelector('.words')?.textContent)).toEqual([
+        MSG.text,
+        failedMsg.text,
+      ])
+      await userEvent.click(screen.getByRole('button', { name: 'Not sent. Tap to retry' }))
+      expect(chat.retrySendMsg).toHaveBeenCalledExactlyOnceWith('client-2')
     })
   })
 })

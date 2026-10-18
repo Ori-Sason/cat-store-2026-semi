@@ -1,0 +1,27 @@
+@use 'setup' as *;
+
+// After a msg's text, so it wraps with it instead of taking a line of its own
+.chat-msg-status {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-1;
+  margin-left: $space-1;
+  white-space: nowrap;
+  font-size: 0.74rem;
+  color: $primary-clr-850;
+
+  svg {
+    flex-shrink: 0;
+    animation: chat-msg-status-spin 1s linear infinite;
+
+    @media (prefers-reduced-motion: reduce) {
+      animation: none;
+    }
+  }
+}
+
+@keyframes chat-msg-status-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

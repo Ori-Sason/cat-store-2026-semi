@@ -1,6 +1,7 @@
 import type React from 'react'
 import { useLayoutEffect, useRef } from 'react'
 import type { ChatMsg } from '@cat-store/shared'
+import type { PendingChatMsg } from '../../../models/chat'
 import { utilService } from '../../../services/util.service'
 import { ChatMsgPreview } from './chat-msg-preview'
 
@@ -9,29 +10,41 @@ const _STICK_TO_BOTTOM_PX = 48
 
 interface ChatLogProps {
   msgs: ChatMsg[]
+  pendingMsgs: PendingChatMsg[] // shown below the saved msgs, in send order
   catOwnerId: string
   isOlderAvailable: boolean
   isLoadingOlder: boolean
   onLoadOlder: () => void
+  onRetrySendMsg: (clientMsgId: string) => void
+}
+
+// A saved msg is keyed by its _id, a pending one by its clientMsgId (it has no _id yet)
+interface LogRow {
+  key: string
+  msg: ChatMsg | PendingChatMsg
 }
 
 // What the log looked like after the last render, to compare against after the next one
 interface ScrollSnapshot {
   firstMsgId: string | null
   lastMsgId: string | null
+  pendingMsgIds: Set<string> // clientMsgIds, to spot a new own send
   scrollTop: number
   scrollHeight: number
   isAtBottom: boolean
 }
 
 // The scrolling list of msgs, grouped under day dividers. It opens at the newest msg, follows new
-// msgs while the reader is at the bottom, and keeps the view still when older msgs load above
+// msgs while the reader is at the bottom, jumps to the bottom on an own send, and keeps the view
+// still when older msgs load above
 export const ChatLog: React.FC<ChatLogProps> = ({
   msgs,
+  pendingMsgs,
   catOwnerId,
   isOlderAvailable,
   isLoadingOlder,
   onLoadOlder,
+  onRetrySendMsg,
 }) => {
   const logRef = useRef<HTMLDivElement>(null)
   const snapshotRef = useRef<ScrollSnapshot | null>(null)
@@ -44,17 +57,20 @@ export const ChatLog: React.FC<ChatLogProps> = ({
     const prev = snapshotRef.current
     const firstMsgId = msgs[0]?._id ?? null
     const lastMsgId = msgs.at(-1)?._id ?? null
+    const pendingMsgIds = new Set(pendingMsgs.map((msg) => msg.clientMsgId))
+    // A send appends a pending msg. Its author wants to see it, even when scrolled up to read
+    const isNewSend = pendingMsgs.some((msg) => !prev?.pendingMsgIds.has(msg.clientMsgId))
 
-    if (!prev?.lastMsgId) {
-      log.scrollTop = log.scrollHeight // the first msgs: open at the newest
+    if (!prev?.lastMsgId || isNewSend) {
+      log.scrollTop = log.scrollHeight // the first msgs or an own send: to the newest
     } else if (firstMsgId !== prev.firstMsgId) {
       // Older msgs went in above: move down by what was added, so the same rows stay in view
       log.scrollTop = prev.scrollTop + (log.scrollHeight - prev.scrollHeight)
     } else if (lastMsgId !== prev.lastMsgId && prev.isAtBottom) {
       log.scrollTop = log.scrollHeight
     }
-    snapshotRef.current = { firstMsgId, lastMsgId, ..._readScroll(log) }
-  }, [msgs])
+    snapshotRef.current = { firstMsgId, lastMsgId, pendingMsgIds, ..._readScroll(log) }
+  }, [msgs, pendingMsgs])
 
   // Keeps the snapshot current between renders, so the next fix starts from where the reader is
   function onScroll() {
@@ -63,7 +79,7 @@ export const ChatLog: React.FC<ChatLogProps> = ({
     if (log && snapshot) snapshotRef.current = { ...snapshot, ..._readScroll(log) }
   }
 
-  if (!msgs.length) {
+  if (!msgs.length && !pendingMsgs.length) {
     return (
       <div className="chat-log is-empty">
         <p className="empty-title">No messages yet</p>
@@ -81,15 +97,19 @@ export const ChatLog: React.FC<ChatLogProps> = ({
           </button>
         </div>
       )}
-      {_groupByDay(msgs).map(({ dayKey, label, msgs }) => (
+      {_groupByDay(msgs, pendingMsgs).map(({ dayKey, label, rows }) => (
         <section key={dayKey} className="day" aria-label={label}>
           <h3 className="day-divider" aria-hidden="true">
             {label}
           </h3>
           <ol className="clean-list">
-            {msgs.map((msg) => (
-              <li key={msg._id}>
-                <ChatMsgPreview msg={msg} catOwnerId={catOwnerId} />
+            {rows.map(({ key, msg }) => (
+              <li key={key}>
+                <ChatMsgPreview
+                  msg={msg}
+                  catOwnerId={catOwnerId}
+                  onRetry={() => onRetrySendMsg(msg.clientMsgId)}
+                />
               </li>
             ))}
           </ol>
@@ -108,14 +128,19 @@ function _readScroll(log: HTMLElement) {
   }
 }
 
-// Consecutive msgs of one local calendar day. msgs are in _id order, which is time order
-function _groupByDay(msgs: ChatMsg[]) {
-  const groups: { dayKey: string; label: string; msgs: ChatMsg[] }[] = []
-  for (const msg of msgs) {
-    const dayKey = new Date(msg.createdAt).toDateString()
+// Consecutive rows of one local calendar day. msgs are in _id order, which is time order, and the
+// pending ones come after them: they were sent just now
+function _groupByDay(msgs: ChatMsg[], pendingMsgs: PendingChatMsg[]) {
+  const rows: LogRow[] = [
+    ...msgs.map((msg) => ({ key: msg._id, msg })),
+    ...pendingMsgs.map((msg) => ({ key: msg.clientMsgId, msg })),
+  ]
+  const groups: { dayKey: string; label: string; rows: LogRow[] }[] = []
+  for (const row of rows) {
+    const dayKey = new Date(row.msg.createdAt).toDateString()
     const lastGroup = groups.at(-1)
-    if (lastGroup?.dayKey === dayKey) lastGroup.msgs.push(msg)
-    else groups.push({ dayKey, label: _getDayLabel(msg.createdAt), msgs: [msg] })
+    if (lastGroup?.dayKey === dayKey) lastGroup.rows.push(row)
+    else groups.push({ dayKey, label: _getDayLabel(row.msg.createdAt), rows: [row] })
   }
   return groups
 }

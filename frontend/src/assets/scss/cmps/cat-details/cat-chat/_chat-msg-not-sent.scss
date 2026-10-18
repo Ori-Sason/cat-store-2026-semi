@@ -1,0 +1,17 @@
+@use 'setup' as *;
+
+// A <button> for the author, a <p> for anyone else. justify-self: the row is a grid, and the
+// button shouldn't stretch across it
+.chat-msg-not-sent {
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  gap: $space-1;
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: $clr-danger;
+
+  &:is(button):hover {
+    text-decoration: underline;
+  }
+}

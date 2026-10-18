@@ -1,9 +1,10 @@
 import type React from 'react'
 import { useEffect, useId, useRef, useState } from 'react'
-import { Link, useLocation } from 'react-router'
 import { useCatChat } from '../../../hooks/use-cat-chat'
 import { useLoggedInUserStore } from '../../../store/logged-in-user.store'
 import { ReviewListSkeleton } from '../../common/review/review-list-skeleton'
+import { ChatComposer } from './chat-composer'
+import { ChatGuestCta } from './chat-guest-cta'
 import { ChatHeader } from './chat-header'
 import { ChatIcon } from './chat-icon'
 import { ChatLog } from './chat-log'
@@ -21,7 +22,6 @@ export const CatChat: React.FC<CatChatProps> = ({ catId, catName, catOwnerId }) 
   const [isOpen, setIsOpen] = useState(false)
   const chat = useCatChat(catId, isOpen)
   const loggedInUser = useLoggedInUserStore((state) => state.loggedInUser)
-  const location = useLocation()
   const iconRef = useRef<HTMLButtonElement>(null)
   const panelRef = useRef<HTMLElement>(null)
   const titleId = useId()
@@ -66,7 +66,7 @@ export const CatChat: React.FC<CatChatProps> = ({ catId, catName, catOwnerId }) 
         {chat.status === 'error' && (
           <div className="join-error" role="alert">
             <p>Couldn't connect to the chat.</p>
-            <button type="button" className="main-btn" onClick={chat.retry}>
+            <button type="button" className="main-btn" onClick={chat.retryLoadChat}>
               Retry
             </button>
           </div>
@@ -80,23 +80,25 @@ export const CatChat: React.FC<CatChatProps> = ({ catId, catName, catOwnerId }) 
         {chat.status === 'ready' && (
           <ChatLog
             msgs={chat.msgs}
+            pendingMsgs={chat.pendingMsgs}
             catOwnerId={catOwnerId}
             isOlderAvailable={chat.isOlderAvailable}
             isLoadingOlder={chat.isLoadingOlder}
             onLoadOlder={() => void chat.loadOlder()}
+            onRetrySendMsg={chat.retrySendMsg}
           />
         )}
 
-        {!loggedInUser && (
-          <div className="guest-cta">
-            <p>You're reading as a guest.</p>
-            <Link
-              to={`/login?redirectTo=${encodeURIComponent(location.pathname + location.search)}`}
-              className="main-btn"
-            >
-              Log in to chat
-            </Link>
-          </div>
+        {/* Keyed by cat: a cat switch can reuse this page, and the text belongs to the old cat */}
+        {loggedInUser ? (
+          <ChatComposer
+            key={catId}
+            catId={catId}
+            isDisabled={chat.status !== 'ready'}
+            onSendMsg={chat.sendMsg}
+          />
+        ) : (
+          <ChatGuestCta />
         )}
       </section>
     </div>
