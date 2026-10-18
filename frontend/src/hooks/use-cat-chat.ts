@@ -54,7 +54,6 @@ interface JoinSession {
   // The newest _id merged so far: the reconnect gap fill's cursor. Kept here, not read off the
   // state, because a reconnect handler can run before React renders the last merge
   newestMsgId: string | null
-  isLoadingOlder: boolean
   // The latest copy of every msg an edit or a remove changed during this join, held or not. A
   // fetch that read the DB before the change can land after it, and this copy wins over the
   // fetched one
@@ -301,7 +300,6 @@ export function useCatChat(catIdParam: string, isOpen: boolean) {
       joinPromise: Promise.resolve(),
       firstPagePromise: null,
       newestMsgId: null,
-      isLoadingOlder: false,
       changedMsgById: new Map(),
     }
     sessionRef.current = session
@@ -357,8 +355,7 @@ export function useCatChat(catIdParam: string, isOpen: boolean) {
   async function loadOlder() {
     const session = sessionRef.current
     const beforeId = chat.msgs[0]?._id
-    if (!session || !beforeId || chat.isOldestLoaded || session.isLoadingOlder) return
-    session.isLoadingOlder = true
+    if (!session || !beforeId || chat.isOldestLoaded || chat.isLoadingOlder) return
     updateChat(session, (prev) => ({ ...prev, isLoadingOlder: true }))
     try {
       const page = await chatService.getOlderPage(session.catId, beforeId)
@@ -369,7 +366,6 @@ export function useCatChat(catIdParam: string, isOpen: boolean) {
         useUserMsgStore.getState().showErrorMsg(errorService.getErrorMsg(err))
       }
     } finally {
-      session.isLoadingOlder = false
       updateChat(session, (prev) => ({ ...prev, isLoadingOlder: false }))
     }
   }

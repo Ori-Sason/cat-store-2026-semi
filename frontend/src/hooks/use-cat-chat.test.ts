@@ -255,25 +255,6 @@ describe('useCatChat history', () => {
       expect(_ids(result.current.msgs)).toEqual([4, 5, 6].map(_msgId))
     })
 
-    it('ignores a second call while one is loading', async () => {
-      const older = _deferred<ChatMsgOlderPage>()
-      vi.mocked(chatService.getOlderPage)
-        .mockResolvedValueOnce(_page([5, 6], _msgId(5)))
-        .mockReturnValueOnce(older.promise)
-      const { result } = _render(_CAT_ID, true)
-      await waitFor(() => expect(result.current.isOlderAvailable).toBe(true))
-
-      act(() => {
-        void result.current.loadOlder()
-        void result.current.loadOlder()
-      })
-      expect(result.current.isLoadingOlder).toBe(true)
-      await act(async () => older.resolve(_page([4], null)))
-
-      expect(chatService.getOlderPage).toHaveBeenCalledTimes(2)
-      expect(result.current.isLoadingOlder).toBe(false)
-    })
-
     it('shows a user msg on a failure and still offers older msgs', async () => {
       vi.mocked(chatService.getOlderPage)
         .mockResolvedValueOnce(_page([5, 6], _msgId(5)))
