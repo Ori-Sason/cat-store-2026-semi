@@ -2,6 +2,8 @@
 
 // The row is full width, so the hover tint and the own rail reach the panel's edges
 .chat-msg-preview {
+  // The ⋮ menu sits in the top-right corner
+  position: relative;
   display: grid;
   row-gap: 2px;
   padding: 6px $space-4;
@@ -26,6 +28,8 @@
   }
 
   header {
+    // Clear of the ⋮ button in the corner
+    padding-right: 1.75rem;
     display: flex;
     flex-wrap: wrap;
     align-items: baseline;
@@ -70,12 +74,7 @@
       vertical-align: -1px;
       border: 1.5px solid currentColor;
       border-radius: 50%;
-      background: linear-gradient(
-        135deg,
-        transparent 44%,
-        currentColor 44% 56%,
-        transparent 56%
-      );
+      background: linear-gradient(135deg, transparent 44%, currentColor 44% 56%, transparent 56%);
     }
   }
 
@@ -90,6 +89,16 @@
   &.is-failed {
     .words {
       color: $primary-clr-850;
+    }
+  }
+
+  // Waiting on an edit or remove ack: dimmed, its actions off until then
+  &.is-busy {
+    header,
+    .text,
+    .edited,
+    .chat-msg-edit {
+      opacity: 0.6;
     }
   }
 }

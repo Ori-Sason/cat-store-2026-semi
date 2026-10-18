@@ -1,9 +1,13 @@
 import type React from 'react'
-import type { ChatMsg } from '@cat-store/shared'
+import { useState } from 'react'
+import { chatPermissionService, type ChatMsg } from '@cat-store/shared'
+import type { ChatMsgBusyAction } from '../../../hooks/use-cat-chat'
 import type { PendingChatMsg } from '../../../models/chat'
 import { utilService } from '../../../services/util.service'
 import { useLoggedInUserStore } from '../../../store/logged-in-user.store'
 import { UserChips } from '../../common/user/user-chips'
+import { ChatMsgActionsMenu } from './chat-msg-actions-menu'
+import { ChatMsgEdit } from './chat-msg-edit'
 import { ChatMsgNotSent } from './chat-msg-not-sent'
 import { ChatMsgStatus } from './chat-msg-status'
 
@@ -11,23 +15,60 @@ interface ChatMsgPreviewProps {
   msg: ChatMsg | PendingChatMsg
   catOwnerId: string
   onRetry?: () => void // a failed pending msg's "Tap to retry"
+  busyAction?: ChatMsgBusyAction // waiting on an edit or remove ack
+  onUpdate?: (text: string) => Promise<boolean> // resolves to whether the edit was saved
+  onRemove?: () => void // asks for the delete confirm
 }
 
 // One row of the chat log: the review row's look (bold name + chips + muted time, the text
 // below), made live. A pending msg (an own send the server hasn't confirmed) uses the same row,
-// with "Sending…" or a failed line
-export const ChatMsgPreview: React.FC<ChatMsgPreviewProps> = ({ msg, catOwnerId, onRetry }) => {
+// with "Sending…" or a failed line. A saved msg gets the ⋮ menu when the viewer may edit or delete
+// it, and turns into the inline editor on Edit
+export const ChatMsgPreview: React.FC<ChatMsgPreviewProps> = ({
+  msg,
+  catOwnerId,
+  onRetry,
+  busyAction,
+  onUpdate,
+  onRemove,
+}) => {
   const loggedInUser = useLoggedInUserStore((state) => state.loggedInUser)
+  const [isEditOpen, setIsEditOpen] = useState(false)
   const { user } = msg
   const sendStatus = 'sendStatus' in msg ? msg.sendStatus : null
   // A guest owns nothing, and a msg whose author is gone (user: null) is nobody's own. Without the
   // loggedInUser check, undefined === undefined would mark a deleted author's msg as a guest's own
   const isOwn = !!user && !!loggedInUser && user._id === loggedInUser._id
   const isEdited = !msg.isDeleted && msg.updatedAt > msg.createdAt
-  const stateClass = sendStatus ? `is-${sendStatus === 'sending' ? 'pending' : 'failed'}` : ''
+  // Only a saved msg can change: a pending one has no _id yet, and a tombstone is final
+  const isSaved = !sendStatus && !msg.isDeleted
+  const authorId = user?._id ?? null
+  const isEditable = isSaved && chatPermissionService.canEditChatMsg(authorId, loggedInUser)
+  const isRemovable = isSaved && chatPermissionService.canRemoveChatMsg(authorId, loggedInUser)
+  // Closes by itself when the viewer can no longer edit: a logout, or someone deleted the msg
+  const isEditing = isEditOpen && isEditable
+  const stateClass = _getStateClass(sendStatus, busyAction)
+  // "Saving edit…" sits in the editor, which stays open until the ack
+  const statusLabel = _getStatusLabel(sendStatus, busyAction)
+
+  // A failed save keeps the editor open with the typed text
+  async function onSave(text: string) {
+    if (await onUpdate?.(text)) setIsEditOpen(false)
+  }
 
   return (
-    <article className={`chat-msg-preview ${isOwn ? 'is-own' : ''} ${stateClass}`}>
+    <article
+      className={`chat-msg-preview ${isOwn ? 'is-own' : ''} ${stateClass}`}
+      aria-busy={!!busyAction}
+    >
+      {isRemovable && !isEditing && (
+        <ChatMsgActionsMenu
+          isEditable={isEditable}
+          isDisabled={!!busyAction}
+          onEdit={() => setIsEditOpen(true)}
+          onRemove={() => onRemove?.()}
+        />
+      )}
       <header>
         {user ? (
           <span className="author">
@@ -50,19 +91,45 @@ export const ChatMsgPreview: React.FC<ChatMsgPreviewProps> = ({ msg, catOwnerId,
 
       {msg.isDeleted ? (
         <p className="tombstone">Message deleted</p>
+      ) : isEditing ? (
+        <ChatMsgEdit
+          initialText={msg.text}
+          isSaving={busyAction === 'updating'}
+          onSave={(text) => void onSave(text)}
+          onCancel={() => setIsEditOpen(false)}
+        />
       ) : (
         <p className="text">
           <span className="words">{msg.text}</span>
-          {sendStatus === 'sending' && (
+          {statusLabel && (
             <>
               {' '}
-              <ChatMsgStatus label="Sending…" />
+              <ChatMsgStatus label={statusLabel} />
             </>
           )}
         </p>
       )}
-      {isEdited && <p className="edited">Edited at {utilService.formatTime(msg.updatedAt)}</p>}
+      {isEdited && !isEditing && (
+        <p className="edited">Edited at {utilService.formatTime(msg.updatedAt)}</p>
+      )}
       {sendStatus === 'failed' && <ChatMsgNotSent isRetryable={isOwn} onRetry={onRetry} />}
     </article>
   )
+}
+
+function _getStateClass(
+  sendStatus: PendingChatMsg['sendStatus'] | null,
+  busyAction: ChatMsgBusyAction | undefined,
+) {
+  if (sendStatus === 'sending') return 'is-pending'
+  if (sendStatus === 'failed') return 'is-failed'
+  return busyAction ? 'is-busy' : ''
+}
+
+function _getStatusLabel(
+  sendStatus: PendingChatMsg['sendStatus'] | null,
+  busyAction: ChatMsgBusyAction | undefined,
+) {
+  if (sendStatus === 'sending') return 'Sending…'
+  return busyAction === 'removing' ? 'Deleting…' : null
 }

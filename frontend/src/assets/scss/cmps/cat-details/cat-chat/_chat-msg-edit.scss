@@ -1,0 +1,62 @@
+@use 'setup' as *;
+
+// The tallest the textarea grows (about 6 lines) before it scrolls
+$_textarea-max-height: 140px;
+
+.chat-msg-edit {
+  display: grid;
+  gap: 6px;
+  margin-top: 2px;
+
+  textarea {
+    max-height: $_textarea-max-height;
+    padding: 6px $space-2;
+    font: inherit;
+    line-height: 1.35;
+    color: $clr-black;
+    border: 1px solid $primary-clr-300;
+    border-radius: $radius-md;
+    background-color: $clr-white;
+    resize: none;
+
+    &:focus {
+      border-color: $primary-clr-500;
+      outline: 2px solid rgba($primary-clr-500, 0.3);
+    }
+  }
+
+  // The status and the counter on the left, the buttons pinned right
+  .edit-foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: $space-2;
+  }
+
+  .counter {
+    font-size: 0.74rem;
+    font-variant-numeric: tabular-nums;
+    color: $primary-clr-850;
+
+    &.is-over {
+      font-weight: 700;
+      color: $clr-danger;
+    }
+  }
+
+  .edit-btns {
+    display: flex;
+    gap: $space-2;
+    margin-inline-start: auto;
+
+    button {
+      padding: $space-1 $space-3;
+      font-size: 0.8rem;
+
+      &:disabled {
+        opacity: 0.6;
+        cursor: default;
+      }
+    }
+  }
+}

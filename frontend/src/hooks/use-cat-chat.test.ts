@@ -850,3 +850,226 @@ describe('useCatChat sendMsg', () => {
     expect(result.current.pendingMsgs).toEqual([])
   })
 })
+
+describe('useCatChat updateMsg and removeMsg', () => {
+  const _AUTHOR: LoggedInUser = {
+    _id: 'user-1',
+    username: 'maya',
+    fullname: 'Maya Levi',
+    isAdmin: false,
+  }
+
+  // The acks of chat:msg-update / remove. Joins still get the default {}
+  function _mockChangeAck(ack: () => Promise<unknown>) {
+    vi.mocked(socketService.emitWithAck).mockImplementation((event) =>
+      event === 'chat:msg-update' || event === 'chat:msg-remove' ? ack() : Promise.resolve({}),
+    )
+  }
+
+  function _editedMsg(n: number, text = 'edited'): ChatMsg {
+    return { ..._msg(n), isDeleted: false, text, updatedAt: n + 100 }
+  }
+
+  // A remove sets only isDeleted: updatedAt stays
+  function _tombstone(n: number): ChatMsg {
+    const { _id, catId, clientMsgId, createdAt, updatedAt, user } = _msg(n)
+    return { _id, catId, clientMsgId, createdAt, updatedAt, user, isDeleted: true }
+  }
+
+  function _textOf(msg: ChatMsg | undefined) {
+    return msg && !msg.isDeleted ? msg.text : null
+  }
+
+  beforeEach(() => {
+    useLoggedInUserStore.setState({ loggedInUser: _AUTHOR })
+  })
+
+  describe('updateMsg', () => {
+    it('keeps the msg busy until the ack, then shows the edit', async () => {
+      const ack = _deferred<unknown>()
+      _mockChangeAck(() => ack.promise)
+      const { result } = await _renderReady([1, 2])
+
+      let saved!: Promise<boolean>
+      act(() => {
+        saved = result.current.updateMsg(_msgId(1), 'edited')
+      })
+
+      expect(socketService.emitWithAck).toHaveBeenLastCalledWith('chat:msg-update', {
+        catId: _CAT_ID,
+        msgId: _msgId(1),
+        text: 'edited',
+      })
+      expect(result.current.busyMsgs).toEqual({ [_msgId(1)]: 'updating' })
+      expect(_textOf(result.current.msgs[0])).toBe('msg 1') // not optimistic
+
+      await act(async () => ack.resolve({ msg: _editedMsg(1) }))
+
+      await expect(saved).resolves.toBe(true)
+      expect(result.current.busyMsgs).toEqual({})
+      expect(_textOf(result.current.msgs[0])).toBe('edited')
+    })
+
+    it.each([
+      ['a timeout', new ApiError(0, 'NETWORK_ERROR', 'operation has timed out')],
+      ['an error ack', new ApiError(0, 'CHAT_MSG_NOT_FOUND', 'Chat msg not found')],
+    ])('puts the msg back and says why on %s', async (_label, err) => {
+      _mockChangeAck(() => Promise.reject(err))
+      const { result } = await _renderReady([1])
+
+      let saved!: Promise<boolean>
+      act(() => {
+        saved = result.current.updateMsg(_msgId(1), 'edited')
+      })
+
+      await expect(saved).resolves.toBe(false)
+      await waitFor(() => expect(result.current.busyMsgs).toEqual({}))
+      expect(_textOf(result.current.msgs[0])).toBe('msg 1')
+      expect(useUserMsgStore.getState().msg?.txt).toMatch(/^Couldn't save your edit\./)
+      expect(useLoggedInUserStore.getState().loggedInUser).toEqual(_AUTHOR)
+    })
+
+    it('says the session expired on UNAUTHORIZED, with no draft', async () => {
+      _mockChangeAck(() => Promise.reject(new ApiError(0, 'UNAUTHORIZED', 'Login required')))
+      const { result } = await _renderReady([1])
+
+      await act(() => result.current.updateMsg(_msgId(1), 'edited'))
+
+      expect(useUserMsgStore.getState().msg).toMatchObject({
+        type: 'error',
+        txt: 'Your session expired. Log in to keep chatting.',
+      })
+      expect(chatService.saveDraft).not.toHaveBeenCalled()
+      expect(_textOf(result.current.msgs[0])).toBe('msg 1')
+    })
+
+    it('sends one edit at a time per msg', async () => {
+      _mockChangeAck(() => new Promise(() => {}))
+      const { result } = await _renderReady([1])
+
+      act(() => {
+        void result.current.updateMsg(_msgId(1), 'first')
+        void result.current.updateMsg(_msgId(1), 'second')
+      })
+
+      const updateCalls = vi
+        .mocked(socketService.emitWithAck)
+        .mock.calls.filter(([event]) => event === 'chat:msg-update')
+      expect(updateCalls).toHaveLength(1)
+    })
+
+    it("drops a late ack from the old cat's edit after a switch", async () => {
+      const ack = _deferred<unknown>()
+      _mockChangeAck(() => ack.promise)
+      const { result, rerender } = await _renderReady([1])
+      act(() => void result.current.updateMsg(_msgId(1), 'edited'))
+
+      rerender({ catId: _OTHER_CAT_ID, isOpen: false })
+      await act(async () => ack.resolve({ msg: _editedMsg(1) }))
+
+      expect(result.current.msgs).toEqual([])
+      expect(result.current.busyMsgs).toEqual({})
+    })
+  })
+
+  describe('removeMsg', () => {
+    it('keeps the msg busy until the ack, then shows the tombstone', async () => {
+      const ack = _deferred<unknown>()
+      _mockChangeAck(() => ack.promise)
+      const { result } = await _renderReady([1])
+
+      act(() => void result.current.removeMsg(_msgId(1)))
+
+      expect(socketService.emitWithAck).toHaveBeenLastCalledWith('chat:msg-remove', {
+        catId: _CAT_ID,
+        msgId: _msgId(1),
+      })
+      expect(result.current.busyMsgs).toEqual({ [_msgId(1)]: 'removing' })
+      expect(result.current.msgs[0].isDeleted).toBe(false)
+
+      await act(async () => ack.resolve({ msg: _tombstone(1) }))
+
+      expect(result.current.busyMsgs).toEqual({})
+      expect(result.current.msgs[0].isDeleted).toBe(true)
+    })
+
+    it('puts the msg back and says why on a timeout', async () => {
+      _mockChangeAck(() => Promise.reject(new ApiError(0, 'NETWORK_ERROR', 'timeout')))
+      const { result } = await _renderReady([1])
+
+      await act(() => result.current.removeMsg(_msgId(1)))
+
+      expect(result.current.busyMsgs).toEqual({})
+      expect(result.current.msgs[0].isDeleted).toBe(false)
+      expect(useUserMsgStore.getState().msg?.txt).toMatch(/^Couldn't delete it\./)
+    })
+
+    it('says the session expired on UNAUTHORIZED', async () => {
+      _mockChangeAck(() => Promise.reject(new ApiError(0, 'UNAUTHORIZED', 'Login required')))
+      const { result } = await _renderReady([1])
+
+      await act(() => result.current.removeMsg(_msgId(1)))
+
+      expect(useUserMsgStore.getState().msg?.txt).toBe(
+        'Your session expired. Log in to keep chatting.',
+      )
+    })
+  })
+
+  describe('chat:msg-updated and chat:msg-removed', () => {
+    it('replaces the held msg by _id', async () => {
+      const { result } = await _renderReady([1, 2])
+
+      act(() => _serverEmit('chat:msg-updated', { msg: _editedMsg(1) }))
+      act(() => _serverEmit('chat:msg-removed', { msg: _tombstone(2) }))
+
+      expect(_ids(result.current.msgs)).toEqual([1, 2].map(_msgId))
+      expect(_textOf(result.current.msgs[0])).toBe('edited')
+      expect(result.current.msgs[1].isDeleted).toBe(true)
+    })
+
+    it('drops a change for another cat', async () => {
+      const { result } = await _renderReady([1])
+
+      act(() =>
+        _serverEmit('chat:msg-updated', { msg: { ..._editedMsg(1), catId: _OTHER_CAT_ID } }),
+      )
+
+      expect(_textOf(result.current.msgs[0])).toBe('msg 1')
+    })
+
+    it("doesn't count a change as unread", async () => {
+      const { result, rerender } = await _renderReady([1])
+      rerender({ catId: _CAT_ID, isOpen: false })
+
+      act(() => _serverEmit('chat:msg-updated', { msg: _editedMsg(1) }))
+
+      expect(result.current.unreadCount).toBe(0)
+    })
+
+    // Inserting it would leave it alone above a gap, and "load older" pages from the oldest
+    // held _id, so it would skip every msg in between
+    it("doesn't add a msg the log hasn't loaded", async () => {
+      const { result } = await _renderReady([5, 6], _msgId(5))
+
+      act(() => _serverEmit('chat:msg-removed', { msg: _tombstone(1) }))
+
+      expect(_ids(result.current.msgs)).toEqual([5, 6].map(_msgId))
+    })
+
+    // The page was read before the edit, and lands after its event
+    it('keeps a change seen live over the older copy a later fetch brings', async () => {
+      const page = _deferred<ChatMsgOlderPage>()
+      vi.mocked(chatService.getOlderPage).mockReturnValue(page.promise)
+      const { result } = _render(_CAT_ID, true)
+      await waitFor(() => expect(chatService.getOlderPage).toHaveBeenCalled())
+
+      act(() => _serverEmit('chat:msg-updated', { msg: _editedMsg(2) }))
+      act(() => _serverEmit('chat:msg-removed', { msg: _tombstone(1) }))
+      await act(async () => page.resolve(_page([1, 2], null)))
+
+      expect(result.current.msgs[0].isDeleted).toBe(true)
+      expect(_textOf(result.current.msgs[1])).toBe('edited')
+    })
+  })
+})

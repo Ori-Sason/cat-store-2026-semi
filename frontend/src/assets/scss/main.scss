@@ -27,8 +27,11 @@
 @use './cmps/cat-details/cat-chat/chat-header';
 @use './cmps/cat-details/cat-chat/chat-icon';
 @use './cmps/cat-details/cat-chat/chat-log';
+@use './cmps/cat-details/cat-chat/chat-msg-actions-menu';
+@use './cmps/cat-details/cat-chat/chat-msg-edit';
 @use './cmps/cat-details/cat-chat/chat-msg-not-sent';
 @use './cmps/cat-details/cat-chat/chat-msg-preview';
+@use './cmps/cat-details/cat-chat/chat-msg-remove-confirm';
 @use './cmps/cat-details/cat-chat/chat-msg-status';
 @use './cmps/cat-details/cat-reviews';
 @use './cmps/cat-edit/cat-edit-form';

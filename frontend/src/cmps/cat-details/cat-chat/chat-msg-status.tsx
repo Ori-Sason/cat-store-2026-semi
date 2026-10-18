@@ -1,7 +1,7 @@
 import type React from 'react'
 
 interface ChatMsgStatusProps {
-  label: string // "Sending…" (and, with edit and remove, "Saving edit…" / "Deleting…")
+  label: string // "Sending…", "Saving edit…" or "Deleting…"
 }
 
 // The in-flight note after a msg's text: a small rolling spinner and a label. The spinner stands

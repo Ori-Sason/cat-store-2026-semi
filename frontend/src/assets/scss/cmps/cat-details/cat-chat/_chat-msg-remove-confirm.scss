@@ -1,0 +1,62 @@
+@use 'setup' as *;
+
+// The confirm modal's look, scoped to the panel body: it shares the body's grid cell (see
+// _cat-chat.scss), so it dims the log and the composer and leaves the header alone
+.chat-msg-remove-confirm {
+  grid-area: 2 / 1;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  padding: $space-4;
+  background-color: rgba($primary-clr-900, 0.4);
+
+  .box {
+    display: grid;
+    gap: $space-3;
+    width: min(320px, 100%);
+    padding: $space-5;
+    border-radius: $radius-lg;
+    background-color: $clr-white;
+    box-shadow: $shadow-md;
+  }
+
+  h3 {
+    font-size: 1.05rem;
+    color: $primary-clr-900;
+  }
+
+  // The msg being deleted, in a tinted box with a rail
+  .quote {
+    margin: 0;
+    padding: $space-2 $space-3;
+    border-left: 2px solid $primary-clr-300;
+    border-radius: $radius-sm;
+    background-color: rgba($primary-clr-500, 0.08);
+
+    // Cut at 3 lines: it's there to recognize the msg, not to reread it. On the inner <p>, so
+    // the box's padding doesn't show part of a 4th line
+    p {
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 3;
+      line-clamp: 3;
+      overflow: hidden;
+      font-size: 0.9rem;
+      white-space: pre-line;
+      overflow-wrap: anywhere;
+      color: $clr-black;
+    }
+  }
+
+  .desc {
+    font-size: 0.9rem;
+    color: $primary-clr-850;
+  }
+
+  .confirm-btns {
+    display: flex;
+    justify-content: flex-end;
+    gap: $space-2;
+    margin-top: $space-2;
+  }
+}

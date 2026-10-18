@@ -1,6 +1,7 @@
 import type React from 'react'
 import { useLayoutEffect, useRef } from 'react'
 import type { ChatMsg } from '@cat-store/shared'
+import type { ChatMsgBusyAction } from '../../../hooks/use-cat-chat'
 import type { PendingChatMsg } from '../../../models/chat'
 import { utilService } from '../../../services/util.service'
 import { ChatMsgPreview } from './chat-msg-preview'
@@ -16,6 +17,9 @@ interface ChatLogProps {
   isLoadingOlder: boolean
   onLoadOlder: () => void
   onRetrySendMsg: (clientMsgId: string) => void
+  busyMsgs: Partial<Record<string, ChatMsgBusyAction>> // by _id
+  onUpdateMsg: (msgId: string, text: string) => Promise<boolean>
+  onRemoveMsg: (msgId: string) => void // asks for the delete confirm
 }
 
 // A saved msg is keyed by its _id, a pending one by its clientMsgId (it has no _id yet)
@@ -45,6 +49,9 @@ export const ChatLog: React.FC<ChatLogProps> = ({
   isLoadingOlder,
   onLoadOlder,
   onRetrySendMsg,
+  busyMsgs,
+  onUpdateMsg,
+  onRemoveMsg,
 }) => {
   const logRef = useRef<HTMLDivElement>(null)
   const snapshotRef = useRef<ScrollSnapshot | null>(null)
@@ -105,11 +112,21 @@ export const ChatLog: React.FC<ChatLogProps> = ({
           <ol className="clean-list">
             {rows.map(({ key, msg }) => (
               <li key={key}>
-                <ChatMsgPreview
-                  msg={msg}
-                  catOwnerId={catOwnerId}
-                  onRetry={() => onRetrySendMsg(msg.clientMsgId)}
-                />
+                {'_id' in msg ? (
+                  <ChatMsgPreview
+                    msg={msg}
+                    catOwnerId={catOwnerId}
+                    busyAction={busyMsgs[msg._id]}
+                    onUpdate={(text) => onUpdateMsg(msg._id, text)}
+                    onRemove={() => onRemoveMsg(msg._id)}
+                  />
+                ) : (
+                  <ChatMsgPreview
+                    msg={msg}
+                    catOwnerId={catOwnerId}
+                    onRetry={() => onRetrySendMsg(msg.clientMsgId)}
+                  />
+                )}
               </li>
             ))}
           </ol>

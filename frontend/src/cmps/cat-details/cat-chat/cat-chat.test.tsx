@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { act, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { ChatMsg, LoggedInUser } from '@cat-store/shared'
 import { createMemoryRouter, RouterProvider } from 'react-router'
@@ -40,10 +40,13 @@ function _mockChat(overrides: Partial<CatChatHook> = {}) {
     isOlderAvailable: false,
     isLoadingOlder: false,
     unreadCount: 0,
+    busyMsgs: {},
     loadOlder: vi.fn(),
     retryLoadChat: vi.fn(),
     sendMsg: vi.fn(),
     retrySendMsg: vi.fn(),
+    updateMsg: vi.fn(),
+    removeMsg: vi.fn(),
     ...overrides,
   }
   vi.mocked(useCatChat).mockReturnValue(chat)
@@ -225,5 +228,115 @@ describe('CatChat', () => {
       await userEvent.click(screen.getByRole('button', { name: 'Not sent. Tap to retry' }))
       expect(chat.retrySendMsg).toHaveBeenCalledExactlyOnceWith('client-2')
     })
+  })
+
+  describe('the delete confirm', () => {
+    const OWN_MSG: ChatMsg = {
+      ...MSG,
+      user: { _id: USER._id, fullname: USER.fullname, isAdmin: false },
+    }
+
+    async function _askToDelete() {
+      await _open()
+      await userEvent.click(screen.getByRole('button', { name: 'Message actions' }))
+      await userEvent.click(screen.getByRole('button', { name: 'Delete' }))
+      return screen.getByRole('alertdialog', { name: 'Delete this message?' })
+    }
+
+    it('asks first, with the focus on Cancel and the log inert', async () => {
+      const chat = _mockChat({ msgs: [OWN_MSG] })
+      _render()
+      await _askToDelete()
+
+      expect(screen.getByRole('button', { name: 'Cancel' })).toHaveFocus()
+      expect(document.querySelector('.chat-body')).toHaveAttribute('inert')
+      expect(screen.getByRole('button', { name: 'Close chat' })).not.toHaveAttribute('inert')
+      expect(chat.removeMsg).not.toHaveBeenCalled()
+    })
+
+    // So a tap on the wrong row's ⋮ is caught before it's too late
+    it('quotes the msg being deleted', async () => {
+      _mockChat({ msgs: [OWN_MSG] })
+      _render()
+      const confirm = await _askToDelete()
+
+      expect(within(confirm).getByText(OWN_MSG.text)).toBeInTheDocument()
+      expect(confirm).toHaveAccessibleDescription(expect.stringContaining(OWN_MSG.text))
+    })
+
+    it('closes when someone else deletes the msg meanwhile', async () => {
+      _mockChat({ msgs: [OWN_MSG] })
+      _render()
+      await _askToDelete()
+      const { text: _text, ...rest } = OWN_MSG
+
+      _mockChat({ msgs: [{ ...rest, isDeleted: true }] })
+      // Any re-render reads the hook again: a new copy of the same user is one
+      act(() => useLoggedInUserStore.setState({ loggedInUser: { ...USER } }))
+
+      expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
+    })
+
+    it('removes through the hook on Delete', async () => {
+      const chat = _mockChat({ msgs: [OWN_MSG] })
+      _render()
+      const confirm = await _askToDelete()
+
+      await userEvent.click(within(confirm).getByRole('button', { name: 'Delete' }))
+
+      expect(chat.removeMsg).toHaveBeenCalledExactlyOnceWith(OWN_MSG._id)
+      expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
+      expect(document.querySelector('.chat-body')).not.toHaveAttribute('inert')
+    })
+
+    it('gives the focus back to the ⋮ button on Cancel', async () => {
+      const chat = _mockChat({ msgs: [OWN_MSG] })
+      _render()
+      await _askToDelete()
+
+      await userEvent.click(screen.getByRole('button', { name: 'Cancel' }))
+
+      expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
+      expect(screen.getByRole('button', { name: 'Message actions' })).toHaveFocus()
+      expect(chat.removeMsg).not.toHaveBeenCalled()
+    })
+
+    it('cancels on Escape and keeps the panel open', async () => {
+      _mockChat({ msgs: [OWN_MSG] })
+      _render()
+      await _askToDelete()
+
+      await userEvent.keyboard('{Escape}')
+
+      expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
+      expect(screen.getByRole('region', { name: 'Chat' })).toBeInTheDocument()
+    })
+
+    it('is gone after closing and reopening the panel', async () => {
+      _mockChat({ msgs: [OWN_MSG] })
+      _render()
+      await _askToDelete()
+
+      await userEvent.click(screen.getByRole('button', { name: 'Close chat' }))
+      await _open()
+
+      expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
+    })
+  })
+
+  it('saves an inline edit through the hook', async () => {
+    const ownMsg: ChatMsg = {
+      ...MSG,
+      user: { _id: USER._id, fullname: USER.fullname, isAdmin: false },
+    }
+    const chat = _mockChat({ msgs: [ownMsg], updateMsg: vi.fn(async () => true) })
+    _render()
+    await _open()
+    await userEvent.click(screen.getByRole('button', { name: 'Message actions' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Edit' }))
+
+    await userEvent.type(screen.getByRole('textbox', { name: 'Edit message' }), '!{Enter}')
+
+    expect(chat.updateMsg).toHaveBeenCalledExactlyOnceWith(ownMsg._id, `${ownMsg.text}!`)
   })
 })

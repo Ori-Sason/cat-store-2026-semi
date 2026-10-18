@@ -1,0 +1,11 @@
+@use 'setup' as *;
+
+// In the row's top-right corner, not after the time like on reviews: the panel is narrow.
+// The row makes room for it (see _chat-msg-preview.scss)
+.chat-msg-actions-menu {
+  position: absolute;
+  top: 4px;
+  right: $space-2;
+
+  @include actions-menu;
+}

@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { ChatMsg, LoggedInUser } from '@cat-store/shared'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import type { ChatMsgBusyAction } from '../../../hooks/use-cat-chat'
 import type { PendingChatMsg } from '../../../models/chat'
 import { useLoggedInUserStore } from '../../../store/logged-in-user.store'
 import { ChatMsgPreview } from './chat-msg-preview'
@@ -154,6 +155,185 @@ describe('ChatMsgPreview', () => {
       expect(screen.getByText('Not sent')).toBeInTheDocument()
       expect(screen.getByText(MSG.text)).toBeInTheDocument()
       expect(screen.queryByRole('button')).not.toBeInTheDocument()
+    })
+  })
+
+  describe('the actions', () => {
+    const ADMIN: LoggedInUser = { ...OTHER_USER, _id: 'admin-1', username: 'admin', isAdmin: true }
+
+    function _renderEditable(
+      msg: ChatMsg | PendingChatMsg,
+      loggedInUser: LoggedInUser | null,
+      { busyAction, isSaved = true }: { busyAction?: ChatMsgBusyAction; isSaved?: boolean } = {},
+    ) {
+      useLoggedInUserStore.setState({ loggedInUser })
+      const onUpdate = vi.fn(async (_text: string) => isSaved)
+      const onRemove = vi.fn()
+      const { rerender } = render(
+        <ChatMsgPreview
+          msg={msg}
+          catOwnerId={CAT_OWNER_ID}
+          busyAction={busyAction}
+          onUpdate={onUpdate}
+          onRemove={onRemove}
+        />,
+      )
+      return { onUpdate, onRemove, rerender }
+    }
+
+    async function _openMenu() {
+      await userEvent.click(screen.getByRole('button', { name: 'Message actions' }))
+    }
+
+    async function _openEdit() {
+      await _openMenu()
+      await userEvent.click(screen.getByRole('button', { name: 'Edit' }))
+      return screen.getByRole('textbox', { name: 'Edit message' })
+    }
+
+    it('offers Edit and Delete on the viewer’s own msg', async () => {
+      _renderEditable(MSG, AUTHOR)
+      await _openMenu()
+      expect(screen.getByRole('button', { name: 'Edit' })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: 'Delete' })).toBeInTheDocument()
+    })
+
+    it('offers an admin Delete only on someone else’s msg', async () => {
+      _renderEditable(MSG, ADMIN)
+      await _openMenu()
+      expect(screen.queryByRole('button', { name: 'Edit' })).not.toBeInTheDocument()
+      expect(screen.getByRole('button', { name: 'Delete' })).toBeInTheDocument()
+    })
+
+    it('offers an admin Delete on a msg whose author is gone', async () => {
+      _renderEditable(_byAuthor(null), ADMIN)
+      await _openMenu()
+      expect(screen.getByRole('button', { name: 'Delete' })).toBeInTheDocument()
+    })
+
+    it.each([
+      ['another user’s msg', MSG, OTHER_USER],
+      ['a guest', MSG, null],
+    ] as const)('shows no ⋮ on %s', (_label, msg, loggedInUser) => {
+      _renderEditable(msg, loggedInUser)
+      expect(screen.queryByRole('button', { name: 'Message actions' })).not.toBeInTheDocument()
+    })
+
+    it('shows no ⋮ on a tombstone, even to an admin', () => {
+      const { text: _text, ...rest } = MSG
+      _renderEditable({ ...rest, isDeleted: true }, ADMIN)
+      expect(screen.queryByRole('button', { name: 'Message actions' })).not.toBeInTheDocument()
+    })
+
+    it('asks for the delete confirm through onRemove', async () => {
+      const { onRemove } = _renderEditable(MSG, AUTHOR)
+      await _openMenu()
+      await userEvent.click(screen.getByRole('button', { name: 'Delete' }))
+      expect(onRemove).toHaveBeenCalledOnce()
+    })
+
+    it('dims a busy msg and disables its ⋮', () => {
+      const { onRemove } = _renderEditable(MSG, AUTHOR, { busyAction: 'removing' })
+      expect(screen.getByRole('article')).toHaveClass('is-busy')
+      expect(screen.getByRole('article')).toHaveAttribute('aria-busy', 'true')
+      expect(screen.getByRole('button', { name: 'Message actions' })).toBeDisabled()
+      expect(screen.getByText('Deleting…')).toBeInTheDocument()
+      expect(onRemove).not.toHaveBeenCalled()
+    })
+
+    describe('inline edit', () => {
+      it('opens prefilled and focused, in place of the text and the ⋮', async () => {
+        _renderEditable({ ...MSG, updatedAt: MSG.updatedAt + 60_000 }, AUTHOR)
+        const textarea = await _openEdit()
+
+        expect(textarea).toHaveValue(MSG.text)
+        expect(textarea).toHaveFocus()
+        expect(screen.queryByRole('button', { name: 'Message actions' })).not.toBeInTheDocument()
+        expect(screen.queryByText(/Edited at/)).not.toBeInTheDocument()
+      })
+
+      it('saves the trimmed text, and closes once saved', async () => {
+        const { onUpdate } = _renderEditable(MSG, AUTHOR)
+        const textarea = await _openEdit()
+
+        await userEvent.clear(textarea)
+        await userEvent.type(textarea, '  Is he ok with dogs?  {Enter}')
+
+        expect(onUpdate).toHaveBeenCalledExactlyOnceWith('Is he ok with dogs?')
+        expect(screen.queryByRole('textbox', { name: 'Edit message' })).not.toBeInTheDocument()
+      })
+
+      it('stays open with the typed text when the save fails', async () => {
+        _renderEditable(MSG, AUTHOR, { isSaved: false })
+        const textarea = await _openEdit()
+
+        await userEvent.type(textarea, ' Or cats?')
+        await userEvent.click(screen.getByRole('button', { name: 'Save' }))
+
+        expect(screen.getByRole('textbox', { name: 'Edit message' })).toHaveValue(
+          `${MSG.text} Or cats?`,
+        )
+      })
+
+      it('closes without a save when the text is unchanged', async () => {
+        const { onUpdate } = _renderEditable(MSG, AUTHOR)
+        await _openEdit()
+
+        await userEvent.click(screen.getByRole('button', { name: 'Save' }))
+
+        expect(onUpdate).not.toHaveBeenCalled()
+        expect(screen.queryByRole('textbox', { name: 'Edit message' })).not.toBeInTheDocument()
+      })
+
+      it('turns Save off on an empty text', async () => {
+        _renderEditable(MSG, AUTHOR)
+        const textarea = await _openEdit()
+
+        await userEvent.clear(textarea)
+        await userEvent.type(textarea, '   ')
+
+        expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled()
+      })
+
+      it('cancels on Escape and keeps the panel’s Escape from firing', async () => {
+        const onPanelKeyDown = vi.fn()
+        useLoggedInUserStore.setState({ loggedInUser: AUTHOR })
+        render(
+          <div onKeyDown={onPanelKeyDown}>
+            <ChatMsgPreview msg={MSG} catOwnerId={CAT_OWNER_ID} onUpdate={vi.fn()} />
+          </div>,
+        )
+        await _openEdit()
+
+        await userEvent.keyboard('{Escape}')
+
+        expect(screen.queryByRole('textbox', { name: 'Edit message' })).not.toBeInTheDocument()
+        expect(screen.getByText(MSG.text)).toBeInTheDocument()
+        expect(onPanelKeyDown).not.toHaveBeenCalled()
+      })
+
+      it('shows "Saving edit…" and locks the editor while the ack is on its way', async () => {
+        const { rerender } = _renderEditable(MSG, AUTHOR)
+        await _openEdit()
+
+        rerender(<ChatMsgPreview msg={MSG} catOwnerId={CAT_OWNER_ID} busyAction="updating" />)
+
+        expect(screen.getByText('Saving edit…')).toBeInTheDocument()
+        expect(screen.getByRole('textbox', { name: 'Edit message' })).toHaveAttribute('readonly')
+        expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled()
+        expect(screen.getByRole('button', { name: 'Cancel' })).toBeDisabled()
+      })
+
+      it('closes when the msg is deleted meanwhile', async () => {
+        const { rerender } = _renderEditable(MSG, AUTHOR)
+        await _openEdit()
+        const { text: _text, ...rest } = MSG
+
+        rerender(<ChatMsgPreview msg={{ ...rest, isDeleted: true }} catOwnerId={CAT_OWNER_ID} />)
+
+        expect(screen.queryByRole('textbox', { name: 'Edit message' })).not.toBeInTheDocument()
+        expect(screen.getByText('Message deleted')).toBeInTheDocument()
+      })
     })
   })
 })

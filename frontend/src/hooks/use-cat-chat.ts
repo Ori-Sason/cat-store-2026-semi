@@ -3,9 +3,15 @@ import {
   CHAT_LEAVE,
   CHAT_MSG_ADD,
   CHAT_MSG_ADDED,
+  CHAT_MSG_REMOVE,
+  CHAT_MSG_REMOVED,
+  CHAT_MSG_UPDATE,
+  CHAT_MSG_UPDATED,
   type ChatMsg,
   type ChatMsgInput,
   type ChatMsgOlderPage,
+  type ChatMsgRemoveInput,
+  type ChatMsgUpdateInput,
   type ChatRoomInput,
 } from '@cat-store/shared'
 import { useEffect, useRef, useState } from 'react'
@@ -22,6 +28,9 @@ import { useUserMsgStore } from '../store/user-msg.store'
 // idle: not opened yet. loading: the first page is on its way. error: the join or that fetch failed
 export type CatChatStatus = 'idle' | 'loading' | 'ready' | 'error'
 
+// A saved msg waiting on its edit or remove ack
+export type ChatMsgBusyAction = 'updating' | 'removing'
+
 interface CatChatState {
   catId: string
   msgs: ChatMsg[] // by _id, oldest first
@@ -30,6 +39,7 @@ interface CatChatState {
   isOldestLoaded: boolean // the server said nothing older exists
   isLoadingOlder: boolean
   unreadCount: number // msgs from others since the panel was last open
+  busyMsgs: Partial<Record<string, ChatMsgBusyAction>> // by _id
 }
 
 // One join of one room. A new join (a cat switch, StrictMode's join → leave → join) makes a new
@@ -45,10 +55,17 @@ interface JoinSession {
   // state, because a reconnect handler can run before React renders the last merge
   newestMsgId: string | null
   isLoadingOlder: boolean
+  // The _ids waiting on an edit or remove ack. Also in the state for the UI, but checked here: a
+  // second call can come before React renders the first one's busy state
+  busyMsgIds: Set<string>
+  // The latest copy of every msg an edit or a remove changed during this join, held or not. A
+  // fetch that read the DB before the change can land after it, and this copy wins over the
+  // fetched one
+  changedMsgById: Map<string, ChatMsg>
 }
 
-// The server event payloads for chat:msg-added (and, later, updated / removed), and the
-// chat:msg-add ack
+// The server event payloads for chat:msg-added / updated / removed, and the acks of
+// chat:msg-add / update / remove
 interface ChatMsgEvent {
   msg: ChatMsg
 }
@@ -82,18 +99,41 @@ export function useCatChat(catIdParam: string, isOpen: boolean) {
     setChat((prev) => (prev.catId === session.catId ? update(prev) : prev))
   }
 
-  // Every msg enters the state through here, so newestMsgId never misses one. A saved msg also
-  // replaces its pending copy, whichever path brings it: the ack, the broadcast, or a gap fill
-  // (a send that failed on a lost connection may have been saved before the drop)
+  // Every new msg enters the state through here (changes to held ones go through changeMsg), so
+  // newestMsgId never misses one. A saved msg also replaces its pending copy, whichever path
+  // brings it: the ack, the broadcast, or a gap fill (a send that failed on a lost connection may
+  // have been saved before the drop). A copy older than a change seen live is swapped for it
   function addMsgs(session: JoinSession, msgs: ChatMsg[]) {
     if (sessionRef.current !== session || !msgs.length) return
     session.newestMsgId = _getNewestMsgId(session.newestMsgId, msgs)
     const clientMsgIds = new Set(msgs.map((msg) => msg.clientMsgId))
+    const freshMsgs = msgs.map((msg) => _pickNewerCopy(msg, session.changedMsgById.get(msg._id)))
     updateChat(session, (prev) => ({
       ...prev,
-      msgs: _mergeMsgs(prev.msgs, msgs),
+      msgs: _mergeMsgs(prev.msgs, freshMsgs),
       pendingMsgs: _removePendingMsgs(prev.pendingMsgs, clientMsgIds),
     }))
+  }
+
+  // An edit or a remove, from its broadcast or its ack. Unlike addMsgs, it only replaces a msg
+  // the log already holds. An old msg the log hasn't loaded would otherwise sit alone above a
+  // gap, and "load older" pages from the oldest held _id, so it would skip every msg in between.
+  // The copy is kept for the fetch that brings that msg later
+  function changeMsg(session: JoinSession, msg: ChatMsg) {
+    if (sessionRef.current !== session) return
+    session.changedMsgById.set(msg._id, _pickNewerCopy(msg, session.changedMsgById.get(msg._id)))
+    updateChat(session, (prev) => ({ ...prev, msgs: _replaceMsg(prev.msgs, msg) }))
+  }
+
+  function setMsgBusy(session: JoinSession, msgId: string, action: ChatMsgBusyAction | null) {
+    if (action) session.busyMsgIds.add(msgId)
+    else session.busyMsgIds.delete(msgId)
+    updateChat(session, (prev) => {
+      const busyMsgs = { ...prev.busyMsgs }
+      if (action) busyMsgs[msgId] = action
+      else delete busyMsgs[msgId]
+      return { ...prev, busyMsgs }
+    })
   }
 
   // Every join (mount, reconnect, retry) goes through here. A CAT_NOT_FOUND means the cat was
@@ -225,6 +265,36 @@ export function useCatChat(catIdParam: string, isOpen: boolean) {
     }
   }
 
+  // An edit or a remove. Not optimistic, unlike a send: the msg stays as it was, dimmed, until
+  // the ack, and its copy then replaces the held one. A timeout or an error ack leaves the msg as
+  // it was and says why. An UNAUTHORIZED needs no draft: the msg is already saved.
+  // Resolves to whether it was saved, so the inline editor knows to close or to stay open
+  async function emitMsgChange(
+    session: JoinSession,
+    msgId: string,
+    action: ChatMsgBusyAction,
+    emit: () => Promise<ChatMsgEvent>,
+  ) {
+    if (sessionRef.current !== session || session.busyMsgIds.has(msgId)) return false
+    setMsgBusy(session, msgId, action)
+    try {
+      const { msg } = await emit()
+      changeMsg(session, msg)
+      return sessionRef.current === session
+    } catch (err) {
+      if (sessionRef.current !== session) return false
+      if (err instanceof ApiError && err.code === 'UNAUTHORIZED') {
+        _showSessionExpiredMsg()
+      } else {
+        const failedTxt = action === 'updating' ? "Couldn't save your edit." : "Couldn't delete it."
+        useUserMsgStore.getState().showErrorMsg(`${failedTxt} ${errorService.getErrorMsg(err)}`)
+      }
+      return false
+    } finally {
+      setMsgBusy(session, msgId, null)
+    }
+  }
+
   useEffect(() => {
     isOpenRef.current = isOpen
     navigateRef.current = navigate
@@ -237,6 +307,8 @@ export function useCatChat(catIdParam: string, isOpen: boolean) {
       firstPagePromise: null,
       newestMsgId: null,
       isLoadingOlder: false,
+      busyMsgIds: new Set(),
+      changedMsgById: new Map(),
     }
     sessionRef.current = session
     join(session)
@@ -248,13 +320,22 @@ export function useCatChat(catIdParam: string, isOpen: boolean) {
       if (isOpenRef.current || _isOwnMsg(msg)) return
       updateChat(session, (prev) => ({ ...prev, unreadCount: prev.unreadCount + 1 }))
     }
+    // An edit or a remove isn't new, so it never counts as unread
+    const onMsgChanged = ({ msg }: ChatMsgEvent) => {
+      if (msg.catId !== session.catId) return
+      changeMsg(session, msg)
+    }
     const onConnect = () => void rejoin(session)
     socketService.on(CHAT_MSG_ADDED, onMsgAdded)
+    socketService.on(CHAT_MSG_UPDATED, onMsgChanged)
+    socketService.on(CHAT_MSG_REMOVED, onMsgChanged)
     socketService.on('connect', onConnect)
 
     return () => {
       sessionRef.current = null
       socketService.off(CHAT_MSG_ADDED, onMsgAdded)
+      socketService.off(CHAT_MSG_UPDATED, onMsgChanged)
+      socketService.off(CHAT_MSG_REMOVED, onMsgChanged)
       socketService.off('connect', onConnect)
       socketService.emit(CHAT_LEAVE, { catId } satisfies ChatRoomInput)
     }
@@ -343,6 +424,27 @@ export function useCatChat(catIdParam: string, isOpen: boolean) {
     void sendPendingMsg(session, retriedMsg)
   }
 
+  // text is the inline editor's, already trimmed and checked. Only the author may edit: the UI
+  // offers it per chatPermissionService, and the server enforces it
+  function updateMsg(msgId: string, text: string) {
+    const session = sessionRef.current
+    if (!session) return Promise.resolve(false)
+    const payload = { catId: session.catId, msgId, text } satisfies ChatMsgUpdateInput
+    return emitMsgChange(session, msgId, 'updating', () =>
+      socketService.emitWithAck<ChatMsgEvent>(CHAT_MSG_UPDATE, payload),
+    )
+  }
+
+  // The ack is the tombstone. The author or an admin, like the edit's checks
+  function removeMsg(msgId: string) {
+    const session = sessionRef.current
+    if (!session) return Promise.resolve(false)
+    const payload = { catId: session.catId, msgId } satisfies ChatMsgRemoveInput
+    return emitMsgChange(session, msgId, 'removing', () =>
+      socketService.emitWithAck<ChatMsgEvent>(CHAT_MSG_REMOVE, payload),
+    )
+  }
+
   return {
     msgs: chat.msgs,
     pendingMsgs: chat.pendingMsgs,
@@ -351,10 +453,13 @@ export function useCatChat(catIdParam: string, isOpen: boolean) {
     isLoadingOlder: chat.isLoadingOlder,
     // The badge sits on the closed chat icon, so it's 0 while the panel is open
     unreadCount: isOpen ? 0 : chat.unreadCount,
+    busyMsgs: chat.busyMsgs,
     loadOlder,
     retryLoadChat,
     sendMsg,
     retrySendMsg,
+    updateMsg,
+    removeMsg,
   }
 }
 
@@ -384,6 +489,7 @@ function _getInitialState(catId: string): CatChatState {
     isOldestLoaded: false,
     isLoadingOlder: false,
     unreadCount: 0,
+    busyMsgs: {},
   }
 }
 
@@ -411,6 +517,17 @@ function _mergeMsgs(heldMsgs: ChatMsg[], newMsgs: ChatMsg[]): ChatMsg[] {
     if (!heldMsg || _isNewerCopy(msg, heldMsg)) msgById.set(msg._id, msg)
   }
   return [...msgById.values()].sort((a, b) => _compareIds(a._id, b._id))
+}
+
+// The held list itself when nothing changed, so React skips the render
+function _replaceMsg(heldMsgs: ChatMsg[], msg: ChatMsg): ChatMsg[] {
+  const index = heldMsgs.findIndex((heldMsg) => heldMsg._id === msg._id)
+  if (index === -1 || !_isNewerCopy(msg, heldMsgs[index])) return heldMsgs
+  return heldMsgs.with(index, msg)
+}
+
+function _pickNewerCopy(msg: ChatMsg, otherMsg: ChatMsg | undefined) {
+  return otherMsg && _isNewerCopy(otherMsg, msg) ? otherMsg : msg
 }
 
 // The same msg can arrive twice with different content: a fetch that read the DB before an edit
