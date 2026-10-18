@@ -1,7 +1,7 @@
 import type React from 'react'
 import { useState } from 'react'
 import { chatPermissionService, type ChatMsg } from '@cat-store/shared'
-import type { ChatMsgBusyAction } from '../../../hooks/use-cat-chat'
+import type { ChatMsgBusyAction } from '../../../hooks/use-cat-chat/chat-state'
 import type { PendingChatMsg } from '../../../models/chat'
 import { utilService } from '../../../services/util.service'
 import { useLoggedInUserStore } from '../../../store/logged-in-user.store'

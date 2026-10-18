@@ -13,7 +13,7 @@ import { chatService } from '../services/chat.service'
 import { socketService } from '../services/socket.service'
 import { useLoggedInUserStore } from '../store/logged-in-user.store'
 import { useUserMsgStore } from '../store/user-msg.store'
-import { useCatChat } from './use-cat-chat'
+import { useCatChat } from './use-cat-chat/use-cat-chat'
 
 const navigate = vi.hoisted(() => vi.fn())
 
