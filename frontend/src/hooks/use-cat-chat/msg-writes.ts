@@ -105,7 +105,8 @@ async function _sendPendingMsg(roomTracker: ChatRoomTracker, pendingMsg: Pending
 
 // An edit or a remove. Not optimistic, unlike a send: the msg stays as it was, dimmed, until
 // the ack, and its copy then replaces the held one. A timeout or an error ack leaves the msg as
-// it was and says why. An UNAUTHORIZED needs no draft: the msg is already saved.
+// it was and says why.
+// An UNAUTHORIZED needs no draft: the msg is already saved.
 // Resolves to whether it was saved, so the inline editor knows to close or to stay open
 async function _emitMsgChange(
   roomTracker: ChatRoomTracker,

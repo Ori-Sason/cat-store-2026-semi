@@ -5,6 +5,7 @@ import {
   CHAT_MSG_UPDATED,
   type ChatMsg,
   type ChatRoomInput,
+  type LoggedInUser,
 } from '@cat-store/shared'
 import { useEffect, useEffectEvent, useRef, useState } from 'react'
 import { useNavigate } from 'react-router'
@@ -39,6 +40,7 @@ export function useCatChat(catIdParam: string, isOpen: boolean) {
   const [chat, setChat] = useState(() => getInitialChatState(catId))
   const roomTrackerRef = useRef<ChatRoomTracker | null>(null)
   const navigate = useNavigate()
+  const loggedInUser = useLoggedInUserStore((state) => state.loggedInUser)
 
   // A cat switch can reuse cat-details without an unmount. Resetting during render (not in an
   // effect) means the old cat's msgs never show under the new cat, not even for one frame
@@ -46,7 +48,7 @@ export function useCatChat(catIdParam: string, isOpen: boolean) {
 
   // Effect events - call them only from effect code: passed raw into the tracker, they'd be called from outside it
   const countUnreadMsg = useEffectEvent((roomTracker: ChatRoomTracker, msg: ChatMsg) => {
-    if (isOpen || _isOwnMsg(msg)) return
+    if (isOpen || _isOwnMsg(msg, loggedInUser)) return
     updateChat(roomTracker, (prev) => ({ ...prev, unreadCount: prev.unreadCount + 1 }))
   })
   const goToCatList = useEffectEvent(() => {
@@ -112,7 +114,6 @@ export function useCatChat(catIdParam: string, isOpen: boolean) {
 
   function sendMsg(text: string) {
     const roomTracker = roomTrackerRef.current
-    const loggedInUser = useLoggedInUserStore.getState().loggedInUser
     if (!roomTracker || !loggedInUser) return
     sendNewMsg(roomTracker, loggedInUser, text)
   }
@@ -121,7 +122,6 @@ export function useCatChat(catIdParam: string, isOpen: boolean) {
   // stays as failed
   function retrySendMsg(clientMsgId: string) {
     const roomTracker = roomTrackerRef.current
-    const loggedInUser = useLoggedInUserStore.getState().loggedInUser
     const pendingMsg = chat.pendingMsgs.find((msg) => msg.clientMsgId === clientMsgId)
     if (!roomTracker || !pendingMsg || pendingMsg.sendStatus !== 'failed') return
     if (pendingMsg.user._id !== loggedInUser?._id) return
@@ -160,7 +160,6 @@ export function useCatChat(catIdParam: string, isOpen: boolean) {
 }
 
 // A guest owns nothing, and a msg whose author is gone (user: null) is nobody's own
-function _isOwnMsg(msg: ChatMsg) {
-  const loggedInUser = useLoggedInUserStore.getState().loggedInUser
+function _isOwnMsg(msg: ChatMsg, loggedInUser: LoggedInUser | null) {
   return !!loggedInUser && msg.user?._id === loggedInUser._id
 }

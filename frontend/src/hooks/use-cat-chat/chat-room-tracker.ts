@@ -7,7 +7,7 @@ import {
   pickNewerCopy,
   removePendingMsgs,
   replaceMsg,
-} from './msg-merge'
+} from './chat-log.util'
 
 // One join of one room. A new join (a cat switch, StrictMode's join → leave → join) makes a new
 // tracker, so an async result from an old one is dropped. A rejoin on reconnect or a retry keeps

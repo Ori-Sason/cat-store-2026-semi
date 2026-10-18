@@ -5,7 +5,7 @@ import { errorService } from '../../services/error.service'
 import { socketService } from '../../services/socket.service'
 import { useUserMsgStore } from '../../store/user-msg.store'
 import { addMsgs, type ChatRoomTracker, updateChat } from './chat-room-tracker'
-import { getNewestMsgId } from './msg-merge'
+import { getNewestMsgId } from './chat-log.util'
 
 // Keeping the log in step with the room: the join, the first page, the reconnect and "load older"
 
@@ -20,7 +20,7 @@ export function join(roomTracker: ChatRoomTracker) {
   roomTracker.joinPromise = joinPromise
   const redirectIfCatGone = async () => {
     try {
-      await joinPromise
+      await roomTracker.joinPromise
     } catch (err) {
       if (!roomTracker.isActive) return
       if (!(err instanceof ApiError) || err.code !== 'CAT_NOT_FOUND') return
@@ -65,17 +65,21 @@ export async function rejoin(roomTracker: ChatRoomTracker) {
 
   const firstPage = await firstPagePromise
   if (!firstPage) {
-    // The first open failed, often from this same drop: retry it, unless a retry already did
+    // The first open failed, often from this same drop: retry it. Unless, while this awaited it,
+    // someone else already started a new first-page load (the retry button, another rejoin)
     if (roomTracker.firstPagePromise === firstPagePromise) loadFirstPage(roomTracker)
     return
   }
-  // A first page still in flight at the drop can reach past the cursor taken above
+
   afterId = getNewestMsgId(afterId, firstPage.msgs)
+
   try {
+    // make sure we joined the room before the gap fill, so a msg saved in between arrives live
     await roomTracker.joinPromise
   } catch {
     return // join() already redirects on CAT_NOT_FOUND. Anything else waits for the next connect
   }
+
   try {
     await _fillGap(roomTracker, afterId)
   } catch (err) {
@@ -99,17 +103,18 @@ export async function loadOlderPage(roomTracker: ChatRoomTracker, beforeId: stri
   }
 }
 
+// Fills the gap of msgs sent while the socket was dropped:
+// 1. Log is empty → afterId: null → fetch the newest page. Nothing was held before it, so "load
+//    older" pages back from there with no hole.
+// 2. Log has msgs → afterId: string → fetch every msg after the last one held, page by page,
+//    since a long drop can miss more than one page.
 async function _fillGap(roomTracker: ChatRoomTracker, afterId: string | null) {
   if (!afterId) {
-    // The log was empty when opened. The newest page holds everything the drop missed, and its
-    // cursor is right, since nothing was held before it
     const page = await chatService.getOlderPage(roomTracker.catId)
     addMsgs(roomTracker, page.msgs)
     updateChat(roomTracker, (prev) => ({ ...prev, isOldestLoaded: page.nextBeforeId === null }))
     return
   }
-  // Page by page until the newest: more than one page can arrive during a long drop, and
-  // nothing already held is refetched, so there's no hole in the middle
   let cursor: string | null = afterId
   while (cursor && roomTracker.isActive) {
     const page = await chatService.getNewerPage(roomTracker.catId, cursor)
