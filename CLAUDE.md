@@ -48,7 +48,7 @@ A fresh clone needs `npm run hooks:install` once (`.npmrc` has `ignore-scripts`)
 ## Rules — always in context
 Claude Code auto-loads `.claude/rules/*.md`, so they're listed here, not `@`-imported.
 Files with `paths:` frontmatter load only when matching files are touched.
-- `code-style.md` — formatting, lint, async/await.
+- `code-style.md` — formatting, lint, async/await, when to split a file.
 - `naming.md` — routes, DB, code, files, domain terms.
 - `git-workflow.md` — approval gates, pre-merge / pre-push checks, branches, commits, the index
   as review marker.

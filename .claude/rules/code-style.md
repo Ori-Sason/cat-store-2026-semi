@@ -13,4 +13,15 @@ Applies to every JavaScript and TypeScript file in this repository.
 - Comments state the reason itself. Never cite what lives only in `.handoffs/` (stop numbers,
   research ids like "R3", sub-part names): handoffs get deleted. `.docs/` is fine to cite.
 
+## Split a file when it holds too much context
+- The trigger is how much a reader must keep in mind to follow one part, not a line count. Split
+  when a file mixes concerns that can be read on their own (e.g. a hook's sync, writes and merge
+  helpers), or when a diff of it is too big to review in one pass.
+- Logic: a folder named for the file (`hooks/<hook-name>/`), the entry file keeps its name inside
+  it (`hooks/<hook-name>/<hook-name>.ts`), and the parts sit next to it as files it imports. Each
+  part is one concern.
+- TSX: extract child components, placed per `frontend.md`.
+- Its tests follow it: split them by the same concerns, with repeated setup in a `*.helper.ts`
+  in the same folder.
+
 Match the surrounding code for everything this file does not cover.
