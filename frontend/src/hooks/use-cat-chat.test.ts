@@ -943,21 +943,6 @@ describe('useCatChat updateMsg and removeMsg', () => {
       expect(_textOf(result.current.msgs[0])).toBe('msg 1')
     })
 
-    it('sends one edit at a time per msg', async () => {
-      _mockChangeAck(() => new Promise(() => {}))
-      const { result } = await _renderReady([1])
-
-      act(() => {
-        void result.current.updateMsg(_msgId(1), 'first')
-        void result.current.updateMsg(_msgId(1), 'second')
-      })
-
-      const updateCalls = vi
-        .mocked(socketService.emitWithAck)
-        .mock.calls.filter(([event]) => event === 'chat:msg-update')
-      expect(updateCalls).toHaveLength(1)
-    })
-
     it("drops a late ack from the old cat's edit after a switch", async () => {
       const ack = _deferred<unknown>()
       _mockChangeAck(() => ack.promise)

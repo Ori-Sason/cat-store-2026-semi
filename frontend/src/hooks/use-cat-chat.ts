@@ -55,9 +55,6 @@ interface JoinSession {
   // state, because a reconnect handler can run before React renders the last merge
   newestMsgId: string | null
   isLoadingOlder: boolean
-  // The _ids waiting on an edit or remove ack. Also in the state for the UI, but checked here: a
-  // second call can come before React renders the first one's busy state
-  busyMsgIds: Set<string>
   // The latest copy of every msg an edit or a remove changed during this join, held or not. A
   // fetch that read the DB before the change can land after it, and this copy wins over the
   // fetched one
@@ -126,8 +123,6 @@ export function useCatChat(catIdParam: string, isOpen: boolean) {
   }
 
   function setMsgBusy(session: JoinSession, msgId: string, action: ChatMsgBusyAction | null) {
-    if (action) session.busyMsgIds.add(msgId)
-    else session.busyMsgIds.delete(msgId)
     updateChat(session, (prev) => {
       const busyMsgs = { ...prev.busyMsgs }
       if (action) busyMsgs[msgId] = action
@@ -275,7 +270,7 @@ export function useCatChat(catIdParam: string, isOpen: boolean) {
     action: ChatMsgBusyAction,
     emit: () => Promise<ChatMsgEvent>,
   ) {
-    if (sessionRef.current !== session || session.busyMsgIds.has(msgId)) return false
+    if (sessionRef.current !== session) return false
     setMsgBusy(session, msgId, action)
     try {
       const { msg } = await emit()
@@ -307,7 +302,6 @@ export function useCatChat(catIdParam: string, isOpen: boolean) {
       firstPagePromise: null,
       newestMsgId: null,
       isLoadingOlder: false,
-      busyMsgIds: new Set(),
       changedMsgById: new Map(),
     }
     sessionRef.current = session
