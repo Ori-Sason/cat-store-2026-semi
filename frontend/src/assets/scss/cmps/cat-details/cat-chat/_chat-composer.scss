@@ -63,17 +63,8 @@ $_textarea-max-height: 120px;
     }
   }
 
-  .counter {
+  .chat-text-counter {
     padding: $space-1 6px 0;
     text-align: end;
-    font-size: 0.74rem;
-    font-variant-numeric: tabular-nums;
-    color: $primary-clr-850;
-
-    // Past the cap: the reason send is off
-    &.is-over {
-      font-weight: 700;
-      color: $clr-danger;
-    }
   }
 }

@@ -1,0 +1,12 @@
+@use 'setup' as *;
+
+.chat-text-counter {
+  font-size: 0.74rem;
+  font-variant-numeric: tabular-nums;
+  color: $primary-clr-850;
+
+  &.is-over {
+    font-weight: 700;
+    color: $clr-danger;
+  }
+}
