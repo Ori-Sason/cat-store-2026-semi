@@ -1,12 +1,15 @@
 import type React from 'react'
-import { useId, useLayoutEffect, useRef, useState } from 'react'
+import { useId, useLayoutEffect, useRef } from 'react'
 import { CHAT_MSG_TEXT_MAX_LENGTH, chatMsgSchema } from '@cat-store/shared'
 
 // The counter shows only near the cap, so a normal msg isn't watched by a number
 const _COUNTER_FROM_LENGTH = CHAT_MSG_TEXT_MAX_LENGTH * 0.8
 
 interface UseChatTextOptions {
-  initialText: string | (() => string)
+  // Controlled: the caller owns the text. The composer's lives in CatChat, so it outlives the
+  // closed panel, and a caller can react to each change (e.g. the typing indicator)
+  text: string
+  onTextChange: (text: string) => void
   // Enter, without Shift and outside an IME composition. The caller decides if it sends
   onEnter: () => void
 }
@@ -15,8 +18,7 @@ interface UseChatTextOptions {
 // the auto-grow, the counter near the cap, and Enter to submit (Shift+Enter adds a line).
 // No maxLength: it would cut a long paste off silently. The text can pass the cap, and then the
 // counter turns red and the caller keeps its submit button off (isValid is false)
-export function useChatText({ initialText, onEnter }: UseChatTextOptions) {
-  const [text, setText] = useState(initialText)
+export function useChatText({ text, onTextChange, onEnter }: UseChatTextOptions) {
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const counterId = useId()
   const isValid = chatMsgSchema.shape.text.safeParse(text).success
@@ -38,15 +40,13 @@ export function useChatText({ initialText, onEnter }: UseChatTextOptions) {
   }
 
   return {
-    text,
-    setText,
     isValid,
     textareaRef,
     // Spread on the <textarea>. A caller that handles more keys wraps onKeyDown
     textareaProps: {
       ref: textareaRef,
       value: text,
-      onChange: (ev: React.ChangeEvent<HTMLTextAreaElement>) => setText(ev.target.value),
+      onChange: (ev: React.ChangeEvent<HTMLTextAreaElement>) => onTextChange(ev.target.value),
       onKeyDown,
       'aria-describedby': isCounterShown ? counterId : undefined,
     },

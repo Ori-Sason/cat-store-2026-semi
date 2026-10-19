@@ -1,16 +1,39 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { CHAT_MSG_TEXT_MAX_LENGTH } from '@cat-store/shared'
+import { useState } from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { chatService } from '../../../../services/chat.service'
 import { ChatComposer } from './chat-composer'
 
 const CAT_ID = 'aaaaaaaaaaaaaaaaaaaaaaaa'
 
-function _render({ isDisabled = false } = {}) {
+function _render({ isDisabled = false, initialText = '' } = {}) {
   const onSendMsg = vi.fn()
-  render(<ChatComposer catId={CAT_ID} isDisabled={isDisabled} onSendMsg={onSendMsg} />)
+  render(<ComposerHost initialText={initialText} isDisabled={isDisabled} onSendMsg={onSendMsg} />)
   return { onSendMsg, textarea: screen.getByRole('textbox', { name: 'Message' }) }
+}
+
+// CatChat owns the composer's text. This stands in for it
+function ComposerHost({
+  initialText,
+  isDisabled,
+  onSendMsg,
+}: {
+  initialText: string
+  isDisabled: boolean
+  onSendMsg: (text: string) => void
+}) {
+  const [text, setText] = useState(initialText)
+  return (
+    <ChatComposer
+      catId={CAT_ID}
+      text={text}
+      onTextChange={setText}
+      isDisabled={isDisabled}
+      onSendMsg={onSendMsg}
+    />
+  )
 }
 
 beforeEach(() => {
@@ -95,15 +118,9 @@ describe('ChatComposer', () => {
   })
 
   describe('the draft', () => {
-    it('starts from the draft an expired session left', () => {
-      chatService.saveDraft(CAT_ID, 'Can I visit on Sunday?')
-      const { textarea } = _render()
-      expect(textarea).toHaveValue('Can I visit on Sunday?')
-    })
-
     it('removes the draft once it is sent', async () => {
       chatService.saveDraft(CAT_ID, 'Can I visit on Sunday?')
-      const { onSendMsg, textarea } = _render()
+      const { onSendMsg, textarea } = _render({ initialText: 'Can I visit on Sunday?' })
 
       await userEvent.type(textarea, '{Enter}')
 

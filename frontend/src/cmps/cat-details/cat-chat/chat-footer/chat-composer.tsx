@@ -5,23 +5,31 @@ import { ChatTextCounter } from '../chat-common/chat-text-counter'
 
 interface ChatComposerProps {
   catId: string
+  // Owned by CatChat, so closing the panel (which unmounts this) keeps what was typed
+  text: string
+  onTextChange: (text: string) => void
   isDisabled: boolean // until the chat is ready: a send before the join ack would be refused
   onSendMsg: (text: string) => void
 }
 
-// The textarea and its round send button. Enter sends, Shift+Enter adds a line (useChatText).
-// It starts from the draft a send left when the session expired (see chatService.saveDraft).
-// The caller keys it by cat, so a cat switch starts a fresh composer
-export const ChatComposer: React.FC<ChatComposerProps> = ({ catId, isDisabled, onSendMsg }) => {
-  const { text, setText, isValid, textareaRef, textareaProps, counterProps } = useChatText({
-    initialText: () => chatService.getDraft(catId) ?? '',
+// The textarea and its round send button. Enter sends, Shift+Enter adds a line (useChatText)
+export const ChatComposer: React.FC<ChatComposerProps> = ({
+  catId,
+  text,
+  onTextChange,
+  isDisabled,
+  onSendMsg,
+}) => {
+  const { isValid, textareaRef, textareaProps, counterProps } = useChatText({
+    text,
+    onTextChange,
     onEnter: sendMsg,
   })
 
   function sendMsg() {
     if (isDisabled || !isValid) return
     onSendMsg(text.trim())
-    setText('')
+    onTextChange('')
     // Sent as a new msg now, so it shouldn't come back on the next visit
     chatService.removeDraft(catId)
     // A click on send leaves focus on the button, which the empty text then disables

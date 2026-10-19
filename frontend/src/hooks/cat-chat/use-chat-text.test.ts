@@ -1,13 +1,16 @@
 import type React from 'react'
-import { act, renderHook } from '@testing-library/react'
+import { renderHook } from '@testing-library/react'
 import { CHAT_MSG_TEXT_MAX_LENGTH } from '@cat-store/shared'
 import { describe, expect, it, vi } from 'vitest'
 import { useChatText } from './use-chat-text'
 
-function _render(initialText: string | (() => string) = '') {
+function _render(text = '') {
+  const onTextChange = vi.fn()
   const onEnter = vi.fn()
-  const hook = renderHook(() => useChatText({ initialText, onEnter }))
-  return { onEnter, ...hook }
+  const hook = renderHook((props) => useChatText({ ...props, onTextChange, onEnter }), {
+    initialProps: { text },
+  })
+  return { onTextChange, onEnter, ...hook }
 }
 
 // Only the fields onKeyDown reads
@@ -18,10 +21,14 @@ function _keyDown(key: string, { shiftKey = false, isComposing = false } = {}) {
 }
 
 describe('useChatText', () => {
-  it('starts from a lazy initial text', () => {
-    const { result } = _render(() => 'From the draft')
-    expect(result.current.text).toBe('From the draft')
-    expect(result.current.textareaProps.value).toBe('From the draft')
+  it('shows the caller’s text and hands each change back to it', () => {
+    const { result, onTextChange } = _render('Hi')
+    expect(result.current.textareaProps.value).toBe('Hi')
+
+    const ev = { target: { value: 'Hi there' } } as React.ChangeEvent<HTMLTextAreaElement>
+    result.current.textareaProps.onChange(ev)
+
+    expect(onTextChange).toHaveBeenCalledExactlyOnceWith('Hi there')
   })
 
   describe('Enter', () => {
@@ -64,11 +71,11 @@ describe('useChatText', () => {
 
   describe('the counter', () => {
     it('is hidden up to 800 chars, then shown and linked to the textarea', () => {
-      const { result } = _render('a'.repeat(800))
+      const { result, rerender } = _render('a'.repeat(800))
       expect(result.current.counterProps).toBeNull()
       expect(result.current.textareaProps['aria-describedby']).toBeUndefined()
 
-      act(() => result.current.setText('a'.repeat(801)))
+      rerender({ text: 'a'.repeat(801) })
 
       const { counterProps, textareaProps } = result.current
       expect(counterProps?.length).toBe(801)

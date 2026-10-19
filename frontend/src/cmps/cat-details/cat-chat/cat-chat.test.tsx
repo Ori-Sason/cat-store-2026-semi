@@ -5,6 +5,7 @@ import { createMemoryRouter, RouterProvider } from 'react-router'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { useCatChat } from '../../../hooks/cat-chat/use-cat-chat/use-cat-chat'
 import type { PendingChatMsg } from '../../../models/chat'
+import { chatService } from '../../../services/chat.service'
 import { useLoggedInUserStore } from '../../../store/logged-in-user.store'
 import { CatChat } from './cat-chat'
 
@@ -73,6 +74,7 @@ async function _open() {
 
 beforeEach(() => {
   vi.mocked(useCatChat).mockReset()
+  sessionStorage.clear()
 })
 
 describe('CatChat', () => {
@@ -202,6 +204,27 @@ describe('CatChat', () => {
   })
 
   describe('sending', () => {
+    it('starts the composer from the draft an expired session left', async () => {
+      chatService.saveDraft(CAT_ID, 'Can I visit on Sunday?')
+      _mockChat()
+      _render()
+      await _open()
+      expect(screen.getByRole('textbox', { name: 'Message' })).toHaveValue('Can I visit on Sunday?')
+    })
+
+    // Closing unmounts the composer, so its text lives in the panel
+    it('keeps the typed text through a close and a reopen', async () => {
+      _mockChat()
+      _render()
+      await _open()
+      await userEvent.type(screen.getByRole('textbox', { name: 'Message' }), 'Half a thought')
+
+      await userEvent.click(screen.getByRole('button', { name: 'Close chat' }))
+      await _open()
+
+      expect(screen.getByRole('textbox', { name: 'Message' })).toHaveValue('Half a thought')
+    })
+
     it('sends what the composer submits through the hook', async () => {
       const chat = _mockChat()
       _render()

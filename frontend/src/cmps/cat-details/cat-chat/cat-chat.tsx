@@ -2,6 +2,7 @@ import type React from 'react'
 import { useEffect, useId, useRef, useState } from 'react'
 import { useCatChat } from '../../../hooks/cat-chat/use-cat-chat/use-cat-chat'
 import { useChatMsgRemoveConfirm } from '../../../hooks/cat-chat/use-chat-msg-remove-confirm'
+import { chatService } from '../../../services/chat.service'
 import { useLoggedInUserStore } from '../../../store/logged-in-user.store'
 import { ReviewListSkeleton } from '../../common/review/review-list-skeleton'
 import { ChatComposer } from './chat-footer/chat-composer'
@@ -30,6 +31,10 @@ export const CatChat: React.FC<CatChatProps> = ({ catId, catName, catOwnerId }) 
   const titleId = useId()
   // Without isToggledRef, the chat icon is focused on mount: a closed chat never steals focus from the page
   const isToggledRef = useRef(false)
+  // Here, not in the composer: closing the panel unmounts the composer, and its text should
+  // survive that. It starts from the draft a send left when the session expired
+  // (see chatService.saveDraft). The cat-details key resets it on a cat switch
+  const [composerText, setComposerText] = useState(() => chatService.getDraft(catId) ?? '')
   const removeConfirm = useChatMsgRemoveConfirm(chat.msgs, chat.removeMsg, panelRef)
 
   useEffect(() => {
@@ -98,6 +103,8 @@ export const CatChat: React.FC<CatChatProps> = ({ catId, catName, catOwnerId }) 
           {loggedInUser ? (
             <ChatComposer
               catId={catId}
+              text={composerText}
+              onTextChange={setComposerText}
               isDisabled={chat.status !== 'ready'}
               onSendMsg={chat.sendMsg}
             />

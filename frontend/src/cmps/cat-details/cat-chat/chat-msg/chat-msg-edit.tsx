@@ -1,5 +1,5 @@
 import type React from 'react'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useChatText } from '../../../../hooks/cat-chat/use-chat-text'
 import { ChatMsgStatus } from './chat-msg-status'
 import { ChatTextCounter } from '../chat-common/chat-text-counter'
@@ -20,8 +20,10 @@ export const ChatMsgEdit: React.FC<ChatMsgEditProps> = ({
   onCancel,
 }) => {
   const formRef = useRef<HTMLFormElement>(null)
-  const { text, isValid, textareaRef, textareaProps, counterProps } = useChatText({
-    initialText,
+  const [text, setText] = useState(initialText)
+  const { isValid, textareaRef, textareaProps, counterProps } = useChatText({
+    text,
+    onTextChange: setText,
     onEnter: save,
   })
 
