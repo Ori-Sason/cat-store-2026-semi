@@ -25,7 +25,6 @@ export const ChatMsgRemoveConfirm: React.FC<ChatMsgRemoveConfirmProps> = ({
     cancelBtnRef.current?.focus()
   }, [])
 
-  // Escape stops here: the panel closes on an Escape that reaches it
   function onKeyDown(ev: React.KeyboardEvent) {
     if (ev.key !== 'Escape') return
     ev.stopPropagation()

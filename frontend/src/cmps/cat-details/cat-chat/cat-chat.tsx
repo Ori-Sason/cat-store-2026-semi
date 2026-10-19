@@ -32,17 +32,13 @@ export const CatChat: React.FC<CatChatProps> = ({ catId, catName, catOwnerId }) 
   const titleId = useId()
   // Without isToggledRef, the chat icon is focused on mount: a closed chat never steals focus from the page
   const isToggledRef = useRef(false)
-  // The msg the delete confirm asks about. Keyed by cat too: a cat switch can reuse this page,
-  // and a confirm for the old cat's msg must not show under the new one
-  const [removeConfirm, setRemoveConfirm] = useState<{ catId: string; msgId: string } | null>(null)
+  // The id of the msg the delete confirm asks about
+  const [removeMsgId, setRemoveMsgId] = useState<string | null>(null)
   // The msg itself, quoted in the confirm. Gone or already a tombstone (someone else deleted it
   // meanwhile) closes the confirm: there's nothing left to delete
-  const msgToRemove =
-    removeConfirm?.catId === catId
-      ? chat.msgs.find(
-          (msg): msg is ChatMsgWithText => msg._id === removeConfirm.msgId && !msg.isDeleted,
-        )
-      : undefined
+  const msgToRemove = removeMsgId
+    ? chat.msgs.find((msg): msg is ChatMsgWithText => msg._id === removeMsgId && !msg.isDeleted)
+    : undefined
   const isRemoveConfirmOpen = !!msgToRemove
   // Where the focus goes back to when the confirm closes: the msg's ⋮ button
   const removeConfirmOpenerRef = useRef<HTMLElement | null>(null)
@@ -68,17 +64,17 @@ export const CatChat: React.FC<CatChatProps> = ({ catId, catName, catOwnerId }) 
     isToggledRef.current = true
     setIsOpen(isOpenNext)
     // Closing hides the panel, so a reopen starts without the confirm
-    setRemoveConfirm(null)
+    setRemoveMsgId(null)
   }
 
   function openRemoveConfirm(msgId: string) {
     removeConfirmOpenerRef.current = document.activeElement as HTMLElement | null
-    setRemoveConfirm({ catId, msgId })
+    setRemoveMsgId(msgId)
   }
 
   function onConfirmRemove() {
-    if (removeConfirm) void chat.removeMsg(removeConfirm.msgId)
-    setRemoveConfirm(null)
+    if (removeMsgId) void chat.removeMsg(removeMsgId)
+    setRemoveMsgId(null)
   }
 
   // Escape closes, like the other popups. A click outside doesn't: the panel is a place to stay
@@ -131,10 +127,8 @@ export const CatChat: React.FC<CatChatProps> = ({ catId, catName, catOwnerId }) 
             />
           )}
 
-          {/* Keyed by cat: a cat switch can reuse this page, and the text belongs to the old cat */}
           {loggedInUser ? (
             <ChatComposer
-              key={catId}
               catId={catId}
               isDisabled={chat.status !== 'ready'}
               onSendMsg={chat.sendMsg}
@@ -148,7 +142,7 @@ export const CatChat: React.FC<CatChatProps> = ({ catId, catName, catOwnerId }) 
           <ChatMsgRemoveConfirm
             msgText={msgToRemove.text}
             onConfirm={onConfirmRemove}
-            onCancel={() => setRemoveConfirm(null)}
+            onCancel={() => setRemoveMsgId(null)}
           />
         )}
       </section>

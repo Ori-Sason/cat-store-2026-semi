@@ -75,7 +75,9 @@ export const CatDetails: React.FC = () => {
       {/* The reviews: a child route with its own loader (CatReviews) */}
       <Outlet />
 
-      <CatChat catId={cat._id} catName={cat.name} catOwnerId={cat.owner._id} />
+      {/* Keyed by cat: a /cat/A → /cat/B switch reuses this page, and every piece of chat state
+          (the open panel, the delete confirm, the draft text) belongs to the old cat */}
+      <CatChat key={cat._id} catId={cat._id} catName={cat.name} catOwnerId={cat.owner._id} />
 
       <ConfirmModal
         isOpen={isConfirmOpen}
