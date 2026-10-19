@@ -1,4 +1,4 @@
-import type { ChatMsg, UserRef } from '@cat-store/shared'
+import type { ChatMsgWithRefs, UserRef } from '@cat-store/shared'
 import type { PendingChatMsg } from '../../../models/chat'
 
 // idle: not opened yet. loading: the first page is on its way. error: the join or that fetch failed
@@ -8,7 +8,7 @@ export type CatChatStatus = 'idle' | 'loading' | 'ready' | 'error'
 export type ChatMsgBusyAction = 'updating' | 'removing'
 
 export interface CatChatState {
-  msgs: ChatMsg[] // by _id, oldest first
+  msgs: ChatMsgWithRefs[] // by _id, oldest first
   pendingMsgs: PendingChatMsg[] // own sends not confirmed yet, in send order, below the msgs
   status: CatChatStatus
   isOldestLoaded: boolean // the server said nothing older exists
@@ -21,7 +21,7 @@ export interface CatChatState {
 // The server event payloads for chat:msg-added / updated / removed, and the acks of
 // chat:msg-add / update / remove
 export interface ChatMsgEvent {
-  msg: ChatMsg
+  msg: ChatMsgWithRefs
 }
 
 export function getInitialChatState(): CatChatState {

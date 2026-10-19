@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto'
 import { ObjectId } from 'mongodb'
 import request from 'supertest'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import type { ChatMsg } from '@cat-store/shared'
+import type { ChatMsgWithRefs } from '@cat-store/shared'
 import { app } from '../../app.ts'
 import { CAT_COLLECTION, type CatDoc } from '../../models/cat.ts'
 import { CHAT_MSG_COLLECTION, type ChatMsgDoc } from '../../models/chat.ts'
@@ -106,13 +106,13 @@ describe('GET /api/cats/:id/chat-msgs', () => {
     expect(_ids(res.body.msgs)).toEqual(_ids(mitziMsgs))
   })
 
-  it('sends a msg as ChatMsg: string ids, the slim author, no userId or username', async () => {
+  it('sends a msg as ChatMsgWithRefs: string ids, the slim author, no userId or username', async () => {
     const [msg] = _buildMsgs(MITZI, 1, ADMIN._id)
     await _insertMsgs([msg!])
 
     const res = await request(app).get(_url(MITZI._id.toHexString()))
 
-    const expected: ChatMsg = {
+    const expected: ChatMsgWithRefs = {
       _id: msg!._id.toHexString(),
       catId: MITZI._id.toHexString(),
       clientMsgId: msg!.clientMsgId,

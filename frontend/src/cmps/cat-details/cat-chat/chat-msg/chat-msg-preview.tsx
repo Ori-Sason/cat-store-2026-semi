@@ -1,6 +1,6 @@
 import type React from 'react'
 import { useEffect, useRef, useState } from 'react'
-import { chatPermissionService, type ChatMsg } from '@cat-store/shared'
+import { chatPermissionService, type ChatMsgWithRefs } from '@cat-store/shared'
 import type { ChatMsgBusyAction } from '../../../../hooks/cat-chat/use-cat-chat/chat-state'
 import type { PendingChatMsg } from '../../../../models/chat'
 import { utilService } from '../../../../services/util.service'
@@ -12,7 +12,7 @@ import { ChatMsgNotSent } from './chat-msg-not-sent'
 import { ChatMsgStatus } from './chat-msg-status'
 
 interface ChatMsgPreviewProps {
-  msg: ChatMsg | PendingChatMsg
+  msg: ChatMsgWithRefs | PendingChatMsg
   catOwnerId: string
   onRetry?: () => void // a failed pending msg's "Tap to retry"
   busyAction?: ChatMsgBusyAction // waiting on an edit or remove ack

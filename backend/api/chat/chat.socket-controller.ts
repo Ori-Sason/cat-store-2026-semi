@@ -4,7 +4,7 @@ import {
   CHAT_MSG_UPDATED,
   CHAT_PRESENCE_CHANGED,
   CHAT_TYPING,
-  type ChatMsg,
+  type ChatMsgWithRefs,
   type ChatMsgInput,
   type ChatMsgRemoveInput,
   type ChatMsgUpdateInput,
@@ -56,7 +56,7 @@ async function leave({ socket, payload }: SocketEvent<ChatRoomInput>): Promise<v
 // The FE merges by _id / clientMsgId, so getting both the ack and the broadcast is harmless.
 // A retry of a saved msg acks only: the first try already broadcast it, and tabs that missed it
 // get it from the gap fill
-async function addMsg({ payload }: SocketEvent<ChatMsgInput>): Promise<{ msg: ChatMsg }> {
+async function addMsg({ payload }: SocketEvent<ChatMsgInput>): Promise<{ msg: ChatMsgWithRefs }> {
   const { msg, isNew } = await chatService.add(payload, alsService.getVerifiedUser()._id)
   if (isNew) {
     socketService.getIo().to(socketService.getCatRoomName(msg.catId)).emit(CHAT_MSG_ADDED, { msg })
@@ -66,7 +66,9 @@ async function addMsg({ payload }: SocketEvent<ChatMsgInput>): Promise<{ msg: Ch
 
 // chat:msg-update. Acks the edited msg and broadcasts it to the room, the sender included, like
 // addMsg. Not optimistic on the client: it waits for this ack
-async function updateMsg({ payload }: SocketEvent<ChatMsgUpdateInput>): Promise<{ msg: ChatMsg }> {
+async function updateMsg({
+  payload,
+}: SocketEvent<ChatMsgUpdateInput>): Promise<{ msg: ChatMsgWithRefs }> {
   const msg = await chatService.update(payload)
   socketService.getIo().to(socketService.getCatRoomName(msg.catId)).emit(CHAT_MSG_UPDATED, { msg })
   return { msg }
@@ -74,7 +76,9 @@ async function updateMsg({ payload }: SocketEvent<ChatMsgUpdateInput>): Promise<
 
 // chat:msg-remove. Acks the tombstone and broadcasts it to the room, the sender included.
 // A repeat remove acks only: the first one already broadcast it
-async function removeMsg({ payload }: SocketEvent<ChatMsgRemoveInput>): Promise<{ msg: ChatMsg }> {
+async function removeMsg({
+  payload,
+}: SocketEvent<ChatMsgRemoveInput>): Promise<{ msg: ChatMsgWithRefs }> {
   const { msg, isNew } = await chatService.remove(payload)
   if (isNew) {
     socketService

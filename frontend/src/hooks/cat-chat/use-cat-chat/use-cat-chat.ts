@@ -4,7 +4,7 @@ import {
   CHAT_MSG_REMOVED,
   CHAT_MSG_UPDATED,
   CHAT_TYPING,
-  type ChatMsg,
+  type ChatMsgWithRefs,
   type ChatRoomInput,
   type ChatTyping,
   type LoggedInUser,
@@ -45,7 +45,7 @@ export function useCatChat(catId: string, isOpen: boolean) {
   const loggedInUser = useLoggedInUserStore((state) => state.loggedInUser)
 
   // Effect events - call them only from effect code: passed raw into the tracker, they'd be called from outside it
-  const countUnreadMsg = useEffectEvent((roomTracker: ChatRoomTracker, msg: ChatMsg) => {
+  const countUnreadMsg = useEffectEvent((roomTracker: ChatRoomTracker, msg: ChatMsgWithRefs) => {
     if (isOpen || _isOwnMsg(msg, loggedInUser)) return
     updateChat(roomTracker, (prev) => ({ ...prev, unreadCount: prev.unreadCount + 1 }))
   })
@@ -179,6 +179,6 @@ export function useCatChat(catId: string, isOpen: boolean) {
 }
 
 // A guest owns nothing, and a msg whose author is gone (user: null) is nobody's own
-function _isOwnMsg(msg: ChatMsg, loggedInUser: LoggedInUser | null) {
+function _isOwnMsg(msg: ChatMsgWithRefs, loggedInUser: LoggedInUser | null) {
   return !!loggedInUser && msg.user?._id === loggedInUser._id
 }

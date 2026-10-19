@@ -3,7 +3,7 @@ import type { LoggedInUserOrGuest } from '../models/user.ts'
 // The chat msg rules. The FE uses them to decide which Edit / Delete options to show. The BE
 // enforces them through requireChatMsgPermission, on a verified user.
 // Both take the author's id alone, so each caller passes it from its own shape: a ChatMsgDoc's
-// userId, or a ChatMsg's user?._id. null is an author whose account is gone (user: null on the
+// userId, or a ChatMsgWithRefs's user?._id. null is an author whose account is gone (user: null on the
 // wire). Only the FE passes null: the BE passes the doc's userId, which stays set after the
 // account is gone, and no user matches it, so the result is the same
 

@@ -34,8 +34,9 @@ Not here, so it isn't kept twice:
   see the count, never the names.
   Avoid: `room` as a module or type name, `conversation`, `thread`, `channel`. For presence:
   `online`, `viewers`, `watchers`, `active users`.
-- **chat msg** (`chatMsgs`, `ChatMsg`, `CHAT_MSG_NOT_FOUND`, `chat:msg-*`): one message in a chat.
-  Its author is `userId`, its cat is `catId`. Not a user msg (that's a UI popup, see UI).
+- **chat msg** (`chatMsgs`, `ChatMsgWithRefs`, `CHAT_MSG_NOT_FOUND`, `chat:msg-*`): one message in a
+  chat. Its author is `userId`, its cat is `catId`. The wire type is only ever the joined
+  `ChatMsgWithRefs`. There's no plain `ChatMsg`. Not a user msg (that's a UI popup, see UI).
   Rule: `msg` in code and routes (`/chat-msgs`), "message" in user-facing text.
   Avoid: `chatMessage`, `post`, `comment`, `message` in code names.
 - **label** (`labels`, `CatLabel`, `CAT_LABELS`): one of a fixed set of descriptors on a cat. A
@@ -52,9 +53,9 @@ don't assume it.
 
 | Suffix | Meaning | Lives in | Exists today |
 |---|---|---|---|
-| (none) | the stored entity as the API returns it, with string ids | `shared/` | `Cat`, `User` (no password), `Review`, `ChatMsg` |
+| (none) | the stored entity as the API returns it, with string ids | `shared/` | `Cat`, `User` (no password), `Review` |
 | `*Input` | what the client sends, inferred from its `*Schema` (`catSchema` → `CatInput`) | `shared/` | `CatInput`, `UserInput`, `ReviewInput`, `ChatMsgInput`, `ChatMsgUpdateInput`, `ChatMsgRemoveInput`, `ChatRoomInput`, `ChatTypingInput` |
-| `*WithRefs` | the wire type with refs joined in place of their ids (`ownerId` → `owner`) | `shared/` | `CatWithRefs`, `ReviewWithRefs` |
+| `*WithRefs` | the wire type with refs joined in place of their ids (`ownerId` → `owner`). A ref can be `null` where the join is a left join: chat keeps a msg whose author is gone (`user: null`) | `shared/` | `CatWithRefs`, `ReviewWithRefs`, `ChatMsgWithRefs` |
 | `*Ref` | the slice of an entity a join carries, from `<ENTITY>_REF_FIELDS` | `shared/` | `CatRef`, `UserRef` |
 | `*Doc` | the DB shape of any of the above, with `ObjectId` ids | `backend/models/` | `CatDoc`, `UserDoc` (with the hash), `ReviewDoc`, `ChatMsgDoc`, `CatRefDoc`, `UserRefDoc`, `PublicUserDoc` |
 | `*JoinedDoc` | the aggregation output behind a `*WithRefs` | `backend/models/` | `CatJoinedDoc`, `ReviewJoinedDoc`, `ChatMsgJoinedDoc` |
@@ -75,8 +76,6 @@ page names (`CatDetails`, `Profile`, `ReviewDetails`) as type names. Also avoid:
 The ones that don't follow the pattern:
 - `ReviewContentInput`: what editing a review sends, `content` only.
   Avoid: `ReviewUpdate`.
-- `ChatMsg`: always carries the joined `user` (`UserRef | null`) in place of `userId`. Chat has no
-  un-joined wire type, so it takes the plain name, not `ChatMsgWithRefs`.
 - `ChatHistoryQuery`: the `beforeId` / `afterId` cursor of `GET /api/cats/:id/chat-msgs`.
   `ChatMsgOlderPage` / `ChatMsgNewerPage`: what it returns, by direction.
   Avoid: `ChatFilter` (it doesn't filter), `offset`, `cursor` as a field name.

@@ -12,7 +12,7 @@ import {
   CHAT_MSG_UPDATED,
   CHAT_PRESENCE_CHANGED,
   CHAT_TYPING,
-  type ChatMsg,
+  type ChatMsgWithRefs,
   type ChatPresence,
   type ChatTyping,
 } from '@cat-store/shared'
@@ -112,14 +112,17 @@ async function _joinedClient(user: UserDoc): Promise<ClientSocket> {
 }
 
 // Every msg the client gets in this event from here on
-function _collect(client: ClientSocket, event: string): ChatMsg[] {
-  const msgs: ChatMsg[] = []
-  client.on(event, ({ msg }: { msg: ChatMsg }) => msgs.push(msg))
+function _collect(client: ClientSocket, event: string): ChatMsgWithRefs[] {
+  const msgs: ChatMsgWithRefs[] = []
+  client.on(event, ({ msg }: { msg: ChatMsgWithRefs }) => msgs.push(msg))
   return msgs
 }
 
 // A msg saved through the real chat:msg-add, by a client already in the room
-async function _addMsg(client: ClientSocket, text = 'Is she still available?'): Promise<ChatMsg> {
+async function _addMsg(
+  client: ClientSocket,
+  text = 'Is she still available?',
+): Promise<ChatMsgWithRefs> {
   const { msg } = await client.emitWithAck(CHAT_MSG_ADD, { catId, clientMsgId: randomUUID(), text })
   return msg
 }
@@ -234,7 +237,7 @@ describe('chat:msg-add', () => {
     await _flush(sender)
     await _flush(other)
 
-    const expected: ChatMsg = {
+    const expected: ChatMsgWithRefs = {
       _id: expect.any(String),
       catId,
       clientMsgId: payload.clientMsgId,
@@ -353,7 +356,7 @@ describe('chat:msg-add', () => {
 })
 
 describe('chat:msg-update', () => {
-  function _payload(msg: ChatMsg, text = 'Still available?') {
+  function _payload(msg: ChatMsgWithRefs, text = 'Still available?') {
     return { catId, msgId: msg._id, text }
   }
 
@@ -478,12 +481,15 @@ describe('chat:msg-update', () => {
 })
 
 describe('chat:msg-remove', () => {
-  function _payload(msg: ChatMsg) {
+  function _payload(msg: ChatMsgWithRefs) {
     return { catId, msgId: msg._id }
   }
 
   // No text on the wire, the rest as it was
-  function _tombstone({ text: _text, ...msg }: ChatMsg & { text?: string }): ChatMsg {
+  function _tombstone({
+    text: _text,
+    ...msg
+  }: ChatMsgWithRefs & { text?: string }): ChatMsgWithRefs {
     return { ...msg, isDeleted: true }
   }
 

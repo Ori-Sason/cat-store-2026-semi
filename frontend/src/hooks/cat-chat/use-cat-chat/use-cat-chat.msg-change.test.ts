@@ -1,4 +1,4 @@
-import type { ChatMsg, ChatMsgOlderPage } from '@cat-store/shared'
+import type { ChatMsgWithRefs, ChatMsgOlderPage } from '@cat-store/shared'
 import { act, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { ApiError } from '../../../models/api-error'
@@ -42,11 +42,11 @@ describe('useCatChat updateMsg and removeMsg', () => {
     )
   }
 
-  function _editedMsg(n: number, text = 'edited'): ChatMsg {
+  function _editedMsg(n: number, text = 'edited'): ChatMsgWithRefs {
     return { ...makeMsg(n), isDeleted: false, text, updatedAt: n + 100 }
   }
 
-  function _textOf(msg: ChatMsg | undefined) {
+  function _textOf(msg: ChatMsgWithRefs | undefined) {
     return msg && !msg.isDeleted ? msg.text : null
   }
 

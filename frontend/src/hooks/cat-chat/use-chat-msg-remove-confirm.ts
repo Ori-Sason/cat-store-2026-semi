@@ -1,14 +1,14 @@
 import type React from 'react'
 import { useEffect, useRef, useState } from 'react'
-import type { ChatMsg } from '@cat-store/shared'
+import type { ChatMsgWithRefs } from '@cat-store/shared'
 
-type ChatMsgWithText = Extract<ChatMsg, { isDeleted: false }>
+type ChatMsgWithText = Extract<ChatMsgWithRefs, { isDeleted: false }>
 
 // The delete confirm's state and focus rules. The caller renders the confirm with msgToRemove,
 // makes the log inert while isOpen (the confirm is showing), and calls cancel() when the panel
 // closes, so a chat reopen starts without the confirm
 export function useChatMsgRemoveConfirm(
-  msgs: ChatMsg[],
+  msgs: ChatMsgWithRefs[],
   removeMsg: (msgId: string) => Promise<boolean>,
   panelRef: React.RefObject<HTMLElement | null>,
 ) {

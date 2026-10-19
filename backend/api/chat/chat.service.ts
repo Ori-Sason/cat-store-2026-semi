@@ -2,7 +2,7 @@ import { MongoServerError, ObjectId, type Document, type Filter } from 'mongodb'
 import {
   USER_REF_FIELDS,
   type ChatHistoryQuery,
-  type ChatMsg,
+  type ChatMsgWithRefs,
   type ChatMsgInput,
   type ChatMsgNewerPage,
   type ChatMsgOlderPage,
@@ -50,14 +50,14 @@ async function query(
   return { msgs, nextBeforeId: isMore ? msgs[0]!._id : null }
 }
 
-// Saves a msg and returns it joined, as the wire ChatMsg. isNew is false for a retry of a msg
+// Saves a msg and returns it joined, as the wire ChatMsgWithRefs. isNew is false for a retry of a msg
 // that was already saved (same userId + clientMsgId): the unique index rejects the second
 // insert, and the saved msg comes back instead of an error. The controller broadcasts only a new one.
 // The cat isn't read: chat:join is the gate, and requireRoomMember already checked membership
 async function add(
   { catId, clientMsgId, text }: ChatMsgInput,
   userId: string,
-): Promise<{ msg: ChatMsg; isNew: boolean }> {
+): Promise<{ msg: ChatMsgWithRefs; isNew: boolean }> {
   const collection = await mongoService.getCollection<ChatMsgDoc>(CHAT_MSG_COLLECTION)
   const now = Date.now()
   const doc: ChatMsgDoc = {
@@ -98,7 +98,7 @@ async function getByIdAndRoom(msgId: string, catId: string): Promise<ChatMsgDoc>
 // filter, not checked before: a msg deleted between requireChatMsgPermission's read and this
 // write is caught here, atomically. From the user's view a deleted msg is gone, so it's
 // CHAT_MSG_NOT_FOUND
-async function update({ catId, msgId, text }: ChatMsgUpdateInput): Promise<ChatMsg> {
+async function update({ catId, msgId, text }: ChatMsgUpdateInput): Promise<ChatMsgWithRefs> {
   const collection = await mongoService.getCollection<ChatMsgDoc>(CHAT_MSG_COLLECTION)
   const _id = new ObjectId(msgId)
   const { matchedCount } = await collection.updateOne(
@@ -117,7 +117,7 @@ async function update({ catId, msgId, text }: ChatMsgUpdateInput): Promise<ChatM
 async function remove({
   catId,
   msgId,
-}: ChatMsgRemoveInput): Promise<{ msg: ChatMsg; isNew: boolean }> {
+}: ChatMsgRemoveInput): Promise<{ msg: ChatMsgWithRefs; isNew: boolean }> {
   const collection = await mongoService.getCollection<ChatMsgDoc>(CHAT_MSG_COLLECTION)
   const _id = new ObjectId(msgId)
   const { matchedCount, modifiedCount } = await collection.updateOne(
@@ -129,7 +129,7 @@ async function remove({
 }
 
 // The doc has only userId. For the user details we need to aggregate
-async function _getJoinedById(_id: ObjectId): Promise<ChatMsg> {
+async function _getJoinedById(_id: ObjectId): Promise<ChatMsgWithRefs> {
   const collection = await mongoService.getCollection<ChatMsgDoc>(CHAT_MSG_COLLECTION)
   const [doc] = await collection
     .aggregate<ChatMsgJoinedDoc>([{ $match: { _id } }, ..._userStages()])
@@ -176,7 +176,7 @@ function _toWireMsg({
   createdAt,
   updatedAt,
   user,
-}: ChatMsgJoinedDoc): ChatMsg {
+}: ChatMsgJoinedDoc): ChatMsgWithRefs {
   const base = {
     _id: _id.toHexString(),
     catId: catId.toHexString(),

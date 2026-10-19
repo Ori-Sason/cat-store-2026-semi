@@ -1,5 +1,5 @@
 import { render, screen, within } from '@testing-library/react'
-import type { ChatMsg } from '@cat-store/shared'
+import type { ChatMsgWithRefs } from '@cat-store/shared'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { PendingChatMsg } from '../../../../models/chat'
 import { utilService } from '../../../../services/util.service'
@@ -10,7 +10,7 @@ const NOW = new Date(2026, 9, 19, 12, 0).getTime()
 const YESTERDAY = new Date(2026, 9, 18, 23, 50).getTime()
 const OLDER = new Date(2026, 9, 9, 14, 20).getTime()
 
-function _makeMsg(_id: string, createdAt: number): ChatMsg {
+function _makeMsg(_id: string, createdAt: number): ChatMsgWithRefs {
   return {
     _id,
     catId: 'cat-1',
@@ -23,7 +23,7 @@ function _makeMsg(_id: string, createdAt: number): ChatMsg {
   }
 }
 
-function _render(msgs: ChatMsg[], pendingMsgs: PendingChatMsg[] = []) {
+function _render(msgs: ChatMsgWithRefs[], pendingMsgs: PendingChatMsg[] = []) {
   render(
     <ChatLog
       msgs={msgs}

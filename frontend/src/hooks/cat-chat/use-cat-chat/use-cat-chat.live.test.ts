@@ -1,4 +1,4 @@
-import type { ChatMsg } from '@cat-store/shared'
+import type { ChatMsgWithRefs } from '@cat-store/shared'
 import { act, waitFor } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { chatService } from '../../../services/chat.service'
@@ -81,7 +81,7 @@ describe('useCatChat live msgs', () => {
 // The race: the chat is closed, so a live copy lands first, then the first open's fetch brings a
 // copy it read earlier or later. The content decides, not the arrival order
 describe('useCatChat merge of two copies of one msg', () => {
-  async function _openAfterLiveCopy(liveMsg: ChatMsg, fetchedMsg: ChatMsg) {
+  async function _openAfterLiveCopy(liveMsg: ChatMsgWithRefs, fetchedMsg: ChatMsgWithRefs) {
     vi.mocked(chatService.getOlderPage).mockResolvedValue({
       msgs: [fetchedMsg],
       nextBeforeId: null,
@@ -93,7 +93,12 @@ describe('useCatChat merge of two copies of one msg', () => {
     return result.current.msgs
   }
 
-  const _edited: ChatMsg = { ...makeMsg(1), isDeleted: false, updatedAt: 100, text: 'edited' }
+  const _edited: ChatMsgWithRefs = {
+    ...makeMsg(1),
+    isDeleted: false,
+    updatedAt: 100,
+    text: 'edited',
+  }
   const _tombstone = makeTombstone(1)
 
   it('keeps an edit when a stale copy lands after it', async () => {

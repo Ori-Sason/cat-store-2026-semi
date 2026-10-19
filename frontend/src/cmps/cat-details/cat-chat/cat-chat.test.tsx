@@ -1,6 +1,6 @@
 import { act, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import type { ChatMsg, LoggedInUser } from '@cat-store/shared'
+import type { ChatMsgWithRefs, LoggedInUser } from '@cat-store/shared'
 import { createMemoryRouter, RouterProvider } from 'react-router'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { useCatChat } from '../../../hooks/cat-chat/use-cat-chat/use-cat-chat'
@@ -20,7 +20,7 @@ const USER: LoggedInUser = {
 }
 const CAT_ID = 'aaaaaaaaaaaaaaaaaaaaaaaa'
 
-const MSG: ChatMsg = {
+const MSG: ChatMsgWithRefs = {
   _id: 'msg-1',
   catId: CAT_ID,
   clientMsgId: 'client-1',
@@ -300,7 +300,7 @@ describe('CatChat', () => {
 
   describe('the inline edit', () => {
     it('saves through the hook', async () => {
-      const ownMsg: ChatMsg = {
+      const ownMsg: ChatMsgWithRefs = {
         ...MSG,
         user: { _id: USER._id, fullname: USER.fullname, isAdmin: false },
       }
@@ -317,7 +317,7 @@ describe('CatChat', () => {
   })
 
   describe('the delete confirm', () => {
-    const OWN_MSG: ChatMsg = {
+    const OWN_MSG: ChatMsgWithRefs = {
       ...MSG,
       user: { _id: USER._id, fullname: USER.fullname, isAdmin: false },
     }

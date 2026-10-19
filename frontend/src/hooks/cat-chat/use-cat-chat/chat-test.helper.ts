@@ -1,4 +1,9 @@
-import type { ChatMsg, ChatMsgNewerPage, ChatMsgOlderPage, LoggedInUser } from '@cat-store/shared'
+import type {
+  ChatMsgWithRefs,
+  ChatMsgNewerPage,
+  ChatMsgOlderPage,
+  LoggedInUser,
+} from '@cat-store/shared'
 import { renderHook, waitFor } from '@testing-library/react'
 import { beforeEach, expect, vi } from 'vitest'
 import { chatService } from '../../../services/chat.service'
@@ -42,7 +47,7 @@ export function makeMsgId(n: number) {
   return n.toString(16).padStart(24, '0')
 }
 
-export function makeMsg(n: number, catId = CAT_ID): ChatMsg {
+export function makeMsg(n: number, catId = CAT_ID): ChatMsgWithRefs {
   return {
     _id: makeMsgId(n),
     catId,
@@ -57,7 +62,7 @@ export function makeMsg(n: number, catId = CAT_ID): ChatMsg {
 
 // Built field by field: the wire tombstone has no text. A remove sets only isDeleted: updatedAt
 // stays
-export function makeTombstone(n: number): ChatMsg {
+export function makeTombstone(n: number): ChatMsgWithRefs {
   const { _id, catId, clientMsgId, createdAt, updatedAt, user } = makeMsg(n)
   return { _id, catId, clientMsgId, createdAt, updatedAt, user, isDeleted: true }
 }
@@ -70,7 +75,7 @@ export function makeNewerPage(ns: number[], nextAfterId: string | null): ChatMsg
   return { msgs: ns.map((n) => makeMsg(n)), nextAfterId }
 }
 
-export function idsOf(msgs: ChatMsg[]) {
+export function idsOf(msgs: ChatMsgWithRefs[]) {
   return msgs.map((msg) => msg._id)
 }
 

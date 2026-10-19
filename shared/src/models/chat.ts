@@ -113,7 +113,7 @@ export type ChatHistoryQuery = z.infer<typeof chatHistoryQuerySchema>
 
 // Like ReviewWithRefs, userId is replaced by the slim user (never username). user is null when the
 // author's account is gone: chat keeps the message (a left join), where reviews drop it
-interface ChatMsgBase {
+interface ChatMsgWithRefsBase {
   _id: string
   catId: string
   clientMsgId: string
@@ -124,18 +124,18 @@ interface ChatMsgBase {
 
 // A deleted message is a tombstone with no text, so TS won't let the FE read text off it.
 // The text stays in the DB, never on the wire
-export type ChatMsg =
-  | (ChatMsgBase & { isDeleted: false; text: string })
-  | (ChatMsgBase & { isDeleted: true })
+export type ChatMsgWithRefs =
+  | (ChatMsgWithRefsBase & { isDeleted: false; text: string })
+  | (ChatMsgWithRefsBase & { isDeleted: true })
 
 // History pages, msgs oldest first in both directions. A cursor is null when nothing more
 // exists that way
 export interface ChatMsgOlderPage {
-  msgs: ChatMsg[]
+  msgs: ChatMsgWithRefs[]
   nextBeforeId: string | null
 }
 
 export interface ChatMsgNewerPage {
-  msgs: ChatMsg[]
+  msgs: ChatMsgWithRefs[]
   nextAfterId: string | null
 }

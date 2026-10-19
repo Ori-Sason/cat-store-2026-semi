@@ -1,6 +1,6 @@
 import type React from 'react'
 import { useEffect, useLayoutEffect, useRef } from 'react'
-import type { ChatMsg } from '@cat-store/shared'
+import type { ChatMsgWithRefs } from '@cat-store/shared'
 import type { ChatMsgBusyAction } from '../../../../hooks/cat-chat/use-cat-chat/chat-state'
 import type { PendingChatMsg } from '../../../../models/chat'
 import { utilService } from '../../../../services/util.service'
@@ -10,7 +10,7 @@ import { ChatMsgPreview } from '../chat-msg/chat-msg-preview'
 const _STICK_TO_BOTTOM_PX = 48
 
 interface ChatLogProps {
-  msgs: ChatMsg[]
+  msgs: ChatMsgWithRefs[]
   pendingMsgs: PendingChatMsg[] // shown below the saved msgs, in send order
   catOwnerId: string
   isOlderAvailable: boolean
@@ -25,7 +25,7 @@ interface ChatLogProps {
 // A saved msg is keyed by its _id, a pending one by its clientMsgId (it has no _id yet)
 interface LogRow {
   key: string
-  msg: ChatMsg | PendingChatMsg
+  msg: ChatMsgWithRefs | PendingChatMsg
 }
 
 // What the log looked like after the last render, to compare against after the next one
@@ -164,7 +164,7 @@ function _readScroll(log: HTMLElement) {
 
 // Consecutive rows of one local calendar day. msgs are in _id order, which is time order, and the
 // pending ones come after them: they were sent just now
-function _groupByDay(msgs: ChatMsg[], pendingMsgs: PendingChatMsg[]) {
+function _groupByDay(msgs: ChatMsgWithRefs[], pendingMsgs: PendingChatMsg[]) {
   const rows: LogRow[] = [
     ...msgs.map((msg) => ({ key: msg._id, msg })),
     ...pendingMsgs.map((msg) => ({ key: msg.clientMsgId, msg })),

@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import type { ChatMsg, LoggedInUser } from '@cat-store/shared'
+import type { ChatMsgWithRefs, LoggedInUser } from '@cat-store/shared'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { ChatMsgBusyAction } from '../../../../hooks/cat-chat/use-cat-chat/chat-state'
 import type { PendingChatMsg } from '../../../../models/chat'
@@ -16,7 +16,7 @@ const AUTHOR: LoggedInUser = {
 const OTHER_USER: LoggedInUser = { ...AUTHOR, _id: 'user-2', username: 'noam' }
 const CAT_OWNER_ID = 'owner-1'
 
-const MSG: ChatMsg = {
+const MSG: ChatMsgWithRefs = {
   _id: 'msg-1',
   catId: 'cat-1',
   clientMsgId: 'client-1',
@@ -28,7 +28,7 @@ const MSG: ChatMsg = {
 }
 
 function _render(
-  msg: ChatMsg | PendingChatMsg,
+  msg: ChatMsgWithRefs | PendingChatMsg,
   loggedInUser: LoggedInUser | null = null,
   onRetry?: () => void,
 ) {
@@ -40,7 +40,7 @@ function _render(
   return container.querySelector('article')
 }
 
-function _byAuthor(user: ChatMsg['user']): ChatMsg {
+function _byAuthor(user: ChatMsgWithRefs['user']): ChatMsgWithRefs {
   return { ...MSG, user }
 }
 
@@ -126,7 +126,7 @@ describe('ChatMsgPreview', () => {
 
   describe('the pending states', () => {
     function _pending(sendStatus: PendingChatMsg['sendStatus']): PendingChatMsg {
-      const { _id: _unused, ...rest } = MSG as Extract<ChatMsg, { isDeleted: false }>
+      const { _id: _unused, ...rest } = MSG as Extract<ChatMsgWithRefs, { isDeleted: false }>
       const user = { _id: AUTHOR._id, fullname: AUTHOR.fullname, isAdmin: false }
       return { ...rest, user, sendStatus }
     }
@@ -162,7 +162,7 @@ describe('ChatMsgPreview', () => {
     const ADMIN: LoggedInUser = { ...OTHER_USER, _id: 'admin-1', username: 'admin', isAdmin: true }
 
     function _renderEditable(
-      msg: ChatMsg | PendingChatMsg,
+      msg: ChatMsgWithRefs | PendingChatMsg,
       loggedInUser: LoggedInUser | null,
       { busyAction, isSaved = true }: { busyAction?: ChatMsgBusyAction; isSaved?: boolean } = {},
     ) {

@@ -1,4 +1,4 @@
-import type { ChatMsg, ChatMsgOlderPage } from '@cat-store/shared'
+import type { ChatMsgWithRefs, ChatMsgOlderPage } from '@cat-store/shared'
 import type { Dispatch, SetStateAction } from 'react'
 import type { CatChatState } from './chat-state'
 import {
@@ -31,7 +31,7 @@ export interface ChatRoomTracker {
   // The latest copy of every msg an edit or a remove changed during this join, held or not. A
   // fetch that read the DB before the change can land after it, and this copy wins over the
   // fetched one
-  changedMsgById: Map<string, ChatMsg>
+  changedMsgById: Map<string, ChatMsgWithRefs>
   // The viewer's own typing (see typing.ts). Read by timers and the leave, outside a render
   ownTyping: OwnTyping
   // One timer per user shown as typing, which drops them when no refresh comes. By user _id
@@ -78,7 +78,7 @@ export function updateChat(
 // newestMsgId never misses one. A saved msg also replaces its pending copy, whichever path
 // brings it: the ack, the broadcast, or a gap fill (a send that failed on a lost connection may
 // have been saved before the drop). A copy older than a change seen live is swapped for it
-export function addMsgs(roomTracker: ChatRoomTracker, msgs: ChatMsg[]) {
+export function addMsgs(roomTracker: ChatRoomTracker, msgs: ChatMsgWithRefs[]) {
   if (!roomTracker.isActive || !msgs.length) return
   roomTracker.newestMsgId = getNewestMsgId(roomTracker.newestMsgId, msgs)
   const clientMsgIds = new Set(msgs.map((msg) => msg.clientMsgId))
@@ -94,7 +94,7 @@ export function addMsgs(roomTracker: ChatRoomTracker, msgs: ChatMsg[]) {
 // the log already holds. An old msg the log hasn't loaded would otherwise sit alone above a
 // gap, and "load older" pages from the oldest held _id, so it would skip every msg in between.
 // The copy is kept for the fetch that brings that msg later
-export function changeMsg(roomTracker: ChatRoomTracker, msg: ChatMsg) {
+export function changeMsg(roomTracker: ChatRoomTracker, msg: ChatMsgWithRefs) {
   if (!roomTracker.isActive) return
   roomTracker.changedMsgById.set(
     msg._id,

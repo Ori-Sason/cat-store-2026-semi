@@ -1,4 +1,4 @@
-import type { ChatMsg } from '@cat-store/shared'
+import type { ChatMsgWithRefs } from '@cat-store/shared'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { chatService } from './chat.service'
 import { httpService } from './http.service'
@@ -7,7 +7,7 @@ vi.mock('./http.service')
 
 const _ENDPOINT = 'cats/cat-1/chat-msgs'
 
-const _MSG: ChatMsg = {
+const _MSG: ChatMsgWithRefs = {
   _id: 'msg-1',
   catId: 'cat-1',
   clientMsgId: 'client-1',

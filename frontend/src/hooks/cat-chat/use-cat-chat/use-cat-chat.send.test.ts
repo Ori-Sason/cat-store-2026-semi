@@ -1,4 +1,4 @@
-import type { ChatMsg, ChatMsgInput } from '@cat-store/shared'
+import type { ChatMsgWithRefs, ChatMsgInput } from '@cat-store/shared'
 import { act, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { ApiError } from '../../../models/api-error'
@@ -45,7 +45,7 @@ describe('useCatChat sendMsg', () => {
   }
 
   // The saved copy the server would return for the nth send
-  function _savedMsg(n: number, sendIndex = 0): ChatMsg {
+  function _savedMsg(n: number, sendIndex = 0): ChatMsgWithRefs {
     const payload = _sendCalls()[sendIndex][1] as ChatMsgInput
     return { ...makeMsg(n), isDeleted: false, clientMsgId: payload.clientMsgId, text: payload.text }
   }
