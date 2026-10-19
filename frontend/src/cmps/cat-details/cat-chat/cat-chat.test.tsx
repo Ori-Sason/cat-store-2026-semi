@@ -230,6 +230,25 @@ describe('CatChat', () => {
     })
   })
 
+  // The editor's own behavior is in chat-msg-preview's tests. This pins the _id the log binds
+  describe('the inline edit', () => {
+    it('saves through the hook', async () => {
+      const ownMsg: ChatMsg = {
+        ...MSG,
+        user: { _id: USER._id, fullname: USER.fullname, isAdmin: false },
+      }
+      const chat = _mockChat({ msgs: [ownMsg], updateMsg: vi.fn(async () => true) })
+      _render()
+      await _open()
+      await userEvent.click(screen.getByRole('button', { name: 'Message actions' }))
+      await userEvent.click(screen.getByRole('button', { name: 'Edit' }))
+
+      await userEvent.type(screen.getByRole('textbox', { name: 'Edit message' }), '!{Enter}')
+
+      expect(chat.updateMsg).toHaveBeenCalledExactlyOnceWith(ownMsg._id, `${ownMsg.text}!`)
+    })
+  })
+
   describe('the delete confirm', () => {
     const OWN_MSG: ChatMsg = {
       ...MSG,
@@ -322,21 +341,5 @@ describe('CatChat', () => {
 
       expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
     })
-  })
-
-  it('saves an inline edit through the hook', async () => {
-    const ownMsg: ChatMsg = {
-      ...MSG,
-      user: { _id: USER._id, fullname: USER.fullname, isAdmin: false },
-    }
-    const chat = _mockChat({ msgs: [ownMsg], updateMsg: vi.fn(async () => true) })
-    _render()
-    await _open()
-    await userEvent.click(screen.getByRole('button', { name: 'Message actions' }))
-    await userEvent.click(screen.getByRole('button', { name: 'Edit' }))
-
-    await userEvent.type(screen.getByRole('textbox', { name: 'Edit message' }), '!{Enter}')
-
-    expect(chat.updateMsg).toHaveBeenCalledExactlyOnceWith(ownMsg._id, `${ownMsg.text}!`)
   })
 })
