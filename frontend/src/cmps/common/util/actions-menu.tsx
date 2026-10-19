@@ -20,6 +20,7 @@ export const ActionsMenu: React.FC<ActionsMenuProps> = ({
 }) => {
   const popoverRef = useRef<HTMLDivElement>(null)
   const menuBtnRef = useRef<HTMLButtonElement>(null)
+  const isMenuOpenRef = useRef(false)
   const menuId = useId()
   const anchorName = `--actions-menu${menuId}`
 
@@ -33,8 +34,15 @@ export const ActionsMenu: React.FC<ActionsMenuProps> = ({
     action()
   }
 
+  // The browser closes the popover on Escape, but the key still bubbles up. Stop it while the
+  // menu is open, so a container that closes on Escape (the chat panel) stays open. keydown runs
+  // before the popover closes, so the ref still says open here
+  function onKeyDown(ev: React.KeyboardEvent) {
+    if (ev.key === 'Escape' && isMenuOpenRef.current) ev.stopPropagation()
+  }
+
   return (
-    <div className="actions-menu">
+    <div className="actions-menu" onKeyDown={onKeyDown}>
       <button
         ref={menuBtnRef}
         type="button"
@@ -52,6 +60,7 @@ export const ActionsMenu: React.FC<ActionsMenuProps> = ({
         popover="auto"
         ref={popoverRef}
         style={{ positionAnchor: anchorName }}
+        onToggle={(ev) => (isMenuOpenRef.current = ev.newState === 'open')}
       >
         {onEdit && (
           <button type="button" onClick={() => onChoose(onEdit)}>

@@ -127,6 +127,19 @@ describe('CatChat', () => {
       await userEvent.keyboard('{Escape}')
       expect(screen.queryByRole('region', { name: 'Chat' })).not.toBeInTheDocument()
     })
+
+    // The browser closes the popover on Escape but lets the key bubble up to the panel
+    it('stays open on an Escape that closes a msg ⋮ menu', async () => {
+      _mockChat({ msgs: [{ ...MSG, user: { ...MSG.user!, _id: USER._id } }] })
+      _render()
+      await _open()
+      await userEvent.click(screen.getByRole('button', { name: 'Message actions' }))
+
+      await userEvent.keyboard('{Escape}')
+
+      expect(screen.queryByRole('button', { name: 'Edit' })).not.toBeInTheDocument()
+      expect(screen.getByRole('region', { name: 'Chat' })).toBeInTheDocument()
+    })
   })
 
   describe('the panel body', () => {

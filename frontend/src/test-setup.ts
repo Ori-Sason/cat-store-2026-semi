@@ -42,9 +42,16 @@ HTMLDialogElement.prototype.close ??= function (this: HTMLDialogElement) {
 
 // jsdom has no Popover API, and its default stylesheet hides every [popover] (it never matches
 // :popover-open). Emulate what the popover menus use: show / hide / toggle flip an inline
-// display, and a click on a popovertarget button toggles its popover, as a browser does
+// display and fire `toggle`, a click on a popovertarget button toggles its popover, and Escape
+// closes every open one, as a browser does
 function _setPopoverOpen(el: HTMLElement, isOpen: boolean) {
+  const wasOpen = el.style.display === 'block'
   el.style.display = isOpen ? 'block' : ''
+  if (wasOpen !== isOpen) {
+    const newState = isOpen ? 'open' : 'closed'
+    const oldState = isOpen ? 'closed' : 'open'
+    el.dispatchEvent(Object.assign(new Event('toggle'), { newState, oldState }))
+  }
   return isOpen
 }
 HTMLElement.prototype.showPopover ??= function (this: HTMLElement) {
@@ -61,3 +68,15 @@ document.addEventListener('click', (ev) => {
   if (!invoker || invoker.disabled) return
   document.getElementById(invoker.getAttribute('popovertarget')!)?.togglePopover()
 })
+// The browser closes after the keydown dispatch, whether or not a handler stopped it. Capture
+// sees every keydown, and the microtask waits for the dispatch to end
+document.addEventListener(
+  'keydown',
+  (ev) => {
+    if (ev.key !== 'Escape') return
+    queueMicrotask(() => {
+      for (const el of document.querySelectorAll<HTMLElement>('[popover]')) el.hidePopover()
+    })
+  },
+  { capture: true },
+)
