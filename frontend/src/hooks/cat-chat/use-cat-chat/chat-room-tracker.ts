@@ -32,6 +32,18 @@ export interface ChatRoomTracker {
   // fetch that read the DB before the change can land after it, and this copy wins over the
   // fetched one
   changedMsgById: Map<string, ChatMsg>
+  // The viewer's own typing (see typing.ts). Read by timers and the leave, outside a render
+  ownTyping: OwnTyping
+  // One timer per user shown as typing, which drops them when no refresh comes. By user _id
+  typerTimeoutById: Map<string, ReturnType<typeof setTimeout>>
+}
+
+// isTyping: the last chat:typing sent said true. lastSentAt: when that true went out, for the
+// throttle. idleTimeout: sends the false once the viewer stops typing
+export interface OwnTyping {
+  isTyping: boolean
+  lastSentAt: number
+  idleTimeout: ReturnType<typeof setTimeout> | null
 }
 
 export function createChatRoomTracker(
@@ -48,6 +60,8 @@ export function createChatRoomTracker(
     firstPagePromise: null,
     newestMsgId: null,
     changedMsgById: new Map(),
+    ownTyping: { isTyping: false, lastSentAt: 0, idleTimeout: null },
+    typerTimeoutById: new Map(),
   }
 }
 

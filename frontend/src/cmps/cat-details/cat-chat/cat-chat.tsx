@@ -12,6 +12,7 @@ import { ChatIcon } from './chat-icon'
 import { ChatJoinError } from './chat-main/chat-join-error'
 import { ChatLog } from './chat-main/chat-log'
 import { ChatMsgRemoveConfirm } from './chat-msg/chat-msg-remove-confirm'
+import { ChatTyping } from './chat-footer/chat-typing'
 
 interface CatChatProps {
   catId: string
@@ -42,6 +43,11 @@ export const CatChat: React.FC<CatChatProps> = ({ catId, catName, catOwnerId }) 
     if (isOpen) panelRef.current?.focus()
     else iconRef.current?.focus()
   }, [isOpen])
+
+  function onComposerTextChange(text: string) {
+    setComposerText(text)
+    chat.reportTyping(text)
+  }
 
   function toggleOpen(isOpenNext: boolean) {
     isToggledRef.current = true
@@ -100,11 +106,14 @@ export const CatChat: React.FC<CatChatProps> = ({ catId, catName, catOwnerId }) 
             />
           )}
 
+          {/* Guests see it too: the chat is public to read */}
+          <ChatTyping typers={chat.typers} />
+
           {loggedInUser ? (
             <ChatComposer
               catId={catId}
               text={composerText}
-              onTextChange={setComposerText}
+              onTextChange={onComposerTextChange}
               isDisabled={chat.status !== 'ready'}
               onSendMsg={chat.sendMsg}
             />

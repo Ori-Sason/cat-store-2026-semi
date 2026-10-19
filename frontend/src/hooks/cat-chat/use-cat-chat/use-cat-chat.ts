@@ -3,8 +3,10 @@ import {
   CHAT_MSG_ADDED,
   CHAT_MSG_REMOVED,
   CHAT_MSG_UPDATED,
+  CHAT_TYPING,
   type ChatMsg,
   type ChatRoomInput,
+  type ChatTyping,
   type LoggedInUser,
 } from '@cat-store/shared'
 import { useEffect, useEffectEvent, useRef, useState } from 'react'
@@ -22,6 +24,7 @@ import {
 } from './chat-room-tracker'
 import { emitMsgRemove, emitMsgUpdate, resendFailedMsg, sendNewMsg } from './msg-writes'
 import { join, loadFirstPage, loadOlderPage, rejoin } from './room-sync'
+import { clearTyperTimeouts, onTyping, reportOwnTyping, stopOwnTyping } from './typing'
 
 // The cat chat on cat-details. No Zustand store: only this page uses chat.
 // History doesn't come from a route loader, unlike the rest of the page's server data: it's
@@ -67,10 +70,15 @@ export function useCatChat(catId: string, isOpen: boolean) {
       if (msg.catId !== roomTracker.catId) return
       changeMsg(roomTracker, msg)
     }
+    const onTypingEvent = (typing: ChatTyping) => {
+      if (typing.catId !== roomTracker.catId) return
+      onTyping(roomTracker, typing)
+    }
     const onConnect = () => void rejoin(roomTracker)
     socketService.on(CHAT_MSG_ADDED, onMsgAdded)
     socketService.on(CHAT_MSG_UPDATED, onMsgChanged)
     socketService.on(CHAT_MSG_REMOVED, onMsgChanged)
+    socketService.on(CHAT_TYPING, onTypingEvent)
     socketService.on('connect', onConnect)
 
     return () => {
@@ -79,7 +87,11 @@ export function useCatChat(catId: string, isOpen: boolean) {
       socketService.off(CHAT_MSG_ADDED, onMsgAdded)
       socketService.off(CHAT_MSG_UPDATED, onMsgChanged)
       socketService.off(CHAT_MSG_REMOVED, onMsgChanged)
+      socketService.off(CHAT_TYPING, onTypingEvent)
       socketService.off('connect', onConnect)
+      clearTyperTimeouts(roomTracker)
+      // Before the leave: once out of the room, the server drops chat:typing
+      stopOwnTyping(roomTracker)
       socketService.emit(CHAT_LEAVE, { catId } satisfies ChatRoomInput)
     }
   }, [catId])
@@ -110,7 +122,17 @@ export function useCatChat(catId: string, isOpen: boolean) {
   function sendMsg(text: string) {
     const roomTracker = roomTrackerRef.current
     if (!roomTracker || !loggedInUser) return
+    // The false first, so the line clears as the msg lands, not after the idle wait
+    stopOwnTyping(roomTracker)
     sendNewMsg(roomTracker, loggedInUser, text)
+  }
+
+  // The composer calls it on every change of its text. A guest has no composer, and the server
+  // would drop their typing anyway
+  function reportTyping(text: string) {
+    const roomTracker = roomTrackerRef.current
+    if (!roomTracker || !loggedInUser) return
+    reportOwnTyping(roomTracker, text)
   }
 
   // Only its author can retry a failed msg: after a logout or a login as someone else, the row
@@ -145,9 +167,11 @@ export function useCatChat(catId: string, isOpen: boolean) {
     // The badge sits on the closed chat icon, so it's 0 while the panel is open
     unreadCount: isOpen ? 0 : chat.unreadCount,
     busyMsgs: chat.busyMsgs,
+    typers: chat.typers,
     loadOlder,
     retryLoadChat,
     sendMsg,
+    reportTyping,
     retrySendMsg,
     updateMsg,
     removeMsg,

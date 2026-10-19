@@ -42,9 +42,11 @@ function _mockChat(overrides: Partial<CatChatHook> = {}) {
     isLoadingOlder: false,
     unreadCount: 0,
     busyMsgs: {},
+    typers: [],
     loadOlder: vi.fn(),
     retryLoadChat: vi.fn(),
     sendMsg: vi.fn(),
+    reportTyping: vi.fn(),
     retrySendMsg: vi.fn(),
     updateMsg: vi.fn(),
     removeMsg: vi.fn(),
@@ -267,6 +269,26 @@ describe('CatChat', () => {
   })
 
   // The editor's own behavior is in chat-msg-preview's tests. This pins the _id the log binds
+  describe('typing', () => {
+    it('reports every change of the composer text to the hook', async () => {
+      const chat = _mockChat()
+      _render()
+      await _open()
+
+      await userEvent.type(screen.getByRole('textbox', { name: 'Message' }), 'Hi')
+
+      expect(chat.reportTyping).toHaveBeenNthCalledWith(1, 'H')
+      expect(chat.reportTyping).toHaveBeenNthCalledWith(2, 'Hi')
+    })
+
+    it('shows who is typing to a guest too', async () => {
+      _mockChat({ typers: [MSG.user!] })
+      _render(null)
+      await _open()
+      expect(screen.getByText('Noam Cohen is typing…')).toBeInTheDocument()
+    })
+  })
+
   describe('the inline edit', () => {
     it('saves through the hook', async () => {
       const ownMsg: ChatMsg = {
