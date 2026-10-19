@@ -7,7 +7,8 @@ const _MAX_BADGE_COUNT = 99
 interface ChatIconProps {
   unreadCount: number
   onOpen: () => void
-  ref?: Ref<HTMLButtonElement> // CatChat gives the focus back here when the panel closes
+  // Required: CatChat gives the focus back here when the panel closes
+  ref: Ref<HTMLButtonElement>
 }
 
 // The round button that opens the chat, bottom right, with the unread badge
