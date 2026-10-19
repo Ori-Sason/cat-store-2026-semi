@@ -1,5 +1,5 @@
 import type React from 'react'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { chatPermissionService, type ChatMsg } from '@cat-store/shared'
 import type { ChatMsgBusyAction } from '../../../../hooks/cat-chat/use-cat-chat/chat-state'
 import type { PendingChatMsg } from '../../../../models/chat'
@@ -34,6 +34,8 @@ export const ChatMsgPreview: React.FC<ChatMsgPreviewProps> = ({
 }) => {
   const loggedInUser = useLoggedInUserStore((state) => state.loggedInUser)
   const [isEditOpen, setIsEditOpen] = useState(false)
+  const menuBtnRef = useRef<HTMLButtonElement>(null)
+  const isFocusToMenuRef = useRef(false)
   const { user } = msg
   const sendStatus = 'sendStatus' in msg ? msg.sendStatus : null
   // A guest owns nothing, and a msg whose author is gone (user: null) is nobody's own. Without the
@@ -51,9 +53,24 @@ export const ChatMsgPreview: React.FC<ChatMsgPreviewProps> = ({
   // "Saving edit…" sits in the editor, which stays open until the ack
   const statusLabel = _getStatusLabel(sendStatus, busyAction)
 
-  // A failed save keeps the editor open with the typed text
+  // The focused control unmounts with the editor, which drops the focus to <body>: then the panel
+  // no longer gets Escape. Give it back to the ⋮ the editor opened from. Only on the user's close:
+  // when the editor closes by itself (a logout, a delete meanwhile), this row has no ⋮ to focus
+  useEffect(() => {
+    if (isEditOpen || !isFocusToMenuRef.current) return
+    isFocusToMenuRef.current = false
+    menuBtnRef.current?.focus()
+  }, [isEditOpen])
+
+  function closeEdit() {
+    isFocusToMenuRef.current = true
+    setIsEditOpen(false)
+  }
+
+  // A failed save keeps the editor open with the typed text. A saved one's busy state clears
+  // before onUpdate resolves, so the ⋮ is enabled again by the time it takes the focus
   async function onSave(text: string) {
-    if (await onUpdate?.(text)) setIsEditOpen(false)
+    if (await onUpdate?.(text)) closeEdit()
   }
 
   return (
@@ -68,6 +85,7 @@ export const ChatMsgPreview: React.FC<ChatMsgPreviewProps> = ({
           // The author only. An admin on someone else's msg gets Delete alone
           onEdit={isEditable ? () => setIsEditOpen(true) : undefined}
           onDelete={() => onRemove?.()}
+          menuBtnRef={menuBtnRef}
         />
       )}
       <header>
@@ -99,7 +117,7 @@ export const ChatMsgPreview: React.FC<ChatMsgPreviewProps> = ({
           initialText={msg.text}
           isSaving={busyAction === 'updating'}
           onSave={(text) => void onSave(text)}
-          onCancel={() => setIsEditOpen(false)}
+          onCancel={closeEdit}
         />
       ) : (
         <p className="text">

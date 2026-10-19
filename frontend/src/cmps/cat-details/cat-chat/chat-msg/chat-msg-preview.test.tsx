@@ -312,6 +312,21 @@ describe('ChatMsgPreview', () => {
         expect(onPanelKeyDown).not.toHaveBeenCalled()
       })
 
+      // The focused control unmounts with the editor. Left on <body>, the panel's Escape is dead
+      it.each([
+        ['Cancel', () => userEvent.click(screen.getByRole('button', { name: 'Cancel' }))],
+        ['Escape', () => userEvent.keyboard('{Escape}')],
+        ['a save', () => userEvent.keyboard(' Or cats?{Enter}')],
+      ])('gives the focus back to the ⋮ on %s', async (_name, closeEdit) => {
+        _renderEditable(MSG, AUTHOR)
+        await _openEdit()
+
+        await closeEdit()
+
+        expect(screen.queryByRole('textbox', { name: 'Edit message' })).not.toBeInTheDocument()
+        expect(screen.getByRole('button', { name: 'Message actions' })).toHaveFocus()
+      })
+
       it('shows "Saving edit…" and locks the editor while the ack is on its way', async () => {
         const { rerender } = _renderEditable(MSG, AUTHOR)
         await _openEdit()

@@ -6,6 +6,7 @@ interface ActionsMenuProps {
   isDisabled: boolean // while the item waits on its own save or delete
   onEdit?: () => void // left out → no Edit option (e.g. an admin on someone else's chat msg)
   onDelete: () => void
+  menuBtnRef?: React.RefObject<HTMLButtonElement | null> // for a caller that gives the ⋮ the focus back
 }
 
 // A ⋮ button that opens Edit / Delete, for a review row and a chat msg. A popover="auto" in the
@@ -17,9 +18,11 @@ export const ActionsMenu: React.FC<ActionsMenuProps> = ({
   isDisabled,
   onEdit,
   onDelete,
+  menuBtnRef: menuBtnRefProp,
 }) => {
   const popoverRef = useRef<HTMLDivElement>(null)
-  const menuBtnRef = useRef<HTMLButtonElement>(null)
+  const ownMenuBtnRef = useRef<HTMLButtonElement>(null)
+  const menuBtnRef = menuBtnRefProp ?? ownMenuBtnRef
   const isMenuOpenRef = useRef(false)
   const menuId = useId()
   const anchorName = `--actions-menu${menuId}`
