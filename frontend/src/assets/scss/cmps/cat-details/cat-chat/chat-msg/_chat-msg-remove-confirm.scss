@@ -1,6 +1,6 @@
 @use 'setup' as *;
 
-// The confirm modal's look, scoped to the panel body: it shares the body's grid cell (see
+// The confirm modal's look (the confirm-* mixins), scoped to the panel body: it shares the body's grid cell (see
 // _cat-chat.scss), so it dims the log and the composer and leaves the header alone
 .chat-msg-remove-confirm {
   grid-area: 2 / 1;
@@ -8,16 +8,12 @@
   display: grid;
   place-items: center;
   padding: $space-4;
-  background-color: rgba($primary-clr-900, 0.4);
+  background-color: $clr-backdrop;
 
   .box {
-    display: grid;
-    gap: $space-3;
     width: min(320px, 100%);
-    padding: $space-5;
-    border-radius: $radius-lg;
-    background-color: $clr-white;
-    box-shadow: $shadow-md;
+    @include confirm-surface;
+    @include confirm-layout;
   }
 
   h3 {
@@ -54,9 +50,6 @@
   }
 
   .confirm-btns {
-    display: flex;
-    justify-content: flex-end;
-    gap: $space-2;
-    margin-top: $space-2;
+    @include confirm-btns;
   }
 }

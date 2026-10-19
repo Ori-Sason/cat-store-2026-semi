@@ -18,6 +18,8 @@ $clr-success: rgb(30, 120, 70);
 $clr-grey: rgb(207, 205, 205);
 $clr-black: rgb(33, 33, 33);
 $clr-white: rgb(255, 255, 255);
+// The dimmed layer behind a confirm, page-wide or in the chat panel
+$clr-backdrop: rgba($primary-clr-900, 0.4);
 
 /* SPACING */
 $space-1: 4px;

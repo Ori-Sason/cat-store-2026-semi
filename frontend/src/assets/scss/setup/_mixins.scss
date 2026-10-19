@@ -169,3 +169,27 @@ $_pill-sizes: (
   color: $clr-white;
   background-color: $primary-clr-800;
 }
+
+// The confirm look, shared by ConfirmModal and the chat's in-panel delete confirm, so the two
+// can't drift apart. The surface and the layout are two mixins: the modal's <dialog> is the
+// surface and keeps no padding (a click on the dialog itself is a backdrop click), so the layout
+// goes on a box inside it
+@mixin confirm-surface {
+  border-radius: $radius-lg;
+  background-color: $clr-white;
+  box-shadow: $shadow-md;
+}
+
+@mixin confirm-layout {
+  display: grid;
+  gap: $space-3;
+  padding: $space-5;
+}
+
+// Cancel then the danger button, on the right
+@mixin confirm-btns {
+  display: flex;
+  justify-content: flex-end;
+  gap: $space-2;
+  margin-top: $space-2;
+}
