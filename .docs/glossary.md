@@ -28,8 +28,12 @@ Not here, so it isn't kept twice:
   author is `userId` and its cat is `catId`.
   Avoid: `comment`, `feedback`, `rating` (there's no score), `author` as a field name.
 - **chat** (`chatService`, `useCatChat`, `chat:*` events): the live room on one cat's page, one
-  per cat. The room is identified by `catId`. Modules and files are named `chat`.
-  Avoid: `room` as a module or type name, `conversation`, `thread`, `channel`.
+  per cat. The room is identified by `catId`. Modules and files are named `chat`. Its
+  **presence** (`ChatPresence`, `chat:presence-changed`) is who's on the cat's page right now,
+  i.e. in the room, whether or not the chat panel is open: distinct logged-in users, and guests
+  see the count, never the names.
+  Avoid: `room` as a module or type name, `conversation`, `thread`, `channel`. For presence:
+  `online`, `viewers`, `watchers`, `active users`.
 - **chat msg** (`chatMsgs`, `ChatMsg`, `CHAT_MSG_NOT_FOUND`, `chat:msg-*`): one message in a chat.
   Its author is `userId`, its cat is `catId`. Not a user msg (that's a UI popup, see UI).
   Rule: `msg` in code and routes (`/chat-msgs`), "message" in user-facing text.
@@ -70,6 +74,8 @@ The ones that don't follow the pattern:
   payloads. Each event gets its own schema, since a socket event has no URL to carry the ids.
 - `ChatTyping`: the `chat:typing` the server relays to the room, `ChatTypingInput` plus the
   typer's `user` (`UserRef`). Server → client only, so it has no schema.
+- `ChatPresence`: the `chat:presence-changed` snapshot, `{ catId, count, users }`, with
+  `users: null` for a guest socket. Server → client only, so it has no schema.
 - `ChatHistoryQuery`: the `beforeId` / `afterId` cursor of `GET /api/cats/:id/chat-msgs`.
   `ChatMsgOlderPage` / `ChatMsgNewerPage`: what it returns, by direction.
   Avoid: `ChatFilter` (it doesn't filter), `offset`, `cursor` as a field name.

@@ -17,7 +17,7 @@ import { requireRoomMember } from '../../middlewares/socket/require-room-member.
 import { requireSocketUser } from '../../middlewares/socket/require-socket-user.socket-middleware.ts'
 import { requireTokenUser } from '../../middlewares/socket/require-token-user.socket-middleware.ts'
 import { validatePayload } from '../../middlewares/socket/validate-payload.socket-middleware.ts'
-import type { AppSocket } from '../../models/socket.ts'
+import type { AppServer, AppSocket } from '../../models/socket.ts'
 import { socketService } from '../../services/socket.service.ts'
 import { chatSocketController } from './chat.socket-controller.ts'
 
@@ -64,4 +64,19 @@ export function registerChatSocketRoutes(socket: AppSocket): void {
     requireRoomMember,
     chatSocketController.relayTyping,
   )
+}
+
+// Room-level chat events, called once per server by socketService.setup.
+// Presence hooks the adapter's join-room / leave-room, not the join / leave controllers. One
+// place covers all three triggers: the adapter emits join-room only when the socket wasn't in the
+// room yet (a repeat join announces nothing), and leave-room after removing the socket (so the
+// snapshot already leaves it out), for a chat:leave and for every room on a disconnect.
+// A join cancelled by a leave never calls socket.join, so it announces nothing either.
+// The adapter is per process: with a multi-node adapter (Redis), each node keeps its own rooms,
+// so join-room fires only on the node the socket is on, and the snapshot would miss the other
+// nodes' sockets. Fine with one instance
+export function registerChatRoomEvents(io: AppServer): void {
+  const { adapter } = io.sockets
+  adapter.on('join-room', (room: string) => socketService.emitPresenceOnCatRoomChange(io, room))
+  adapter.on('leave-room', (room: string) => socketService.emitPresenceOnCatRoomChange(io, room))
 }

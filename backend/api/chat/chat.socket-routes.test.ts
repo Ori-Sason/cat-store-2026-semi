@@ -10,8 +10,10 @@ import {
   CHAT_MSG_REMOVED,
   CHAT_MSG_UPDATE,
   CHAT_MSG_UPDATED,
+  CHAT_PRESENCE_CHANGED,
   CHAT_TYPING,
   type ChatMsg,
+  type ChatPresence,
   type ChatTyping,
 } from '@cat-store/shared'
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -24,6 +26,7 @@ import { startSocketServer } from '../../test/socket-server.helper.ts'
 import { setupTestDb } from '../../test/test-db.helper.ts'
 import { authService } from '../auth/auth.service.ts'
 import { catService } from '../cat/cat.service.ts'
+import { chatSocketController } from './chat.socket-controller.ts'
 
 setupTestDb()
 
@@ -676,5 +679,140 @@ describe('chat:typing', () => {
     await _flush(other)
 
     expect(otherTypings).toEqual([])
+  })
+})
+
+describe('chat:presence-changed', () => {
+  // A connected client that records every presence snapshot from here on, before it joins
+  async function _presenceClient(user?: UserDoc) {
+    const client = await server.connectClient(user && _loginCookie(user))
+    const presences: ChatPresence[] = []
+    client.on(CHAT_PRESENCE_CHANGED, (presence: ChatPresence) => presences.push(presence))
+    return { client, presences }
+  }
+
+  function _userRef({ _id, fullname, isAdmin }: UserDoc) {
+    return { _id: _id.toHexString(), fullname, isAdmin }
+  }
+
+  it('sends the room a snapshot on a join, the joiner included, as UserRefs', async () => {
+    const maya = await _presenceClient(MAYA)
+    await maya.client.emitWithAck(CHAT_JOIN, { catId })
+    const noam = await _presenceClient(NOAM)
+
+    await noam.client.emitWithAck(CHAT_JOIN, { catId })
+    await _flush(maya.client)
+
+    const snapshot = { catId, count: 2, users: [_userRef(MAYA), _userRef(NOAM)] }
+    expect(maya.presences).toEqual([{ catId, count: 1, users: [_userRef(MAYA)] }, snapshot])
+    expect(noam.presences).toEqual([snapshot])
+    // toEqual already pins the shape, this states the rule
+    expect(JSON.stringify(noam.presences)).not.toContain('username')
+  })
+
+  it('sends the rest of the room a snapshot without the leaver on a leave', async () => {
+    const maya = await _presenceClient(MAYA)
+    await maya.client.emitWithAck(CHAT_JOIN, { catId })
+    const noam = await _presenceClient(NOAM)
+    await noam.client.emitWithAck(CHAT_JOIN, { catId })
+
+    await noam.client.emitWithAck(CHAT_LEAVE, { catId })
+    await _flush(maya.client)
+
+    expect(maya.presences.at(-1)).toEqual({ catId, count: 1, users: [_userRef(MAYA)] })
+    // The leaver is out of the room, so it gets nothing
+    expect(noam.presences).toHaveLength(1)
+  })
+
+  it('sends the rest of the room a snapshot without a socket that disconnected', async () => {
+    const maya = await _presenceClient(MAYA)
+    await maya.client.emitWithAck(CHAT_JOIN, { catId })
+    const noam = await _presenceClient(NOAM)
+    await noam.client.emitWithAck(CHAT_JOIN, { catId })
+
+    noam.client.disconnect()
+    await vi.waitFor(() => expect(maya.presences).toHaveLength(3))
+
+    expect(maya.presences.at(-1)).toEqual({ catId, count: 1, users: [_userRef(MAYA)] })
+  })
+
+  it('counts one user in two tabs once', async () => {
+    const tab1 = await _presenceClient(MAYA)
+    await tab1.client.emitWithAck(CHAT_JOIN, { catId })
+    const tab2 = await _presenceClient(MAYA)
+
+    await tab2.client.emitWithAck(CHAT_JOIN, { catId })
+
+    expect(tab2.presences).toEqual([{ catId, count: 1, users: [_userRef(MAYA)] }])
+  })
+
+  it("doesn't count a guest, and sends it the count with users: null", async () => {
+    const maya = await _presenceClient(MAYA)
+    await maya.client.emitWithAck(CHAT_JOIN, { catId })
+    const guest = await _presenceClient()
+
+    await guest.client.emitWithAck(CHAT_JOIN, { catId })
+    await _flush(maya.client)
+
+    expect(guest.presences).toEqual([{ catId, count: 1, users: null }])
+    expect(maya.presences.at(-1)).toEqual({ catId, count: 1, users: [_userRef(MAYA)] })
+  })
+
+  it('treats a socket whose token expired since the handshake as a guest', async () => {
+    const maya = await _presenceClient(MAYA)
+    await maya.client.emitWithAck(CHAT_JOIN, { catId })
+    // Not with fake timers: a Date jump makes the client's heartbeat think the connection is
+    // dead. fetchSockets hands back this socket's own data
+    const [mayaSocket] = await socketService.getIo().in(catRoom).fetchSockets()
+    mayaSocket!.data.tokenExp = Math.floor(Date.now() / 1000) - 1
+    const noam = await _presenceClient(NOAM)
+
+    await noam.client.emitWithAck(CHAT_JOIN, { catId })
+    await _flush(maya.client)
+
+    expect(noam.presences).toEqual([{ catId, count: 1, users: [_userRef(NOAM)] }])
+    expect(maya.presences.at(-1)).toEqual({ catId, count: 1, users: null })
+  })
+
+  it('sends nothing for a join that a leave cancelled during the cat read', async () => {
+    const maya = await _presenceClient(MAYA)
+    await maya.client.emitWithAck(CHAT_JOIN, { catId })
+    const noam = await _presenceClient(NOAM)
+    const { promise: catRead, resolve: finishCatRead } = Promise.withResolvers<CatDoc>()
+    const getById = vi.spyOn(catService, 'getById').mockReturnValueOnce(catRead)
+
+    const joinAck = noam.client.emitWithAck(CHAT_JOIN, { catId })
+    await vi.waitFor(() => expect(getById).toHaveBeenCalled())
+    await noam.client.emitWithAck(CHAT_LEAVE, { catId })
+    finishCatRead(cat)
+    await joinAck
+    await _flush(maya.client)
+
+    expect(maya.presences).toHaveLength(1)
+    expect(noam.presences).toEqual([])
+  })
+
+  it('sends nothing for a repeat join of a room the socket is already in', async () => {
+    const maya = await _presenceClient(MAYA)
+    await maya.client.emitWithAck(CHAT_JOIN, { catId })
+
+    await maya.client.emitWithAck(CHAT_JOIN, { catId })
+
+    expect(maya.presences).toHaveLength(1)
+  })
+
+  // The listener runs inside socket.join, so a throw there must not reach the join
+  it('still joins when the snapshot throws, and logs it', async () => {
+    vi.spyOn(chatSocketController, 'emitPresence').mockImplementationOnce(() => {
+      throw new Error('boom')
+    })
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const maya = await _presenceClient(MAYA)
+
+    const ack = await maya.client.emitWithAck(CHAT_JOIN, { catId })
+
+    expect(ack).toEqual({})
+    expect(await _socketIdsIn(catRoom)).toEqual([maya.client.id])
+    expect(consoleError).toHaveBeenCalled()
   })
 })

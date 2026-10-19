@@ -260,3 +260,37 @@ describe('socketService.on', () => {
     )
   })
 })
+
+describe('socketService.getCatIdFromRoomName', () => {
+  it('reverses getCatRoomName', () => {
+    const catId = '652f1c2e9b1e8a3d4c5b6a79'
+
+    expect(socketService.getCatIdFromRoomName(socketService.getCatRoomName(catId))).toBe(catId)
+  })
+
+  // Every socket also sits in a room named after its own id
+  it('returns null for a room that is not a cat room', () => {
+    expect(socketService.getCatIdFromRoomName('aB3xYz_socket-id')).toBeNull()
+  })
+})
+
+describe('socketService.getDistinctLiveUsers', () => {
+  function _socketOf(tokenUser: LoggedInUser | null, expiresInSec = 60) {
+    const tokenExp = tokenUser ? Math.floor(Date.now() / 1000) + expiresInSec : null
+    return createFakeSocket({ tokenUser, tokenExp }).socket
+  }
+
+  it('dedupes one user in two tabs, skips guests and expired tokens, and drops username', () => {
+    const other: LoggedInUser = { ...LOGGED_IN_USER, _id: '652f1c2e9b1e8a3d4c5b6a7a' }
+    const sockets = [
+      _socketOf(LOGGED_IN_USER),
+      _socketOf(null),
+      _socketOf(LOGGED_IN_USER),
+      _socketOf(other, -1),
+    ]
+
+    expect(socketService.getDistinctLiveUsers(sockets)).toEqual([
+      { _id: LOGGED_IN_USER._id, fullname: LOGGED_IN_USER.fullname, isAdmin: false },
+    ])
+  })
+})

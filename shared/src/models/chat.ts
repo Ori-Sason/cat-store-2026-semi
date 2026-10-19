@@ -15,6 +15,7 @@ export const CHAT_TYPING = 'chat:typing'
 export const CHAT_MSG_ADDED = 'chat:msg-added'
 export const CHAT_MSG_UPDATED = 'chat:msg-updated'
 export const CHAT_MSG_REMOVED = 'chat:msg-removed'
+export const CHAT_PRESENCE_CHANGED = 'chat:presence-changed'
 
 // Lowercased, unlike review ids. The regex is case-insensitive, so ABC… and abc… both pass and
 // find the same cat. But the room name and the FE's catId filter compare strings, so an
@@ -83,6 +84,17 @@ export type ChatTypingInput = z.infer<typeof chatTypingSchema>
 // username
 export interface ChatTyping extends ChatTypingInput {
   user: UserRef
+}
+
+// chat:presence-changed, server → each socket in the room: who's on the cat's page right now.
+// The full snapshot, never a ±1, so a missed event is fixed by the next one. count is the distinct
+// logged-in users, the viewer included (one user in two tabs counts once, guests not at all).
+// users is null for a guest socket: guests get the count, never the names. Server → client only,
+// so it has no schema
+export interface ChatPresence {
+  catId: string
+  count: number
+  users: UserRef[] | null
 }
 
 // GET /api/cats/:id/chat-msgs. Neither → the newest page, beforeId → older, afterId → newer

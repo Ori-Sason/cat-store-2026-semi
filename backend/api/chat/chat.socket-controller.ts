@@ -2,16 +2,18 @@ import {
   CHAT_MSG_ADDED,
   CHAT_MSG_REMOVED,
   CHAT_MSG_UPDATED,
+  CHAT_PRESENCE_CHANGED,
   CHAT_TYPING,
   type ChatMsg,
   type ChatMsgInput,
   type ChatMsgRemoveInput,
   type ChatMsgUpdateInput,
+  type ChatPresence,
   type ChatRoomInput,
   type ChatTyping,
   type ChatTypingInput,
 } from '@cat-store/shared'
-import type { SocketEvent } from '../../models/socket.ts'
+import type { AppServer, SocketEvent } from '../../models/socket.ts'
 import { alsService } from '../../services/als.service.ts'
 import { socketService } from '../../services/socket.service.ts'
 import { catService } from '../cat/cat.service.ts'
@@ -95,6 +97,29 @@ function relayTyping({ socket, payload }: SocketEvent<ChatTypingInput>): void {
   socket.to(socketService.getCatRoomName(payload.catId)).emit(CHAT_TYPING, typing)
 }
 
+// chat:presence-changed. Sends the room's presence snapshot to each socket in it, after a socket
+// joined or left (a disconnect included). Read from the adapter's room and socket.data, so no
+// state of its own and no DB read: a rename shows after the user's next login, fine for presence.
+// One emit per socket, not io.to(room): a guest socket gets the count with users: null, so the
+// names never reach a guest on the wire. Rooms are small, so the loop is cheap.
+// Sync on purpose: it runs inside the adapter's join-room / leave-room, while the room still
+// reflects that exact change
+function emitPresence(io: AppServer, catId: string): void {
+  const { adapter, sockets } = io.sockets
+  const socketIds = adapter.rooms.get(socketService.getCatRoomName(catId)) ?? new Set<string>()
+  const roomSockets = [...socketIds].flatMap((socketId) => sockets.get(socketId) ?? [])
+  const users = socketService.getDistinctLiveUsers(roomSockets)
+
+  for (const socket of roomSockets) {
+    const presence: ChatPresence = {
+      catId,
+      count: users.length,
+      users: socketService.getLiveTokenUser(socket) ? users : null,
+    }
+    socket.emit(CHAT_PRESENCE_CHANGED, presence)
+  }
+}
+
 export const chatSocketController = {
   join,
   leave,
@@ -102,4 +127,5 @@ export const chatSocketController = {
   updateMsg,
   removeMsg,
   relayTyping,
+  emitPresence,
 }

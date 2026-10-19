@@ -3,7 +3,9 @@ import { randomUUID } from 'node:crypto'
 import cookieParser from 'cookie-parser'
 import { Server } from 'socket.io'
 import { authService } from '../api/auth/auth.service.ts'
-import { registerChatSocketRoutes } from '../api/chat/chat.socket-routes.ts'
+import { CHAT_PRESENCE_CHANGED, type LoggedInUser, type UserRef } from '@cat-store/shared'
+import { chatSocketController } from '../api/chat/chat.socket-controller.ts'
+import { registerChatRoomEvents, registerChatSocketRoutes } from '../api/chat/chat.socket-routes.ts'
 import { LOGIN_TOKEN_COOKIE } from '../models/auth.ts'
 import type { AppServer, AppSocket, SocketEvent, SocketMiddleware } from '../models/socket.ts'
 import { alsService, type AlsStore } from './als.service.ts'
@@ -12,6 +14,8 @@ import { errorService } from './error.service.ts'
 // Default 1MB. Zod caps a chat msg's text, but without this one frame could still be 1MB.
 // 16KB leaves room for 1000 chars × 4 bytes (UTF-8) plus the JSON around them
 const _MAX_HTTP_BUFFER_SIZE_BYTES = 16 * 1024
+
+const _CAT_ROOM_PREFIX = 'cat:'
 
 // The one io instance, so REST controllers can emit too (e.g. a site-wide "cat removed").
 // null until setup runs: Supertest uses the app with no http server, so no io
@@ -29,6 +33,8 @@ function setup(httpServer: HttpServer): AppServer {
   // WebSocket upgrade included, so the handshake below sees req.cookies on either transport
   newIo.engine.use(cookieParser())
   newIo.use(_attachSocketTokenUser)
+  // Room-level listeners (the adapter's join-room / leave-room), once per server, not per socket
+  registerChatRoomEvents(newIo)
   // Every event's chain is declared in its *.socket-routes.ts, like an Express router
   newIo.on('connection', (socket) => {
     registerChatSocketRoutes(socket)
@@ -47,7 +53,52 @@ function getIo(): AppServer {
 // One room per cat. catId must already be lowercased (the chat schemas do it, or toHexString()),
 // since room names compare as strings: cat:ABC… and cat:abc… would be two rooms
 function getCatRoomName(catId: string): string {
-  return `cat:${catId}`
+  return `${_CAT_ROOM_PREFIX}${catId}`
+}
+
+// The reverse of getCatRoomName: cat:<id> → id, any other room → null. Every socket also sits in
+// a room named after its own id, so room-level listeners use this to keep only cat rooms
+function getCatIdFromRoomName(room: string): string | null {
+  return room.startsWith(_CAT_ROOM_PREFIX) ? room.slice(_CAT_ROOM_PREFIX.length) : null
+}
+
+// The socket's handshake user while its token is still valid, else null: a guest, or a token
+// that expired since the handshake (a socket can outlive its token). Token-only, no DB read.
+// exp is in seconds (JWT)
+function getLiveTokenUser(socket: AppSocket): LoggedInUser | null {
+  const { tokenUser, tokenExp } = socket.data
+  if (!tokenUser || tokenExp === null || tokenExp <= Date.now() / 1000) return null
+  return tokenUser
+}
+
+// The distinct logged-in users among the sockets, in the order given. Deduped by _id, so one user
+// in two tabs counts once. A guest, or a socket whose token expired since the handshake, isn't a
+// user here (getLiveTokenUser). Picked field by field, so username never goes out
+function getDistinctLiveUsers(sockets: AppSocket[]): UserRef[] {
+  const userById = new Map<string, UserRef>()
+  for (const socket of sockets) {
+    const tokenUser = getLiveTokenUser(socket)
+    if (!tokenUser || userById.has(tokenUser._id)) continue
+    const { _id, fullname, isAdmin } = tokenUser
+    userById.set(_id, { _id, fullname, isAdmin })
+  }
+  return [...userById.values()]
+}
+
+// The adapter's join-room / leave-room listener, attached by registerChatRoomEvents. Skips rooms
+// that aren't cat rooms.
+// Takes the io captured at setup, not getIo(): close() clears the holder before io.close(), and
+// every socket's leave-room fires during that close.
+// It runs synchronously inside socket.join / socket.leave / the disconnect cleanup, so a throw
+// would break that join or disconnect. Caught and logged instead
+function emitPresenceOnCatRoomChange(io: AppServer, room: string): void {
+  const catId = getCatIdFromRoomName(room)
+  if (!catId) return
+  try {
+    chatSocketController.emitPresence(io, catId)
+  } catch (err) {
+    console.error(`[ws] ${CHAT_PRESENCE_CHANGED} for ${room}: failed to emit`, err)
+  }
 }
 
 // Site-wide emit for REST controllers. Does nothing until setup runs, so Supertest files need
@@ -152,6 +203,10 @@ export const socketService = {
   getIo,
   on,
   getCatRoomName,
+  getCatIdFromRoomName,
+  getLiveTokenUser,
+  getDistinctLiveUsers,
+  emitPresenceOnCatRoomChange,
   emit,
   close,
 }
