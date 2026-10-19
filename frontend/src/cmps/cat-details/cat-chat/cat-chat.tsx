@@ -8,6 +8,7 @@ import { ChatComposer } from './chat-composer'
 import { ChatGuestCta } from './chat-guest-cta'
 import { ChatHeader } from './chat-header'
 import { ChatIcon } from './chat-icon'
+import { ChatJoinError } from './chat-join-error'
 import { ChatLog } from './chat-log'
 import { ChatMsgRemoveConfirm } from './chat-msg-remove-confirm'
 
@@ -21,7 +22,7 @@ interface CatChatProps {
 
 // The chat icon (bottom right, with the unread badge) and the panel it opens. Closing only hides
 // the panel: the room stays joined and the msgs stay in the hook, so a reopen doesn't refetch and
-// the badge counts again. So there's no separate minimize
+// the badge counts again.
 export const CatChat: React.FC<CatChatProps> = ({ catId, catName, catOwnerId }) => {
   const [isOpen, setIsOpen] = useState(false)
   const chat = useCatChat(catId, isOpen)
@@ -63,7 +64,7 @@ export const CatChat: React.FC<CatChatProps> = ({ catId, catName, catOwnerId }) 
     else panelRef.current?.focus()
   }, [isRemoveConfirmOpen])
 
-  function toggle(isOpenNext: boolean) {
+  function toggleOpen(isOpenNext: boolean) {
     isToggledRef.current = true
     setIsOpen(isOpenNext)
     // Closing hides the panel, so a reopen starts without the confirm
@@ -82,13 +83,13 @@ export const CatChat: React.FC<CatChatProps> = ({ catId, catName, catOwnerId }) 
 
   // Escape closes, like the other popups. A click outside doesn't: the panel is a place to stay
   function onPanelKeyDown(ev: React.KeyboardEvent) {
-    if (ev.key === 'Escape') toggle(false)
+    if (ev.key === 'Escape') toggleOpen(false)
   }
 
   if (!isOpen) {
     return (
       <div className="cat-chat">
-        <ChatIcon ref={iconRef} unreadCount={chat.unreadCount} onOpen={() => toggle(true)} />
+        <ChatIcon ref={iconRef} unreadCount={chat.unreadCount} onOpen={() => toggleOpen(true)} />
       </div>
     )
   }
@@ -102,24 +103,19 @@ export const CatChat: React.FC<CatChatProps> = ({ catId, catName, catOwnerId }) 
         tabIndex={-1}
         onKeyDown={onPanelKeyDown}
       >
-        <ChatHeader titleId={titleId} catName={catName} onClose={() => toggle(false)} />
+        <ChatHeader titleId={titleId} catName={catName} onClose={() => toggleOpen(false)} />
 
         {/* Inert under the delete confirm, which covers it. The header stays live */}
         <div className="chat-body" inert={isRemoveConfirmOpen}>
-          {chat.status === 'error' && (
-            <div className="join-error" role="alert">
-              <p>Couldn't connect to the chat.</p>
-              <button type="button" className="main-btn" onClick={chat.retryLoadChat}>
-                Retry
-              </button>
-            </div>
-          )}
+          {chat.status === 'error' && <ChatJoinError onRetry={chat.retryLoadChat} />}
+
           {/* idle too: the first render after opening comes before the hook's fetch starts */}
           {(chat.status === 'idle' || chat.status === 'loading') && (
             <div className="loading">
               <ReviewListSkeleton label="Loading messages" />
             </div>
           )}
+
           {chat.status === 'ready' && (
             <ChatLog
               msgs={chat.msgs}

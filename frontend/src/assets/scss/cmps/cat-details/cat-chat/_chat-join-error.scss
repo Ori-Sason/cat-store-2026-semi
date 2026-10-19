@@ -1,0 +1,29 @@
+@use 'setup' as *;
+
+// Centered in the log's place, like the empty log, with a red icon on top
+.chat-join-error {
+  flex: 1;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: $space-2;
+  padding: $space-5;
+  text-align: center;
+  font-size: 0.85rem;
+  color: $primary-clr-850;
+
+  svg {
+    margin-bottom: $space-1;
+    color: $clr-danger;
+  }
+
+  .error-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: $primary-clr-900;
+  }
+
+  p {
+    max-width: 260px;
+  }
+}

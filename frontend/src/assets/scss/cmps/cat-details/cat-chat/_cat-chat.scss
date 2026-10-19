@@ -57,15 +57,4 @@ $_panel-height: 620px;
     justify-content: flex-end;
     padding: $space-2 $space-4;
   }
-
-  .join-error {
-    flex: 1;
-    display: grid;
-    place-content: center;
-    justify-items: center;
-    gap: $space-3;
-    padding: $space-5;
-    text-align: center;
-    color: $primary-clr-900;
-  }
 }
