@@ -3,8 +3,8 @@ import { useState } from 'react'
 import { useFetcher } from 'react-router'
 import type { ReviewContentInput, ReviewWithRefs } from '@cat-store/shared'
 import type { reviewAction } from '../../../pages/review/review.action'
+import { ActionsMenu } from '../util/actions-menu'
 import { ConfirmModal } from '../util/confirm-modal'
-import { ReviewActionsMenu } from './review-actions-menu'
 import { ReviewEdit } from './review-edit'
 
 interface ReviewEditableProps {
@@ -48,7 +48,8 @@ export const ReviewEditable: React.FC<ReviewEditableProps> = ({ review }) => {
   return (
     <>
       {!isEditing && (
-        <ReviewActionsMenu
+        <ActionsMenu
+          label="Review actions"
           isDisabled={isDeleting}
           onEdit={() => setIsEditing(true)}
           onDelete={() => setIsConfirmOpen(true)}

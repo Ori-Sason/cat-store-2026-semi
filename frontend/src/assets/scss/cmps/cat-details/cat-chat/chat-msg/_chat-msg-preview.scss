@@ -27,6 +27,13 @@
     }
   }
 
+  // In the row's top-right corner, not after the time like on reviews: the panel is narrow
+  .actions-menu {
+    position: absolute;
+    top: 4px;
+    right: $space-2;
+  }
+
   header {
     // Clear of the ⋮ button in the corner
     padding-right: 1.75rem;

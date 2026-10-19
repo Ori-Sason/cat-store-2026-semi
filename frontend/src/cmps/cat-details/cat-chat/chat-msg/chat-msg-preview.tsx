@@ -6,7 +6,7 @@ import type { PendingChatMsg } from '../../../../models/chat'
 import { utilService } from '../../../../services/util.service'
 import { useLoggedInUserStore } from '../../../../store/logged-in-user.store'
 import { UserChips } from '../../../common/user/user-chips'
-import { ChatMsgActionsMenu } from './chat-msg-actions-menu'
+import { ActionsMenu } from '../../../common/util/actions-menu'
 import { ChatMsgEdit } from './chat-msg-edit'
 import { ChatMsgNotSent } from './chat-msg-not-sent'
 import { ChatMsgStatus } from './chat-msg-status'
@@ -62,11 +62,12 @@ export const ChatMsgPreview: React.FC<ChatMsgPreviewProps> = ({
       aria-busy={!!busyAction}
     >
       {isRemovable && !isEditing && (
-        <ChatMsgActionsMenu
-          isEditable={isEditable}
+        <ActionsMenu
+          label="Message actions"
           isDisabled={!!busyAction}
-          onEdit={() => setIsEditOpen(true)}
-          onRemove={() => onRemove?.()}
+          // The author only. An admin on someone else's msg gets Delete alone
+          onEdit={isEditable ? () => setIsEditOpen(true) : undefined}
+          onDelete={() => onRemove?.()}
         />
       )}
       <header>
@@ -79,11 +80,13 @@ export const ChatMsgPreview: React.FC<ChatMsgPreviewProps> = ({
         ) : (
           <span className="author is-gone">[Deleted User]</span>
         )}
+
         {/* No You chip, on purpose, unlike reviews: a review is a standalone post, while in a
             live conversation the own-row style is enough to find your own lines */}
         {user && (
           <UserChips isAdmin={user.isAdmin} isOwner={user._id === catOwnerId} isYou={false} />
         )}
+
         <time dateTime={new Date(msg.createdAt).toISOString()}>
           {utilService.formatTime(msg.createdAt)}
         </time>
@@ -109,9 +112,11 @@ export const ChatMsgPreview: React.FC<ChatMsgPreviewProps> = ({
           )}
         </p>
       )}
+
       {isEdited && !isEditing && (
         <p className="edited">Edited at {utilService.formatTime(msg.updatedAt)}</p>
       )}
+
       {sendStatus === 'failed' && <ChatMsgNotSent isRetryable={isOwn} onRetry={onRetry} />}
     </article>
   )

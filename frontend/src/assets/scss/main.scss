@@ -29,7 +29,6 @@
 @use './cmps/cat-details/cat-chat/chat-icon';
 @use './cmps/cat-details/cat-chat/chat-main/chat-join-error';
 @use './cmps/cat-details/cat-chat/chat-main/chat-log';
-@use './cmps/cat-details/cat-chat/chat-msg/chat-msg-actions-menu';
 @use './cmps/cat-details/cat-chat/chat-msg/chat-msg-edit';
 @use './cmps/cat-details/cat-chat/chat-msg/chat-msg-not-sent';
 @use './cmps/cat-details/cat-chat/chat-msg/chat-msg-preview';
@@ -44,12 +43,12 @@
 @use './cmps/common/cat/cat-preview';
 @use './cmps/common/cat/label-chip';
 @use './cmps/common/cat/label-toggles';
-@use './cmps/common/review/review-actions-menu';
 @use './cmps/common/review/review-edit';
 @use './cmps/common/review/review-list';
 @use './cmps/common/review/review-list-skeleton';
 @use './cmps/common/review/review-preview';
 @use './cmps/common/user/user-chips';
+@use './cmps/common/util/actions-menu';
 @use './cmps/common/util/confirm-modal';
 @use './cmps/common/util/route-error';
 @use './cmps/common/util/section-error';
