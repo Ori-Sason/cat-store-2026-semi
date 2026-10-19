@@ -344,6 +344,25 @@ describe('CatChat', () => {
       expect(document.querySelector('.chat-body')).not.toHaveAttribute('inert')
     })
 
+    // The ⋮ is disabled until the remove's ack, and a disabled button can't take the focus
+    it('gives the focus to the panel on Delete, while the ⋮ waits on the ack', async () => {
+      _mockChat({
+        msgs: [OWN_MSG],
+        // The busy msg the hook would return once the remove is in flight
+        removeMsg: vi.fn(async () => {
+          _mockChat({ msgs: [OWN_MSG], busyMsgs: { [OWN_MSG._id]: 'removing' } })
+          return new Promise<boolean>(() => {})
+        }),
+      })
+      _render()
+      const confirm = await _askToDelete()
+
+      await userEvent.click(within(confirm).getByRole('button', { name: 'Delete' }))
+
+      expect(screen.getByRole('button', { name: 'Message actions' })).toBeDisabled()
+      expect(screen.getByRole('region', { name: 'Chat' })).toHaveFocus()
+    })
+
     it('gives the focus back to the ⋮ button on Cancel', async () => {
       const chat = _mockChat({ msgs: [OWN_MSG] })
       _render()
