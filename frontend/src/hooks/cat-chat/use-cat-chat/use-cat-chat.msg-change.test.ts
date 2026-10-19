@@ -112,19 +112,6 @@ describe('useCatChat updateMsg and removeMsg', () => {
       expect(chatService.saveDraft).not.toHaveBeenCalled()
       expect(_textOf(result.current.msgs[0])).toBe('msg 1')
     })
-
-    it("drops a late ack from the old cat's edit after a switch", async () => {
-      const ack = deferred<unknown>()
-      _mockChangeAck(() => ack.promise)
-      const { result, rerender } = await renderReadyChat([1])
-      act(() => void result.current.updateMsg(makeMsgId(1), 'edited'))
-
-      rerender({ catId: OTHER_CAT_ID, isOpen: false })
-      await act(async () => ack.resolve({ msg: _editedMsg(1) }))
-
-      expect(result.current.msgs).toEqual([])
-      expect(result.current.busyMsgs).toEqual({})
-    })
   })
 
   describe('removeMsg', () => {

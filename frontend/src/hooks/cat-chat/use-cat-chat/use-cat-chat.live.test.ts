@@ -68,26 +68,6 @@ describe('useCatChat live msgs', () => {
     expect(idsOf(result.current.msgs)).toEqual([makeMsgId(1)])
   })
 
-  it('keeps events for the cat when the route param is uppercase', async () => {
-    vi.mocked(chatService.getOlderPage).mockResolvedValue(makePage([1], null))
-    const { result } = renderChat(CAT_ID.toUpperCase(), true)
-    await waitFor(() => expect(result.current.status).toBe('ready'))
-
-    act(() => serverEmit('chat:msg-added', { msg: makeMsg(2) }))
-
-    expect(idsOf(result.current.msgs)).toEqual([1, 2].map(makeMsgId))
-  })
-
-  it('stops listening to the old cat after a switch', async () => {
-    const { result, rerender } = await renderReadyChat([1])
-
-    rerender({ catId: OTHER_CAT_ID, isOpen: false })
-    act(() => serverEmit('chat:msg-added', { msg: makeMsg(2) }))
-
-    expect(result.current.msgs).toEqual([])
-    expect(socketListeners.get('chat:msg-added')?.size).toBe(1)
-  })
-
   it('removes its listeners on unmount', () => {
     const { unmount } = renderChat()
 

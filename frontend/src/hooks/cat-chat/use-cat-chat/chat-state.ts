@@ -8,7 +8,6 @@ export type CatChatStatus = 'idle' | 'loading' | 'ready' | 'error'
 export type ChatMsgBusyAction = 'updating' | 'removing'
 
 export interface CatChatState {
-  catId: string
   msgs: ChatMsg[] // by _id, oldest first
   pendingMsgs: PendingChatMsg[] // own sends not confirmed yet, in send order, below the msgs
   status: CatChatStatus
@@ -24,9 +23,8 @@ export interface ChatMsgEvent {
   msg: ChatMsg
 }
 
-export function getInitialChatState(catId: string): CatChatState {
+export function getInitialChatState(): CatChatState {
   return {
-    catId,
     msgs: [],
     pendingMsgs: [],
     status: 'idle',

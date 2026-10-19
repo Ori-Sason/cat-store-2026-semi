@@ -1,4 +1,3 @@
-import type { ChatMsgOlderPage } from '@cat-store/shared'
 import { act, renderHook, waitFor } from '@testing-library/react'
 import { StrictMode } from 'react'
 import { describe, expect, it, vi } from 'vitest'
@@ -8,9 +7,7 @@ import { socketService } from '../../../services/socket.service'
 import { useUserMsgStore } from '../../../store/user-msg.store'
 import {
   CAT_ID,
-  OTHER_CAT_ID,
   makeMsgId,
-  makeMsg,
   makePage,
   idsOf,
   deferred,
@@ -43,12 +40,6 @@ describe('useCatChat history', () => {
       unmount()
 
       expect(socketService.emit).toHaveBeenCalledExactlyOnceWith('chat:leave', { catId: CAT_ID })
-    })
-
-    it('joins with a lowercased catId', () => {
-      renderChat(CAT_ID.toUpperCase())
-
-      expect(socketService.emitWithAck).toHaveBeenCalledWith('chat:join', { catId: CAT_ID })
     })
 
     // Dev mode runs mount effects twice: join → leave → join, and the room stays joined
@@ -188,49 +179,6 @@ describe('useCatChat history', () => {
       expect(useUserMsgStore.getState().msg?.type).toBe('error')
       expect(result.current.isOlderAvailable).toBe(true)
       expect(result.current.isLoadingOlder).toBe(false)
-    })
-  })
-
-  describe('a cat switch', () => {
-    it('leaves the old room, joins the new one and resets the state', async () => {
-      vi.mocked(chatService.getOlderPage).mockResolvedValue(makePage([1], null))
-      const { result, rerender } = renderChat(CAT_ID, true)
-      await waitFor(() => expect(result.current.status).toBe('ready'))
-
-      rerender({ catId: OTHER_CAT_ID, isOpen: false })
-
-      expect(socketService.emit).toHaveBeenCalledWith('chat:leave', { catId: CAT_ID })
-      expect(socketService.emitWithAck).toHaveBeenLastCalledWith('chat:join', {
-        catId: OTHER_CAT_ID,
-      })
-      expect(result.current.status).toBe('idle')
-      expect(result.current.msgs).toEqual([])
-    })
-
-    it("drops the old cat's fetch when it lands after the switch", async () => {
-      const oldFetch = deferred<ChatMsgOlderPage>()
-      vi.mocked(chatService.getOlderPage).mockReturnValueOnce(oldFetch.promise)
-      const { result, rerender } = renderChat(CAT_ID, true)
-      await waitFor(() => expect(chatService.getOlderPage).toHaveBeenCalledOnce())
-
-      rerender({ catId: OTHER_CAT_ID, isOpen: false })
-      await act(async () => oldFetch.resolve(makePage([1], null)))
-
-      expect(result.current.msgs).toEqual([])
-      expect(result.current.status).toBe('idle')
-    })
-
-    it('fetches the new cat on open', async () => {
-      vi.mocked(chatService.getOlderPage)
-        .mockResolvedValueOnce(makePage([1], null))
-        .mockResolvedValueOnce({ msgs: [makeMsg(9, OTHER_CAT_ID)], nextBeforeId: null })
-      const { result, rerender } = renderChat(CAT_ID, true)
-      await waitFor(() => expect(result.current.status).toBe('ready'))
-
-      rerender({ catId: OTHER_CAT_ID, isOpen: true })
-
-      await waitFor(() => expect(idsOf(result.current.msgs)).toEqual([makeMsgId(9)]))
-      expect(chatService.getOlderPage).toHaveBeenLastCalledWith(OTHER_CAT_ID)
     })
   })
 })

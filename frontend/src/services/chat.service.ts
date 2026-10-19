@@ -33,8 +33,7 @@ function getNewerPage(catId: string, afterId: string): Promise<ChatMsgNewerPage>
 // origin (e.g. Chrome's "block all cookies"), so getItem and removeItem can fail too, not only
 // setItem on a full QuotaExceededError
 function _getDraftKey(catId: string) {
-  // Lowercased like every chat catId: the route param keeps the URL's case
-  return `chatDraft:${catId.toLowerCase()}`
+  return `chatDraft:${catId}`
 }
 
 function getDraft(catId: string): string | null {

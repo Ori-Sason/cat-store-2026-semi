@@ -30,21 +30,16 @@ import { join, loadFirstPage, loadOlderPage, rejoin } from './room-sync'
 // Join on page load, fetch on open: live events reach a closed chat too (the unread badge),
 // and a visitor who never opens it pays only the join.
 // This file is the React side: the state, the effects and the actions the UI calls. The work
-// behind them lives next to it, as plain functions that take the room tracker
-export function useCatChat(catIdParam: string, isOpen: boolean) {
-  // Lowercased like the server's room name and every catId on the wire: a /cat/ABC… URL would
-  // otherwise read every event as another cat's
-  const catId = catIdParam.toLowerCase()
+// behind them lives next to it, as plain functions that take the room tracker.
+// One mount per cat: cat-details keys CatChat by the cat, so a cat switch remounts it and the
+// state starts fresh. catId is the cat doc's _id, lowercase like every catId on the wire
+export function useCatChat(catId: string, isOpen: boolean) {
   // chat: what's drawn. React state, so a change rerenders the UI.
   // roomTrackerRef: the bookkeeping behind it. A mutable object async code reads and writes, never rendered
-  const [chat, setChat] = useState(() => getInitialChatState(catId))
+  const [chat, setChat] = useState(getInitialChatState)
   const roomTrackerRef = useRef<ChatRoomTracker | null>(null)
   const navigate = useNavigate()
   const loggedInUser = useLoggedInUserStore((state) => state.loggedInUser)
-
-  // A cat switch can reuse cat-details without an unmount. Resetting during render (not in an
-  // effect) means the old cat's msgs never show under the new cat, not even for one frame
-  if (chat.catId !== catId) setChat(getInitialChatState(catId))
 
   // Effect events - call them only from effect code: passed raw into the tracker, they'd be called from outside it
   const countUnreadMsg = useEffectEvent((roomTracker: ChatRoomTracker, msg: ChatMsg) => {

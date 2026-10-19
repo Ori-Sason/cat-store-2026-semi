@@ -9,7 +9,7 @@ import {
   replaceMsg,
 } from './chat-log.util'
 
-// One join of one room. A new join (a cat switch, StrictMode's join → leave → join) makes a new
+// One join of one room. A new join (a remount, StrictMode's join → leave → join) makes a new
 // tracker, so an async result from an old one is dropped. A rejoin on reconnect or a retry keeps
 // the tracker and only replaces its joinPromise.
 // The tracker also carries what async code needs from the hook (the state setter, the redirect),
@@ -51,14 +51,13 @@ export function createChatRoomTracker(
   }
 }
 
-// Applies an async result only while its tracker is still the current one, and only to that
-// cat's state
+// Applies an async result only while its tracker is still the current one
 export function updateChat(
   roomTracker: ChatRoomTracker,
   update: (prev: CatChatState) => CatChatState,
 ) {
   if (!roomTracker.isActive) return
-  roomTracker.setChat((prev) => (prev.catId === roomTracker.catId ? update(prev) : prev))
+  roomTracker.setChat(update)
 }
 
 // Every new msg enters the state through here (changes to held ones go through changeMsg), so

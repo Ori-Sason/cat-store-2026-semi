@@ -9,7 +9,6 @@ import { useUserMsgStore } from '../../../store/user-msg.store'
 import {
   VIEWER,
   CAT_ID,
-  OTHER_CAT_ID,
   makeMsgId,
   makeMsg,
   idsOf,
@@ -204,19 +203,5 @@ describe('useCatChat sendMsg', () => {
       type: 'error',
       txt: 'Your session expired. Log in to keep chatting.',
     })
-  })
-
-  it("drops a late ack from the old cat's send after a switch", async () => {
-    const ack = deferred<unknown>()
-    _mockSendAck(() => ack.promise)
-    const { result, rerender } = await renderReadyChat([1])
-    act(() => result.current.sendMsg('Hi'))
-    const savedMsg = _savedMsg(2)
-
-    rerender({ catId: OTHER_CAT_ID, isOpen: false })
-    await act(async () => ack.resolve({ msg: savedMsg }))
-
-    expect(result.current.msgs).toEqual([])
-    expect(result.current.pendingMsgs).toEqual([])
   })
 })

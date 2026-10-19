@@ -6,7 +6,6 @@ import { socketService } from '../../../services/socket.service'
 import { useUserMsgStore } from '../../../store/user-msg.store'
 import {
   CAT_ID,
-  OTHER_CAT_ID,
   makeMsgId,
   makeMsg,
   makePage,
@@ -176,16 +175,17 @@ describe('useCatChat failed join', () => {
     expect(navigate).not.toHaveBeenCalled()
   })
 
-  it("drops a redirect from the old cat's join after a switch", async () => {
+  // The visitor already left the page: a redirect now would pull them off where they went
+  it('drops a redirect from a join that fails after unmount', async () => {
     const oldJoin = deferred<object>()
     vi.mocked(socketService.emitWithAck).mockReturnValueOnce(
       oldJoin.promise.then(() => {
         throw new ApiError(0, 'CAT_NOT_FOUND', 'Cat not found')
       }),
     )
-    const { rerender } = renderChat()
+    const { unmount } = renderChat()
 
-    rerender({ catId: OTHER_CAT_ID, isOpen: false })
+    unmount()
     await act(async () => oldJoin.resolve({}))
 
     expect(navigate).not.toHaveBeenCalled()
