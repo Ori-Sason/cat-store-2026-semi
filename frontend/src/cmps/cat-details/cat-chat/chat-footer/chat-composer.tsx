@@ -1,7 +1,7 @@
 import type React from 'react'
-import { useChatText } from '../../../hooks/use-chat-text'
-import { chatService } from '../../../services/chat.service'
-import { ChatTextCounter } from './chat-text-counter'
+import { useChatText } from '../../../../hooks/use-chat-text'
+import { chatService } from '../../../../services/chat.service'
+import { ChatTextCounter } from '../chat-common/chat-text-counter'
 
 interface ChatComposerProps {
   catId: string

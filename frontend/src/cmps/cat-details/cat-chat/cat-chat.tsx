@@ -4,13 +4,13 @@ import type { ChatMsg } from '@cat-store/shared'
 import { useCatChat } from '../../../hooks/use-cat-chat/use-cat-chat'
 import { useLoggedInUserStore } from '../../../store/logged-in-user.store'
 import { ReviewListSkeleton } from '../../common/review/review-list-skeleton'
-import { ChatComposer } from './chat-composer'
-import { ChatGuestCta } from './chat-guest-cta'
+import { ChatComposer } from './chat-footer/chat-composer'
+import { ChatGuestCta } from './chat-footer/chat-guest-cta'
 import { ChatHeader } from './chat-header'
 import { ChatIcon } from './chat-icon'
-import { ChatJoinError } from './chat-join-error'
-import { ChatLog } from './chat-log'
-import { ChatMsgRemoveConfirm } from './chat-msg-remove-confirm'
+import { ChatJoinError } from './chat-main/chat-join-error'
+import { ChatLog } from './chat-main/chat-log'
+import { ChatMsgRemoveConfirm } from './chat-msg/chat-msg-remove-confirm'
 
 type ChatMsgWithText = Extract<ChatMsg, { isDeleted: false }>
 

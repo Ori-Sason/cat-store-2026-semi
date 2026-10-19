@@ -17,6 +17,9 @@ paths:
   - `cmps/<page>/`: components only that page uses. The folder name matches `pages/<page>/`.
     A feature with several components gets its own subfolder, named for its top component:
     `cmps/cat-details/cat-chat/`.
+    When it grows, split it into idea folders, named `<feature-prefix>-<idea>` (not
+    necessarily a component): `cat-chat/chat-main/`, `chat-msg/`, `chat-footer/`. What's used by 2+ of
+    them goes in `<feature-prefix>-common/`, which is shared only inside the feature, unlike `cmps/common/`.
   - `cmps/common/<group>/`: components used by 2+ pages, grouped by entity (`cat/`) or
     `util/` for domain-free UI. Move a component here when a second page needs it.
     It's `common`, not `shared`, because `shared/` is the workspace package.

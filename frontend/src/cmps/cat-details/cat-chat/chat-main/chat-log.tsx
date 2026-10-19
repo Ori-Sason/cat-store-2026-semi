@@ -1,10 +1,10 @@
 import type React from 'react'
 import { useLayoutEffect, useRef } from 'react'
 import type { ChatMsg } from '@cat-store/shared'
-import type { ChatMsgBusyAction } from '../../../hooks/use-cat-chat/chat-state'
-import type { PendingChatMsg } from '../../../models/chat'
-import { utilService } from '../../../services/util.service'
-import { ChatMsgPreview } from './chat-msg-preview'
+import type { ChatMsgBusyAction } from '../../../../hooks/use-cat-chat/chat-state'
+import type { PendingChatMsg } from '../../../../models/chat'
+import { utilService } from '../../../../services/util.service'
+import { ChatMsgPreview } from '../chat-msg/chat-msg-preview'
 
 // Closer than this to the bottom counts as "at the bottom", so a new msg keeps the log pinned
 const _STICK_TO_BOTTOM_PX = 48

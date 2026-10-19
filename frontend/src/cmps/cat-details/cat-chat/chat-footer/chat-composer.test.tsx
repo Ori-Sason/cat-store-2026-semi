@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { CHAT_MSG_TEXT_MAX_LENGTH } from '@cat-store/shared'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { chatService } from '../../../services/chat.service'
+import { chatService } from '../../../../services/chat.service'
 import { ChatComposer } from './chat-composer'
 
 const CAT_ID = 'aaaaaaaaaaaaaaaaaaaaaaaa'

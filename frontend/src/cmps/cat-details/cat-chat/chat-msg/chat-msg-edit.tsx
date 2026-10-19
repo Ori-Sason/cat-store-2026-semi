@@ -1,8 +1,8 @@
 import type React from 'react'
 import { useEffect, useRef } from 'react'
-import { useChatText } from '../../../hooks/use-chat-text'
+import { useChatText } from '../../../../hooks/use-chat-text'
 import { ChatMsgStatus } from './chat-msg-status'
-import { ChatTextCounter } from './chat-text-counter'
+import { ChatTextCounter } from '../chat-common/chat-text-counter'
 
 interface ChatMsgEditProps {
   initialText: string
