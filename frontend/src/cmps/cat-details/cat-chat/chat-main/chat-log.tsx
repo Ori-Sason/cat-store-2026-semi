@@ -1,5 +1,5 @@
 import type React from 'react'
-import { useLayoutEffect, useRef } from 'react'
+import { useEffect, useLayoutEffect, useRef } from 'react'
 import type { ChatMsg } from '@cat-store/shared'
 import type { ChatMsgBusyAction } from '../../../../hooks/cat-chat/use-cat-chat/chat-state'
 import type { PendingChatMsg } from '../../../../models/chat'
@@ -79,6 +79,23 @@ export const ChatLog: React.FC<ChatLogProps> = ({
     snapshotRef.current = { firstMsgId, lastMsgId, pendingMsgIds, ..._readScroll(log) }
   }, [msgs, pendingMsgs])
 
+  // The log shrinks when something under it grows (the composer, the typing line), and the browser
+  // keeps scrollTop, so the newest rows slide out of view. A reader who was at the bottom stays
+  // there. Its own content growing is the layout effect's job: this only sees the box resize
+  const isEmpty = !msgs.length && !pendingMsgs.length
+  useEffect(() => {
+    const log = logRef.current
+    if (!log) return
+    const observer = new ResizeObserver(() => {
+      const snapshot = snapshotRef.current
+      if (!snapshot?.isAtBottom) return
+      log.scrollTop = log.scrollHeight
+      snapshotRef.current = { ...snapshot, ..._readScroll(log) }
+    })
+    observer.observe(log)
+    return () => observer.disconnect()
+  }, [isEmpty])
+
   // Keeps the snapshot current between renders, so the next fix starts from where the reader is
   function onScroll() {
     const log = logRef.current
@@ -86,7 +103,7 @@ export const ChatLog: React.FC<ChatLogProps> = ({
     if (log && snapshot) snapshotRef.current = { ...snapshot, ..._readScroll(log) }
   }
 
-  if (!msgs.length && !pendingMsgs.length) {
+  if (isEmpty) {
     return (
       <div className="chat-log is-empty">
         <p className="empty-title">No messages yet</p>
