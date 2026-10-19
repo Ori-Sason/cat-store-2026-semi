@@ -6,9 +6,9 @@ paths:
 # Backend
 
 - Layering: route → controller → service. Only services touch the DB.
-- Middlewares are split by transport, one per file: REST in `middlewares/http/`
-  (`*.middleware.ts`), socket event chain steps in `middlewares/socket/`
-  (`*.socket-middleware.ts`).
+- Middlewares are split by transport, one per file, in `middlewares/<transport>/` (e.g. `http/`,
+  `socket/`). Each transport gets its own file suffix: `*.middleware.ts` for HTTP,
+  `*.socket-middleware.ts` for socket event chain steps.
 - Backend-only DB types (e.g. `CatDoc` with `_id: ObjectId`) live in `backend/models/`,
   not in `shared/`.
 - `_id`, `createdAt`, `updatedAt`, `ownerId` and `userId` are server-set. Never take them from the

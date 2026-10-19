@@ -24,4 +24,12 @@ Applies to every JavaScript and TypeScript file in this repository.
 - Its tests follow it: split them by the same concerns, with repeated setup in a `*.helper.ts`
   in the same folder.
 
+## Group a kind folder by idea
+- A kind folder (e.g. `hooks/`, `middlewares/`) gets subfolders once several files in it share
+  one idea, such as a feature (`hooks/<feature>/`) or a transport (`middlewares/<transport>/`).
+  Name the subfolder for that idea. Files that share nothing stay at the kind folder's root.
+- A split file's folder (above) moves into the subfolder as is: `hooks/<feature>/<hook-name>/`.
+- A package's rule adds any extra naming for its subfolders (e.g. the components folder in
+  `frontend.md`).
+
 Match the surrounding code for everything this file does not cover.

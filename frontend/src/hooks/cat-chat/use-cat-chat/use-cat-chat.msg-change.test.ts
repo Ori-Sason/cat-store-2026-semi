@@ -1,11 +1,11 @@
 import type { ChatMsg, ChatMsgOlderPage } from '@cat-store/shared'
 import { act, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { ApiError } from '../../models/api-error'
-import { chatService } from '../../services/chat.service'
-import { socketService } from '../../services/socket.service'
-import { useLoggedInUserStore } from '../../store/logged-in-user.store'
-import { useUserMsgStore } from '../../store/user-msg.store'
+import { ApiError } from '../../../models/api-error'
+import { chatService } from '../../../services/chat.service'
+import { socketService } from '../../../services/socket.service'
+import { useLoggedInUserStore } from '../../../store/logged-in-user.store'
+import { useUserMsgStore } from '../../../store/user-msg.store'
 import {
   VIEWER,
   makeTombstone,
@@ -24,8 +24,8 @@ import {
 
 const navigate = vi.hoisted(() => vi.fn())
 
-vi.mock('../../services/socket.service')
-vi.mock('../../services/chat.service')
+vi.mock('../../../services/socket.service')
+vi.mock('../../../services/chat.service')
 // Only the redirect is checked, so a stand-in navigate is enough. The hook needs no router
 vi.mock('react-router', async (importOriginal) => ({
   ...(await importOriginal<typeof import('react-router')>()),

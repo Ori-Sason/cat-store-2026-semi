@@ -1,7 +1,7 @@
 import type React from 'react'
 import { useLayoutEffect, useRef } from 'react'
 import type { ChatMsg } from '@cat-store/shared'
-import type { ChatMsgBusyAction } from '../../../../hooks/use-cat-chat/chat-state'
+import type { ChatMsgBusyAction } from '../../../../hooks/cat-chat/use-cat-chat/chat-state'
 import type { PendingChatMsg } from '../../../../models/chat'
 import { utilService } from '../../../../services/util.service'
 import { ChatMsgPreview } from '../chat-msg/chat-msg-preview'

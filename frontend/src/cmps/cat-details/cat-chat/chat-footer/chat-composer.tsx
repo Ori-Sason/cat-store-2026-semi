@@ -1,5 +1,5 @@
 import type React from 'react'
-import { useChatText } from '../../../../hooks/use-chat-text'
+import { useChatText } from '../../../../hooks/cat-chat/use-chat-text'
 import { chatService } from '../../../../services/chat.service'
 import { ChatTextCounter } from '../chat-common/chat-text-counter'
 

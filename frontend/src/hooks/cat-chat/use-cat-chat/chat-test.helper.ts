@@ -1,10 +1,10 @@
 import type { ChatMsg, ChatMsgNewerPage, ChatMsgOlderPage, LoggedInUser } from '@cat-store/shared'
 import { renderHook, waitFor } from '@testing-library/react'
 import { beforeEach, expect, vi } from 'vitest'
-import { chatService } from '../../services/chat.service'
-import { socketService } from '../../services/socket.service'
-import { useLoggedInUserStore } from '../../store/logged-in-user.store'
-import { useUserMsgStore } from '../../store/user-msg.store'
+import { chatService } from '../../../services/chat.service'
+import { socketService } from '../../../services/socket.service'
+import { useLoggedInUserStore } from '../../../store/logged-in-user.store'
+import { useUserMsgStore } from '../../../store/user-msg.store'
 import { useCatChat } from './use-cat-chat'
 
 // Shared by the useCatChat test files. Each file still mocks socketService, chatService and

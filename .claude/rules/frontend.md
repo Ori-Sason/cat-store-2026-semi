@@ -16,12 +16,13 @@ paths:
   Pages compose. Components are the building blocks and live in `cmps/`:
   - `cmps/<page>/`: components only that page uses. The folder name matches `pages/<page>/`.
     A feature with several components gets its own subfolder, named for its top component:
-    `cmps/cat-details/cat-chat/`.
-    When it grows, split it into idea folders, named `<feature-prefix>-<idea>` (not
-    necessarily a component): `cat-chat/chat-main/`, `chat-msg/`, `chat-footer/`. What's used by 2+ of
-    them goes in `<feature-prefix>-common/`, which is shared only inside the feature, unlike `cmps/common/`.
-  - `cmps/common/<group>/`: components used by 2+ pages, grouped by entity (`cat/`) or
+    `cmps/<page>/<feature>/`.
+    When it grows, split it into idea folders (`code-style.md` → "Group a kind folder by idea"),
+    named `<prefix>-<idea>`, where `<prefix>` is the feature's short name. An idea isn't
+    necessarily a component: `<prefix>-main/`, `<prefix>-footer/`. What's used by 2+ of them goes
+    in `<prefix>-common/`, which is shared only inside the feature, unlike `cmps/common/`.
+  - `cmps/common/<group>/`: components used by 2+ pages, grouped by entity (`<entity>/`) or
     `util/` for domain-free UI. Move a component here when a second page needs it.
-    It's `common`, not `shared`, because `shared/` is the workspace package.
+    It's `common`, not `shared`, so it doesn't clash with a shared workspace package.
   - `cmps/layout/`: the app shell, used by the router.
   SCSS mirrors this tree.

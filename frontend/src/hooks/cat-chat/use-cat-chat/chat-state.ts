@@ -1,5 +1,5 @@
 import type { ChatMsg } from '@cat-store/shared'
-import type { PendingChatMsg } from '../../models/chat'
+import type { PendingChatMsg } from '../../../models/chat'
 
 // idle: not opened yet. loading: the first page is on its way. error: the join or that fetch failed
 export type CatChatStatus = 'idle' | 'loading' | 'ready' | 'error'

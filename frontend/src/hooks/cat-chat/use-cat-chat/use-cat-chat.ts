@@ -9,9 +9,9 @@ import {
 } from '@cat-store/shared'
 import { useEffect, useEffectEvent, useRef, useState } from 'react'
 import { useNavigate } from 'react-router'
-import { socketService } from '../../services/socket.service'
-import { useLoggedInUserStore } from '../../store/logged-in-user.store'
-import { useUserMsgStore } from '../../store/user-msg.store'
+import { socketService } from '../../../services/socket.service'
+import { useLoggedInUserStore } from '../../../store/logged-in-user.store'
+import { useUserMsgStore } from '../../../store/user-msg.store'
 import { type ChatMsgEvent, getInitialChatState } from './chat-state'
 import {
   addMsgs,

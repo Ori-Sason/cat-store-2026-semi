@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { PendingChatMsg } from '../../models/chat'
+import type { PendingChatMsg } from '../../../models/chat'
 import { makeMsg, makeMsgId, makeTombstone } from './chat-test.helper'
 import {
   getNewestMsgId,

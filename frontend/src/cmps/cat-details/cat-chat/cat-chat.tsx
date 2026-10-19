@@ -1,7 +1,7 @@
 import type React from 'react'
 import { useEffect, useId, useRef, useState } from 'react'
 import type { ChatMsg } from '@cat-store/shared'
-import { useCatChat } from '../../../hooks/use-cat-chat/use-cat-chat'
+import { useCatChat } from '../../../hooks/cat-chat/use-cat-chat/use-cat-chat'
 import { useLoggedInUserStore } from '../../../store/logged-in-user.store'
 import { ReviewListSkeleton } from '../../common/review/review-list-skeleton'
 import { ChatComposer } from './chat-footer/chat-composer'
