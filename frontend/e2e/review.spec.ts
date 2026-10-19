@@ -51,7 +51,7 @@ async function _editReview(page: Page, content: string, newContent: string) {
 
 async function _deleteReview(page: Page, content: string) {
   await _chooseAction(page, content, 'Delete')
-  const dialog = page.getByRole('dialog', { name: 'Delete this review?' })
+  const dialog = page.getByRole('alertdialog', { name: 'Delete this review?' })
   await dialog.getByRole('button', { name: 'Delete' }).click()
 
   await expect(page.getByRole('status')).toContainText('Review deleted')

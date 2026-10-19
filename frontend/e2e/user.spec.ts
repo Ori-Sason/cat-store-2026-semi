@@ -36,7 +36,7 @@ test('a user adds a cat and gets Edit / Delete only on their own', async ({ page
   // Clean up through the UI, which also covers an owner's delete
   await page.goto(ownCatUrl)
   await page.getByRole('button', { name: 'Delete' }).click()
-  await page.getByRole('dialog').getByRole('button', { name: 'Delete' }).click()
+  await page.getByRole('alertdialog').getByRole('button', { name: 'Delete' }).click()
   await expect(page).toHaveURL(/\/cat$/)
   await expect(page.getByRole('status')).toContainText('Cat deleted')
 })

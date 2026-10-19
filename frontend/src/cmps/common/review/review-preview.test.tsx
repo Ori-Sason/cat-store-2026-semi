@@ -303,10 +303,10 @@ describe('ReviewPreview', () => {
       const review = await _findReview()
 
       await _choose(review, 'Delete')
-      const dialog = screen.getByRole('dialog', { name: 'Delete this review?' })
+      const dialog = screen.getByRole('alertdialog', { name: 'Delete this review?' })
       await userEvent.click(within(dialog).getByRole('button', { name: 'Cancel' }))
 
-      expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+      expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
       expect(reviewService.remove).not.toHaveBeenCalled()
     })
 
@@ -317,7 +317,7 @@ describe('ReviewPreview', () => {
 
       await _choose(review, 'Delete')
       vi.mocked(reviewService.query).mockResolvedValue([])
-      const dialog = screen.getByRole('dialog', { name: 'Delete this review?' })
+      const dialog = screen.getByRole('alertdialog', { name: 'Delete this review?' })
       await userEvent.click(within(dialog).getByRole('button', { name: 'Delete' }))
 
       expect(await screen.findByText('No reviews yet')).toBeInTheDocument()
@@ -333,7 +333,7 @@ describe('ReviewPreview', () => {
       const review = await _findReview()
 
       await _choose(review, 'Delete')
-      const dialog = screen.getByRole('dialog', { name: 'Delete this review?' })
+      const dialog = screen.getByRole('alertdialog', { name: 'Delete this review?' })
       await userEvent.click(within(dialog).getByRole('button', { name: 'Delete' }))
 
       await waitFor(() => expect(useUserMsgStore.getState().msg).toMatchObject({ type: 'error' }))

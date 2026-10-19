@@ -116,7 +116,7 @@ describe('routes', () => {
 
     await userEvent.click(within(review).getByRole('button', { name: 'Review actions' }))
     await userEvent.click(within(review).getByRole('button', { name: 'Delete' }))
-    const dialog = screen.getByRole('dialog', { name: 'Delete this review?' })
+    const dialog = screen.getByRole('alertdialog', { name: 'Delete this review?' })
     await userEvent.click(within(dialog).getByRole('button', { name: 'Delete' }))
 
     expect(await screen.findByText('No reviews yet')).toBeInTheDocument()

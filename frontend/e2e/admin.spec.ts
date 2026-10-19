@@ -23,7 +23,7 @@ async function _editCat(page: Page, newName: string, newPrice?: string) {
 
 async function _deleteCat(page: Page, name: string) {
   await page.getByRole('button', { name: 'Delete' }).click()
-  const dialog = page.getByRole('dialog', { name: `Delete ${name}?` })
+  const dialog = page.getByRole('alertdialog', { name: `Delete ${name}?` })
   await dialog.getByRole('button', { name: 'Delete' }).click()
 
   await expect(page).toHaveURL(/\/cat$/)

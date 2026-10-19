@@ -10,6 +10,9 @@ interface ConfirmModalProps {
   onClose: () => void
 }
 
+// A modal <dialog> that asks before a destructive action. role="alertdialog" over the native
+// dialog role: screen readers announce it as an interruption and read the msg with the title.
+// showModal() focuses the first button, Cancel: on a destructive choice, the safe one is the default
 export const ConfirmModal: React.FC<ConfirmModalProps> = ({
   isOpen,
   title,
@@ -20,6 +23,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
 }) => {
   const dialogRef = useRef<HTMLDialogElement>(null)
   const titleId = useId()
+  const msgId = useId()
 
   useEffect(() => {
     const dialog = dialogRef.current!
@@ -36,13 +40,15 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
     <dialog
       ref={dialogRef}
       className="confirm-modal"
+      role="alertdialog"
       aria-labelledby={titleId}
+      aria-describedby={msgId}
       onClose={onClose}
       onClick={onDialogClick}
     >
       <div className="content">
         <h2 id={titleId}>{title}</h2>
-        <p>{msg}</p>
+        <p id={msgId}>{msg}</p>
         <div className="actions">
           <button type="button" className="sub-btn" onClick={onClose}>
             Cancel

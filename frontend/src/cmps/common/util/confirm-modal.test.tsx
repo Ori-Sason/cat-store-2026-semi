@@ -20,17 +20,18 @@ function _renderModal(isOpen = true) {
 }
 
 describe('ConfirmModal', () => {
-  it('opens as a dialog named by its title', () => {
+  it('opens as an alertdialog named by its title and described by its msg', () => {
     _renderModal()
 
-    expect(screen.getByRole('dialog', { name: 'Delete Mitzi?' })).toHaveAttribute('open')
-    expect(screen.getByText("This can't be undone.")).toBeInTheDocument()
+    const dialog = screen.getByRole('alertdialog', { name: 'Delete Mitzi?' })
+    expect(dialog).toHaveAttribute('open')
+    expect(dialog).toHaveAccessibleDescription("This can't be undone.")
   })
 
   it('stays closed while isOpen is false', () => {
     _renderModal(false)
 
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
   })
 
   it('calls onConfirm from the confirm button', async () => {
@@ -53,7 +54,7 @@ describe('ConfirmModal', () => {
   it('calls onClose when the dialog closes itself (Esc)', () => {
     const { onClose } = _renderModal()
 
-    act(() => screen.getByRole<HTMLDialogElement>('dialog').close())
+    act(() => screen.getByRole<HTMLDialogElement>('alertdialog').close())
 
     expect(onClose).toHaveBeenCalledOnce()
   })
@@ -64,7 +65,7 @@ describe('ConfirmModal', () => {
     await userEvent.click(screen.getByText("This can't be undone."))
     expect(onClose).not.toHaveBeenCalled()
 
-    await userEvent.click(screen.getByRole('dialog'))
+    await userEvent.click(screen.getByRole('alertdialog'))
     expect(onClose).toHaveBeenCalledOnce()
   })
 })

@@ -175,10 +175,10 @@ describe('CatDetails', () => {
     _renderAt('/cat/cat-1')
     await userEvent.click(await screen.findByRole('button', { name: 'Delete' }))
 
-    const dialog = screen.getByRole('dialog', { name: 'Delete Mitzi?' })
+    const dialog = screen.getByRole('alertdialog', { name: 'Delete Mitzi?' })
     await userEvent.click(within(dialog).getByRole('button', { name: 'Cancel' }))
 
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
     expect(catService.remove).not.toHaveBeenCalled()
   })
 
@@ -187,7 +187,7 @@ describe('CatDetails', () => {
     const router = _renderAt('/cat/cat-1')
     await userEvent.click(await screen.findByRole('button', { name: 'Delete' }))
 
-    const dialog = screen.getByRole('dialog', { name: 'Delete Mitzi?' })
+    const dialog = screen.getByRole('alertdialog', { name: 'Delete Mitzi?' })
     await userEvent.click(within(dialog).getByRole('button', { name: 'Delete' }))
 
     await waitFor(() => expect(router.state.location.pathname).toBe('/cat'))
@@ -203,7 +203,7 @@ describe('CatDetails', () => {
     _renderAt('/cat/cat-1')
     await userEvent.click(await screen.findByRole('button', { name: 'Delete' }))
 
-    const dialog = screen.getByRole('dialog', { name: 'Delete Mitzi?' })
+    const dialog = screen.getByRole('alertdialog', { name: 'Delete Mitzi?' })
     await userEvent.click(within(dialog).getByRole('button', { name: 'Delete' }))
 
     expect(await screen.findByRole('button', { name: 'Delete' })).toBeEnabled()
@@ -382,7 +382,7 @@ describe('CatDetails reviews', () => {
       await _openReviewMenu('Delete')
       vi.mocked(reviewService.query).mockResolvedValue([])
 
-      const dialog = screen.getByRole('dialog', { name: 'Delete this review?' })
+      const dialog = screen.getByRole('alertdialog', { name: 'Delete this review?' })
       await userEvent.click(within(dialog).getByRole('button', { name: 'Delete' }))
 
       expect(await screen.findByText('No reviews yet')).toBeInTheDocument()
