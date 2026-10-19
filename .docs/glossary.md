@@ -53,11 +53,18 @@ don't assume it.
 | Suffix | Meaning | Lives in | Exists today |
 |---|---|---|---|
 | (none) | the stored entity as the API returns it, with string ids | `shared/` | `Cat`, `User` (no password), `Review`, `ChatMsg` |
-| `*Input` | what the client sends, inferred from `<entity>Schema` | `shared/` | `CatInput`, `UserInput`, `ReviewInput`, `ChatMsgInput` |
+| `*Input` | what the client sends, inferred from its `*Schema` (`catSchema` → `CatInput`) | `shared/` | `CatInput`, `UserInput`, `ReviewInput`, `ChatMsgInput`, `ChatMsgUpdateInput`, `ChatMsgRemoveInput`, `ChatRoomInput`, `ChatTypingInput` |
 | `*WithRefs` | the wire type with refs joined in place of their ids (`ownerId` → `owner`) | `shared/` | `CatWithRefs`, `ReviewWithRefs` |
 | `*Ref` | the slice of an entity a join carries, from `<ENTITY>_REF_FIELDS` | `shared/` | `CatRef`, `UserRef` |
 | `*Doc` | the DB shape of any of the above, with `ObjectId` ids | `backend/models/` | `CatDoc`, `UserDoc` (with the hash), `ReviewDoc`, `ChatMsgDoc`, `CatRefDoc`, `UserRefDoc`, `PublicUserDoc` |
 | `*JoinedDoc` | the aggregation output behind a `*WithRefs` | `backend/models/` | `CatJoinedDoc`, `ReviewJoinedDoc`, `ChatMsgJoinedDoc` |
+
+Socket events:
+- Every client → server event gets its own `*Input` and schema, since a socket event has no URL
+  to carry the ids (`ChatMsgUpdateInput` carries `catId` and `msgId`).
+- A server → client payload is named for what it reports, with no suffix and no schema, since
+  the client never sends it: `ChatTyping` (`ChatTypingInput` plus the typer's `user`),
+  `ChatPresence` (`{ catId, count, users }`, `users: null` for a guest socket).
 
 Avoid for all of them: `*Dto`, `New*`, `*Payload`, `*ToSave`, `Populated*`, `*Summary`, and
 page names (`CatDetails`, `Profile`, `ReviewDetails`) as type names. Also avoid:
@@ -70,12 +77,6 @@ The ones that don't follow the pattern:
   Avoid: `ReviewUpdate`.
 - `ChatMsg`: always carries the joined `user` (`UserRef | null`) in place of `userId`. Chat has no
   un-joined wire type, so it takes the plain name, not `ChatMsgWithRefs`.
-- `ChatMsgUpdateInput`, `ChatMsgRemoveInput`, `ChatRoomInput`, `ChatTypingInput`: the socket
-  payloads. Each event gets its own schema, since a socket event has no URL to carry the ids.
-- `ChatTyping`: the `chat:typing` the server relays to the room, `ChatTypingInput` plus the
-  typer's `user` (`UserRef`). Server → client only, so it has no schema.
-- `ChatPresence`: the `chat:presence-changed` snapshot, `{ catId, count, users }`, with
-  `users: null` for a guest socket. Server → client only, so it has no schema.
 - `ChatHistoryQuery`: the `beforeId` / `afterId` cursor of `GET /api/cats/:id/chat-msgs`.
   `ChatMsgOlderPage` / `ChatMsgNewerPage`: what it returns, by direction.
   Avoid: `ChatFilter` (it doesn't filter), `offset`, `cursor` as a field name.
