@@ -1,7 +1,7 @@
 import type React from 'react'
 import { useEffect, useId, useRef, useState } from 'react'
-import type { ChatMsg } from '@cat-store/shared'
 import { useCatChat } from '../../../hooks/cat-chat/use-cat-chat/use-cat-chat'
+import { useChatMsgRemoveConfirm } from '../../../hooks/cat-chat/use-chat-msg-remove-confirm'
 import { useLoggedInUserStore } from '../../../store/logged-in-user.store'
 import { ReviewListSkeleton } from '../../common/review/review-list-skeleton'
 import { ChatComposer } from './chat-footer/chat-composer'
@@ -11,8 +11,6 @@ import { ChatIcon } from './chat-icon'
 import { ChatJoinError } from './chat-main/chat-join-error'
 import { ChatLog } from './chat-main/chat-log'
 import { ChatMsgRemoveConfirm } from './chat-msg/chat-msg-remove-confirm'
-
-type ChatMsgWithText = Extract<ChatMsg, { isDeleted: false }>
 
 interface CatChatProps {
   catId: string
@@ -32,16 +30,7 @@ export const CatChat: React.FC<CatChatProps> = ({ catId, catName, catOwnerId }) 
   const titleId = useId()
   // Without isToggledRef, the chat icon is focused on mount: a closed chat never steals focus from the page
   const isToggledRef = useRef(false)
-  // The id of the msg the delete confirm asks about
-  const [removeMsgId, setRemoveMsgId] = useState<string | null>(null)
-  // The msg itself, quoted in the confirm. Gone or already a tombstone (someone else deleted it
-  // meanwhile) closes the confirm: there's nothing left to delete
-  const msgToRemove = removeMsgId
-    ? chat.msgs.find((msg): msg is ChatMsgWithText => msg._id === removeMsgId && !msg.isDeleted)
-    : undefined
-  const isRemoveConfirmOpen = !!msgToRemove
-  // Where the focus goes back to when the confirm closes: the msg's ⋮ button
-  const removeConfirmOpenerRef = useRef<HTMLElement | null>(null)
+  const removeConfirm = useChatMsgRemoveConfirm(chat.msgs, chat.removeMsg, panelRef)
 
   useEffect(() => {
     if (!isToggledRef.current) return
@@ -49,32 +38,11 @@ export const CatChat: React.FC<CatChatProps> = ({ catId, catName, catOwnerId }) 
     else iconRef.current?.focus()
   }, [isOpen])
 
-  // After the confirm closes, in an effect: until this render the log was inert, and an inert
-  // element can't take the focus. A confirmed remove disables the ⋮ button until its ack, so the
-  // panel takes the focus then, and it doesn't drop to <body>
-  useEffect(() => {
-    const opener = removeConfirmOpenerRef.current
-    if (isRemoveConfirmOpen || !opener) return
-    removeConfirmOpenerRef.current = null
-    if (opener.isConnected && !opener.matches(':disabled')) opener.focus()
-    else panelRef.current?.focus()
-  }, [isRemoveConfirmOpen])
-
   function toggleOpen(isOpenNext: boolean) {
     isToggledRef.current = true
     setIsOpen(isOpenNext)
     // Closing hides the panel, so a reopen starts without the confirm
-    setRemoveMsgId(null)
-  }
-
-  function openRemoveConfirm(msgId: string) {
-    removeConfirmOpenerRef.current = document.activeElement as HTMLElement | null
-    setRemoveMsgId(msgId)
-  }
-
-  function onConfirmRemove() {
-    if (removeMsgId) void chat.removeMsg(removeMsgId)
-    setRemoveMsgId(null)
+    removeConfirm.cancel()
   }
 
   // Escape closes, like the other popups. A click outside doesn't: the panel is a place to stay
@@ -102,7 +70,7 @@ export const CatChat: React.FC<CatChatProps> = ({ catId, catName, catOwnerId }) 
         <ChatHeader titleId={titleId} catName={catName} onClose={() => toggleOpen(false)} />
 
         {/* Inert under the delete confirm, which covers it. The header stays live */}
-        <div className="chat-body" inert={isRemoveConfirmOpen}>
+        <div className="chat-body" inert={removeConfirm.isOpen}>
           {chat.status === 'error' && <ChatJoinError onRetry={chat.retryLoadChat} />}
 
           {/* idle too: the first render after opening comes before the hook's fetch starts */}
@@ -123,7 +91,7 @@ export const CatChat: React.FC<CatChatProps> = ({ catId, catName, catOwnerId }) 
               onRetrySendMsg={chat.retrySendMsg}
               busyMsgs={chat.busyMsgs}
               onUpdateMsg={chat.updateMsg}
-              onRemoveMsg={openRemoveConfirm}
+              onRemoveMsg={removeConfirm.open}
             />
           )}
 
@@ -138,11 +106,11 @@ export const CatChat: React.FC<CatChatProps> = ({ catId, catName, catOwnerId }) 
           )}
         </div>
 
-        {msgToRemove && (
+        {removeConfirm.msgToRemove && (
           <ChatMsgRemoveConfirm
-            msgText={msgToRemove.text}
-            onConfirm={onConfirmRemove}
-            onCancel={() => setRemoveMsgId(null)}
+            msgText={removeConfirm.msgToRemove.text}
+            onConfirm={removeConfirm.confirm}
+            onCancel={removeConfirm.cancel}
           />
         )}
       </section>
