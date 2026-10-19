@@ -1,4 +1,5 @@
 import { act, renderHook, waitFor } from '@testing-library/react'
+import type { ChatMsgOlderPage } from '@cat-store/shared'
 import { StrictMode } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 import { ApiError } from '../../../models/api-error'
@@ -153,6 +154,31 @@ describe('useCatChat history', () => {
       expect(chatService.getOlderPage).toHaveBeenLastCalledWith(CAT_ID, makeMsgId(5))
       expect(idsOf(result.current.msgs)).toEqual([3, 4, 5, 6].map(makeMsgId))
       expect(result.current.isOlderAvailable).toBe(false)
+    })
+
+    it('is loading older only while the older page is on its way', async () => {
+      const olderPage = deferred<ChatMsgOlderPage>()
+      vi.mocked(chatService.getOlderPage)
+        .mockResolvedValueOnce(makePage([5, 6], makeMsgId(5)))
+        .mockReturnValueOnce(olderPage.promise)
+      const { result } = renderChat(CAT_ID, true)
+      await waitFor(() => expect(result.current.isOlderAvailable).toBe(true))
+      expect(result.current.isLoadingOlder).toBe(false)
+
+      let loadOlderDone!: Promise<void>
+      act(() => {
+        loadOlderDone = result.current.loadOlder()
+      })
+
+      expect(result.current.isLoadingOlder).toBe(true)
+
+      await act(async () => {
+        olderPage.resolve(makePage([3, 4], null))
+        await loadOlderDone
+      })
+
+      expect(result.current.isLoadingOlder).toBe(false)
+      expect(idsOf(result.current.msgs)).toEqual([3, 4, 5, 6].map(makeMsgId))
     })
 
     it('dedupes a msg that is already held', async () => {

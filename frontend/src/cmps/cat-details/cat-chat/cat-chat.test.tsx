@@ -177,6 +177,15 @@ describe('CatChat', () => {
       await userEvent.click(screen.getByRole('button', { name: 'Load older' }))
       expect(chat.loadOlder).toHaveBeenCalledOnce()
     })
+
+    // Disabled, so a second click can't fetch the same page twice
+    it('shows "Loading…" on a disabled button while older msgs load', async () => {
+      _mockChat({ msgs: [MSG], isOlderAvailable: true, isLoadingOlder: true })
+      _render()
+      await _open()
+      expect(screen.getByRole('button', { name: 'Loading…' })).toBeDisabled()
+      expect(screen.queryByRole('button', { name: 'Load older' })).not.toBeInTheDocument()
+    })
   })
 
   describe('the guest CTA', () => {
