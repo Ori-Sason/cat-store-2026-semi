@@ -2,6 +2,7 @@ import type React from 'react'
 import { useEffect, useId, useRef, useState } from 'react'
 import { useCatChat } from '../../../hooks/cat-chat/use-cat-chat/use-cat-chat'
 import { useChatMsgRemoveConfirm } from '../../../hooks/cat-chat/use-chat-msg-remove-confirm'
+import { useChatPresenceList } from '../../../hooks/cat-chat/use-chat-presence-list'
 import { chatService } from '../../../services/chat.service'
 import { useLoggedInUserStore } from '../../../store/logged-in-user.store'
 import { ReviewListSkeleton } from '../../common/review/review-list-skeleton'
@@ -38,29 +39,13 @@ export const CatChat: React.FC<CatChatProps> = ({ catId, catName, catOwnerId }) 
   // (see chatService.saveDraft). The cat-details key resets it on a cat switch
   const [composerText, setComposerText] = useState(() => chatService.getDraft(catId) ?? '')
   const removeConfirm = useChatMsgRemoveConfirm(chat.msgs, chat.removeMsg, panelRef)
-  // The panel body shows the log (with the typing line and the composer) or the "here now" list
-  const [view, setView] = useState<'log' | 'presence'>('log')
-  const presenceBtnRef = useRef<HTMLButtonElement>(null)
-
-  // Names reach only a logged-in socket, and only a logged-in viewer is shown them
-  const presenceUsers = loggedInUser ? (chat.presence?.users ?? null) : null
-  const isPresenceListAvailable = !!presenceUsers?.some((user) => user._id !== loggedInUser?._id)
-
-  if (view === 'presence' && !isPresenceListAvailable) setView('log')
-  const isPresenceListShown = view === 'presence' && isPresenceListAvailable
+  const presenceList = useChatPresenceList(chat.presence, loggedInUser, panelRef)
 
   useEffect(() => {
     if (!isToggledRef.current) return
     if (isOpen) panelRef.current?.focus()
     else iconRef.current?.focus()
   }, [isOpen])
-
-  // The presence list closed by itself and took the focused back button with it. "Back to chat"
-  // moves the focus itself, so this only catches the focus that dropped to <body>
-  useEffect(() => {
-    if (isPresenceListShown || document.activeElement !== document.body) return
-    panelRef.current?.focus()
-  }, [isPresenceListShown])
 
   function onComposerTextChange(text: string) {
     setComposerText(text)
@@ -72,22 +57,13 @@ export const CatChat: React.FC<CatChatProps> = ({ catId, catName, catOwnerId }) 
     setIsOpen(isOpenNext)
     // Closing hides the panel, so a reopen starts on the log, without the confirm
     removeConfirm.cancel()
-    setView('log')
+    presenceList.reset()
   }
 
-  // The header's count only opens the list. The way back is "Back to chat", so a second click on
-  // the count does nothing
   function openPresenceList() {
-    if (isPresenceListShown) return
     // The confirm belongs to the log, which the list hides
     removeConfirm.cancel()
-    setView('presence')
-  }
-
-  // The header's count is still there (the list shows only while it's a button), so it takes the focus
-  function closePresenceList() {
-    setView('log')
-    presenceBtnRef.current?.focus()
+    presenceList.showList()
   }
 
   // Escape closes, like the other popups. A click outside doesn't: the panel is a place to stay
@@ -117,11 +93,11 @@ export const CatChat: React.FC<CatChatProps> = ({ catId, catName, catOwnerId }) 
           catName={catName}
           presenceCount={{
             count: chat.presence?.count ?? 0,
-            isJustYou: !!presenceUsers && !isPresenceListAvailable,
-            isListAvailable: isPresenceListAvailable,
-            isListShown: isPresenceListShown,
+            isJustYou: presenceList.isJustYou,
+            isListAvailable: presenceList.isAvailable,
+            isListShown: presenceList.isShown,
             onOpenList: openPresenceList,
-            ref: presenceBtnRef,
+            ref: presenceList.countRef,
           }}
           onClose={() => toggleOpen(false)}
         />
@@ -131,8 +107,8 @@ export const CatChat: React.FC<CatChatProps> = ({ catId, catName, catOwnerId }) 
             Hidden, not unmounted, under the list: an open inline edit, the scroll
             position and the pin to the bottom survive a look at who's here */}
         <div
-          className={`chat-body${isPresenceListShown ? ' is-hidden' : ''}`}
-          inert={removeConfirm.isOpen || isPresenceListShown}
+          className={`chat-body${presenceList.isShown ? ' is-hidden' : ''}`}
+          inert={removeConfirm.isOpen || presenceList.isShown}
         >
           {chat.status === 'error' && <ChatJoinError onRetry={chat.retryLoadChat} />}
 
@@ -174,12 +150,12 @@ export const CatChat: React.FC<CatChatProps> = ({ catId, catName, catOwnerId }) 
           )}
         </div>
 
-        {isPresenceListShown && loggedInUser && presenceUsers && (
+        {presenceList.isShown && loggedInUser && presenceList.users && (
           <ChatPresenceList
-            users={presenceUsers}
+            users={presenceList.users}
             loggedInUserId={loggedInUser._id}
             catOwnerId={catOwnerId}
-            onBack={closePresenceList}
+            onBack={presenceList.hideList}
           />
         )}
 
