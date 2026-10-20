@@ -3,8 +3,10 @@ import {
   CHAT_MSG_ADDED,
   CHAT_MSG_REMOVED,
   CHAT_MSG_UPDATED,
+  CHAT_PRESENCE_CHANGED,
   CHAT_TYPING,
   type ChatMsgWithRefs,
+  type ChatPresence,
   type ChatRoomInput,
   type ChatTyping,
   type LoggedInUser,
@@ -74,12 +76,22 @@ export function useCatChat(catId: string, isOpen: boolean) {
       if (typing.catId !== roomTracker.catId) return
       onTyping(roomTracker, typing)
     }
+    // A full snapshot, not a ±1, so it replaces the last one whole
+    const onPresenceChanged = (presence: ChatPresence) => {
+      if (presence.catId !== roomTracker.catId) return
+      updateChat(roomTracker, (prev) => ({ ...prev, presence }))
+    }
     const onConnect = () => void rejoin(roomTracker)
+    // Offline, the count goes stale and nothing would correct it. The rejoin on connect brings a
+    // fresh snapshot
+    const onDisconnect = () => updateChat(roomTracker, (prev) => ({ ...prev, presence: null }))
     socketService.on(CHAT_MSG_ADDED, onMsgAdded)
     socketService.on(CHAT_MSG_UPDATED, onMsgChanged)
     socketService.on(CHAT_MSG_REMOVED, onMsgChanged)
     socketService.on(CHAT_TYPING, onTypingEvent)
+    socketService.on(CHAT_PRESENCE_CHANGED, onPresenceChanged)
     socketService.on('connect', onConnect)
+    socketService.on('disconnect', onDisconnect)
 
     return () => {
       roomTracker.isActive = false
@@ -88,7 +100,9 @@ export function useCatChat(catId: string, isOpen: boolean) {
       socketService.off(CHAT_MSG_UPDATED, onMsgChanged)
       socketService.off(CHAT_MSG_REMOVED, onMsgChanged)
       socketService.off(CHAT_TYPING, onTypingEvent)
+      socketService.off(CHAT_PRESENCE_CHANGED, onPresenceChanged)
       socketService.off('connect', onConnect)
+      socketService.off('disconnect', onDisconnect)
       clearTyperTimeouts(roomTracker)
       // Before the leave: once out of the room, the server drops chat:typing
       stopOwnTyping(roomTracker)
@@ -168,6 +182,7 @@ export function useCatChat(catId: string, isOpen: boolean) {
     unreadCount: isOpen ? 0 : chat.unreadCount,
     busyMsgs: chat.busyMsgs,
     typers: chat.typers,
+    presence: chat.presence,
     loadOlder,
     retryLoadChat,
     sendMsg,

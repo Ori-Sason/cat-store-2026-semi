@@ -43,6 +43,7 @@ function _mockChat(overrides: Partial<CatChatHook> = {}) {
     unreadCount: 0,
     busyMsgs: {},
     typers: [],
+    presence: null,
     loadOlder: vi.fn(),
     retryLoadChat: vi.fn(),
     sendMsg: vi.fn(),

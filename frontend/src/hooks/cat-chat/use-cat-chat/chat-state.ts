@@ -1,4 +1,4 @@
-import type { ChatMsgWithRefs, UserRef } from '@cat-store/shared'
+import type { ChatMsgWithRefs, ChatPresence, UserRef } from '@cat-store/shared'
 import type { PendingChatMsg } from '../../../models/chat'
 
 // idle: not opened yet. loading: the first page is on its way. error: the join or that fetch failed
@@ -16,6 +16,9 @@ export interface CatChatState {
   unreadCount: number // msgs from others since the panel was last open
   busyMsgs: Partial<Record<string, ChatMsgBusyAction>> // by _id
   typers: UserRef[] // who is typing right now, in the order they started
+  // Who's on the cat's page, from the server's last snapshot. null until the first one, and again
+  // while the socket is offline: nothing would correct a stale count then
+  presence: ChatPresence | null
 }
 
 // The server event payloads for chat:msg-added / updated / removed, and the acks of
@@ -34,5 +37,6 @@ export function getInitialChatState(): CatChatState {
     unreadCount: 0,
     busyMsgs: {},
     typers: [],
+    presence: null,
   }
 }
