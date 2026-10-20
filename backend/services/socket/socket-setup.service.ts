@@ -66,9 +66,11 @@ async function close(): Promise<void> {
 // on writes. A missing, bad or expired token is a guest, never a rejected handshake: a guest can
 // still read the chat. Same-origin, so the browser sends the cookie on its own (sameSite strict)
 function _attachSocketTokenUser(socket: AppSocket, next: (err?: Error) => void): void {
-  const { cookies } = socket.request as { cookies?: Record<string, string> }
+  const { cookies } = socket.request as { cookies?: Record<string, unknown> }
+  // unknown, like attachTokenUser: cookie-parser turns a "j:{…}" cookie into an object
   const loginToken = cookies?.[LOGIN_TOKEN_COOKIE]
-  const decoded = loginToken ? authService.verifyLoginTokenWithExp(loginToken) : null
+  const decoded =
+    typeof loginToken === 'string' ? authService.verifyLoginTokenWithExp(loginToken) : null
 
   socket.data.tokenUser = decoded?.loggedInUser ?? null
   socket.data.tokenExp = decoded?.exp ?? null

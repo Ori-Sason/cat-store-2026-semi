@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken'
 import type { LoggedInUser } from '@cat-store/shared'
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 import { authService } from '../../api/auth/auth.service.ts'
 import { config } from '../../config/index.ts'
 import { startSocketServer } from '../../test/socket-server.helper.ts'
@@ -77,6 +77,21 @@ describe('socketSetupService handshake', () => {
       tokenExp: null,
       wantedCatIds: new Set(),
     })
+  })
+
+  // cookie-parser turns a "j:{…}" cookie into an object. The handshake must not pass it on as a
+  // token: today jwt.verify would throw and be caught, but only by luck of where the catch sits
+  it('connects a JSON cookie as a guest, without verifying it', async () => {
+    const verifySpy = vi.spyOn(authService, 'verifyLoginTokenWithExp')
+    const client = await server.connectClient(`loginToken=${encodeURIComponent('j:{"token":"x"}')}`)
+
+    expect(await _serverSocketDataFor(client.id)).toEqual({
+      tokenUser: null,
+      tokenExp: null,
+      wantedCatIds: new Set(),
+    })
+    expect(verifySpy).not.toHaveBeenCalled()
+    verifySpy.mockRestore()
   })
 
   // The handshake arrives on the WebSocket upgrade then, not a polling GET. engine.use must
