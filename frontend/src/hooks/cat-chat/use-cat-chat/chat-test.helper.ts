@@ -97,8 +97,8 @@ export function joinCalls() {
 }
 
 export function renderChat(catId = CAT_ID, isOpen = false) {
-  return renderHook((props) => useCatChat(props.catId, props.isOpen), {
-    initialProps: { catId, isOpen },
+  return renderHook((props) => useCatChat(props.catId, props.isOpen, props.isCatDeleting), {
+    initialProps: { catId, isOpen, isCatDeleting: false },
   })
 }
 

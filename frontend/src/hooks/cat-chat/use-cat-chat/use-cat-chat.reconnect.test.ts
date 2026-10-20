@@ -152,6 +152,24 @@ describe('useCatChat failed join', () => {
     })
   })
 
+  // The viewer's own delete: a join still in flight when the DELETE commits acks CAT_NOT_FOUND
+  it("doesn't redirect while the page's own delete is in flight", async () => {
+    let reject!: (err: unknown) => void
+    const pendingJoin = new Promise<object>((_, rej) => (reject = rej))
+    vi.mocked(socketService.emitWithAck).mockReturnValueOnce(pendingJoin)
+    const { rerender } = renderChat()
+
+    useUserMsgStore.getState().queueSuccessNavigationMsg('Cat deleted')
+    rerender({ catId: CAT_ID, isOpen: false, isCatDeleting: true })
+    await act(async () => {
+      reject(new ApiError(0, 'CAT_NOT_FOUND', 'Cat not found'))
+      await pendingJoin.catch(() => {})
+    })
+
+    expect(navigate).not.toHaveBeenCalled()
+    expect(useUserMsgStore.getState().navigationMsg).toMatchObject({ txt: 'Cat deleted' })
+  })
+
   // A socket that was offline when the cat was deleted learns it from the rejoin
   it('redirects when a rejoin finds the cat gone', async () => {
     await renderReadyChat([1])

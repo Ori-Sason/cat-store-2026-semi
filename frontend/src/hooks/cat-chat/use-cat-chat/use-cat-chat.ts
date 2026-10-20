@@ -37,8 +37,10 @@ import { clearTyperTimeouts, onTyping, reportOwnTyping, stopOwnTyping } from './
 // This file is the React side: the state, the effects and the actions the UI calls. The work
 // behind them lives next to it, as plain functions that take the room tracker.
 // One mount per cat: cat-details keys CatChat by the cat, so a cat switch remounts it and the
-// state starts fresh. catId is the cat doc's _id, lowercase like every catId on the wire
-export function useCatChat(catId: string, isOpen: boolean) {
+// state starts fresh. catId is the cat doc's _id, lowercase like every catId on the wire.
+// isCatDeleting: the page's delete is in flight, from the submit until its redirect lands. A
+// CAT_NOT_FOUND can't tell this viewer's delete from someone else's, and only the page knows
+export function useCatChat(catId: string, isOpen: boolean, isCatDeleting: boolean) {
   // chat: what's drawn. React state, so a change rerenders the UI.
   // roomTrackerRef: the bookkeeping behind it. A mutable object async code reads and writes, never rendered
   const [chat, setChat] = useState(getInitialChatState)
@@ -52,6 +54,9 @@ export function useCatChat(catId: string, isOpen: boolean) {
     updateChat(roomTracker, (prev) => ({ ...prev, unreadCount: prev.unreadCount + 1 }))
   })
   const goToCatList = useEffectEvent(() => {
+    // The viewer's own delete: a join still in flight when the DELETE commits acks CAT_NOT_FOUND
+    // too. The delete's redirect and its "Cat deleted" own that exit
+    if (isCatDeleting) return
     useUserMsgStore.getState().queueErrorNavigationMsg('This cat was deleted')
     void navigate('/cat', { replace: true })
   })

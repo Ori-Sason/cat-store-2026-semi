@@ -214,7 +214,7 @@ describe('useCatChat updateMsg and removeMsg', () => {
 
     it("doesn't count a change as unread", async () => {
       const { result, rerender } = await renderReadyChat([1])
-      rerender({ catId: CAT_ID, isOpen: false })
+      rerender({ catId: CAT_ID, isOpen: false, isCatDeleting: false })
 
       act(() => serverEmit('chat:msg-updated', { msg: _editedMsg(1) }))
 

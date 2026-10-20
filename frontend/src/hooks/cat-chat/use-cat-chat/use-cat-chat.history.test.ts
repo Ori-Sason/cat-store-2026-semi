@@ -46,10 +46,13 @@ describe('useCatChat history', () => {
     // Dev mode runs mount effects twice: join → leave → join, and the room stays joined
     it('ends joined under StrictMode, and the first open fetches once', async () => {
       vi.mocked(chatService.getOlderPage).mockResolvedValue(makePage([1], null))
-      const { result, rerender } = renderHook((props) => useCatChat(props.catId, props.isOpen), {
-        initialProps: { catId: CAT_ID, isOpen: false },
-        wrapper: StrictMode,
-      })
+      const { result, rerender } = renderHook(
+        (props) => useCatChat(props.catId, props.isOpen, false),
+        {
+          initialProps: { catId: CAT_ID, isOpen: false },
+          wrapper: StrictMode,
+        },
+      )
 
       expect(vi.mocked(socketService.emitWithAck).mock.calls.map(([event]) => event)).toEqual([
         'chat:join',
@@ -71,7 +74,7 @@ describe('useCatChat history', () => {
       vi.mocked(chatService.getOlderPage)
         .mockReturnValueOnce(oldFetch.promise)
         .mockReturnValueOnce(newFetch.promise)
-      const { result } = renderHook(() => useCatChat(CAT_ID, true), { wrapper: StrictMode })
+      const { result } = renderHook(() => useCatChat(CAT_ID, true, false), { wrapper: StrictMode })
       await waitFor(() => expect(chatService.getOlderPage).toHaveBeenCalledTimes(2))
 
       await act(async () => newFetch.resolve(makePage([2, 3], null)))
@@ -96,7 +99,7 @@ describe('useCatChat history', () => {
       vi.mocked(chatService.getOlderPage).mockResolvedValue(makePage([1, 2], null))
       const { result, rerender } = renderChat()
 
-      rerender({ catId: CAT_ID, isOpen: true })
+      rerender({ catId: CAT_ID, isOpen: true, isCatDeleting: false })
       await act(() => Promise.resolve())
       expect(result.current.status).toBe('loading')
       expect(chatService.getOlderPage).not.toHaveBeenCalled()
@@ -113,8 +116,8 @@ describe('useCatChat history', () => {
       const { result, rerender } = renderChat(CAT_ID, true)
       await waitFor(() => expect(result.current.status).toBe('ready'))
 
-      rerender({ catId: CAT_ID, isOpen: false })
-      rerender({ catId: CAT_ID, isOpen: true })
+      rerender({ catId: CAT_ID, isOpen: false, isCatDeleting: false })
+      rerender({ catId: CAT_ID, isOpen: true, isCatDeleting: false })
 
       expect(chatService.getOlderPage).toHaveBeenCalledOnce()
       expect(idsOf(result.current.msgs)).toEqual([makeMsgId(1)])

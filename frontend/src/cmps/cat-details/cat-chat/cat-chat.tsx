@@ -20,14 +20,15 @@ interface CatChatProps {
   catId: string
   catName: string
   catOwnerId: string // for the Owner chip
+  isCatDeleting: boolean // the page's delete is in flight (see useCatChat)
 }
 
 // The chat icon (bottom right, with the unread badge) and the panel it opens. Closing only hides
 // the panel: the room stays joined and the msgs stay in the hook, so a reopen doesn't refetch and
 // the badge counts again.
-export const CatChat: React.FC<CatChatProps> = ({ catId, catName, catOwnerId }) => {
+export const CatChat: React.FC<CatChatProps> = ({ catId, catName, catOwnerId, isCatDeleting }) => {
   const [isOpen, setIsOpen] = useState(false)
-  const chat = useCatChat(catId, isOpen)
+  const chat = useCatChat(catId, isOpen, isCatDeleting)
   const loggedInUser = useLoggedInUserStore((state) => state.loggedInUser)
   const iconRef = useRef<HTMLButtonElement>(null)
   const panelRef = useRef<HTMLElement>(null)

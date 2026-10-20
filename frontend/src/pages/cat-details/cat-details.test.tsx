@@ -1,4 +1,4 @@
-import { render, screen, waitFor, within } from '@testing-library/react'
+import { act, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { CatWithRefs, LoggedInUser, Review, ReviewWithRefs } from '@cat-store/shared'
 import { createMemoryRouter, RouterProvider } from 'react-router'
@@ -8,6 +8,7 @@ import { ApiError } from '../../models/api-error'
 import type { BackToLocationState } from '../../models/util'
 import { catService } from '../../services/cat.service'
 import { reviewService } from '../../services/review.service'
+import { socketService } from '../../services/socket.service'
 import { useLoggedInUserStore } from '../../store/logged-in-user.store'
 import { useUserMsgStore } from '../../store/user-msg.store'
 import { utilService } from '../../services/util.service'
@@ -22,6 +23,9 @@ vi.mock('../../services/cat.service')
 vi.mock('../../services/review.service')
 // The page mounts the chat, which joins its room. These tests are about the rest of the page
 vi.mock('../../services/socket.service')
+
+// The list's loader, so a test can hold the redirect after a delete mid-flight
+const catListLoader = vi.fn()
 
 const CAT = {
   _id: 'cat-1',
@@ -62,7 +66,7 @@ function _renderAt(path: string, state?: BackToLocationState) {
       {
         HydrateFallback: () => null,
         children: [
-          { path: '/cat', element: <p>Cat list</p> },
+          { path: '/cat', loader: catListLoader, element: <p>Cat list</p> },
           {
             errorElement: <RouteError />,
             children: [
@@ -110,6 +114,7 @@ function _renderAt(path: string, state?: BackToLocationState) {
 describe('CatDetails', () => {
   beforeEach(() => {
     vi.resetAllMocks()
+    catListLoader.mockResolvedValue(null)
     vi.mocked(catService.getById).mockResolvedValue(CAT)
     vi.mocked(reviewService.query).mockResolvedValue([])
     // The owner, so Edit / Delete show - the cat rules have their own tests below
@@ -193,6 +198,36 @@ describe('CatDetails', () => {
     await waitFor(() => expect(router.state.location.pathname).toBe('/cat'))
     expect(catService.remove).toHaveBeenCalledWith('cat-1')
     expect(screen.getByText('Cat list')).toBeInTheDocument()
+  })
+
+  // The chat's join can still be in flight when the DELETE commits, and then acks CAT_NOT_FOUND.
+  // That's this viewer's own delete, so its "Cat deleted" stays, not the chat's "This cat was deleted".
+  // The ack lands after the DELETE's response, while the redirect to the list is still loading
+  it("keeps the delete's msg when the chat's join finds the cat gone mid-delete", async () => {
+    let rejectJoin!: (err: unknown) => void
+    const pendingJoin = new Promise<never>((_, reject) => (rejectJoin = reject))
+    vi.mocked(socketService.emitWithAck).mockReturnValueOnce(pendingJoin)
+    vi.mocked(catService.remove).mockResolvedValue()
+    let resolveCatList!: (value: null) => void
+    catListLoader.mockReturnValueOnce(new Promise((res) => (resolveCatList = res)))
+    const router = _renderAt('/cat/cat-1')
+    await userEvent.click(await screen.findByRole('button', { name: 'Delete' }))
+    const dialog = screen.getByRole('alertdialog', { name: 'Delete Mitzi?' })
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Delete' }))
+    await waitFor(() => expect(catListLoader).toHaveBeenCalledOnce())
+
+    await act(async () => {
+      rejectJoin(new ApiError(0, 'CAT_NOT_FOUND', 'Cat not found'))
+      await pendingJoin.catch(() => {})
+    })
+    await act(async () => resolveCatList(null))
+
+    await waitFor(() => expect(router.state.location.pathname).toBe('/cat'))
+    expect(catListLoader).toHaveBeenCalledOnce()
+    expect(useUserMsgStore.getState().navigationMsg).toMatchObject({
+      txt: 'Cat deleted',
+      type: 'success',
+    })
   })
 
   it('stays on the page with an error message when the delete fails', async () => {

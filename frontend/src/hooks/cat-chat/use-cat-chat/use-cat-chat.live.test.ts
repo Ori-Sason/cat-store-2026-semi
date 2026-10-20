@@ -54,7 +54,7 @@ describe('useCatChat live msgs', () => {
     const { result, rerender } = renderChat()
 
     act(() => serverEmit('chat:msg-added', { msg: makeMsg(3) }))
-    rerender({ catId: CAT_ID, isOpen: true })
+    rerender({ catId: CAT_ID, isOpen: true, isCatDeleting: false })
 
     await waitFor(() => expect(result.current.status).toBe('ready'))
     expect(idsOf(result.current.msgs)).toEqual([1, 2, 3].map(makeMsgId))
@@ -88,7 +88,7 @@ describe('useCatChat merge of two copies of one msg', () => {
     })
     const { result, rerender } = renderChat()
     act(() => serverEmit('chat:msg-added', { msg: liveMsg }))
-    rerender({ catId: CAT_ID, isOpen: true })
+    rerender({ catId: CAT_ID, isOpen: true, isCatDeleting: false })
     await waitFor(() => expect(result.current.status).toBe('ready'))
     return result.current.msgs
   }
@@ -155,12 +155,12 @@ describe('useCatChat unread count', () => {
     const { result, rerender } = renderChat()
     act(() => serverEmit('chat:msg-added', { msg: makeMsg(1) }))
 
-    rerender({ catId: CAT_ID, isOpen: true })
+    rerender({ catId: CAT_ID, isOpen: true, isCatDeleting: false })
     await waitFor(() => expect(result.current.status).toBe('ready'))
     act(() => serverEmit('chat:msg-added', { msg: makeMsg(2) }))
     expect(result.current.unreadCount).toBe(0)
 
-    rerender({ catId: CAT_ID, isOpen: false })
+    rerender({ catId: CAT_ID, isOpen: false, isCatDeleting: false })
     expect(result.current.unreadCount).toBe(0)
     act(() => serverEmit('chat:msg-added', { msg: makeMsg(3) }))
     expect(result.current.unreadCount).toBe(1)

@@ -63,7 +63,9 @@ function _render(loggedInUser: LoggedInUser | null = USER) {
     [
       {
         path: '/cat/:id',
-        element: <CatChat catId={CAT_ID} catName="Mitzi" catOwnerId="owner-1" />,
+        element: (
+          <CatChat catId={CAT_ID} catName="Mitzi" catOwnerId="owner-1" isCatDeleting={false} />
+        ),
       },
     ],
     { initialEntries: [`/cat/${CAT_ID}`] },
@@ -105,14 +107,14 @@ describe('CatChat', () => {
     it('opens the panel in place of the icon, and tells the hook', async () => {
       _mockChat({ msgs: [MSG] })
       _render()
-      expect(useCatChat).toHaveBeenLastCalledWith(CAT_ID, false)
+      expect(useCatChat).toHaveBeenLastCalledWith(CAT_ID, false, false)
       await _open()
 
       expect(screen.getByRole('region', { name: 'Chat' })).toHaveFocus()
       expect(screen.getByText('About Mitzi')).toBeInTheDocument()
       expect(screen.getByText('Is she ok with dogs?')).toBeInTheDocument()
       expect(screen.queryByRole('button', { name: /open chat/i })).not.toBeInTheDocument()
-      expect(useCatChat).toHaveBeenLastCalledWith(CAT_ID, true)
+      expect(useCatChat).toHaveBeenLastCalledWith(CAT_ID, true, false)
     })
 
     it('closes on × and gives the focus back to the icon', async () => {

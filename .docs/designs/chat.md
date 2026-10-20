@@ -529,6 +529,12 @@ That socket is a guest, and a guest can only read a chat that's public anyway.
 ## When a cat is deleted
 **Built:** `catService.remove` deletes the cat's `chatMsgs`. A client that rejoins a deleted cat
 gets `CAT_NOT_FOUND`, and the FE goes to `/cat` with a user msg.
+- **Except on the viewer's own delete.** A join in flight during the delete also gets
+  `CAT_NOT_FOUND`, so the chat would replace "Cat deleted" with "This cat was deleted". It's a
+  race between the REST `DELETE` and `chat:join`.
+  Solution: cat-details passes `isCatDeleting` (its delete fetcher isn't idle), and the chat skips
+  its redirect meanwhile.
+  *Not chosen:* `useNavigation()`. A fetcher submit leaves it `idle`.
 
 **Planned with Part 6 item 2** (the site-wide notifications):
 ```
