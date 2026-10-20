@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { socketService } from '../../services/socket.service.ts'
+import { socketService } from '../../services/socket/socket.service.ts'
 import { createFakeSocket } from '../../test/fake-socket.helper.ts'
 import { requireRoomMember } from './require-room-member.socket-middleware.ts'
 

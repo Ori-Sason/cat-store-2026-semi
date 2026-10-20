@@ -7,14 +7,14 @@ import {
   type SocketOptions,
 } from 'socket.io-client'
 import { app } from '../app.ts'
-import { socketService } from '../services/socket.service.ts'
+import { socketSetupService } from '../services/socket/socket-setup.service.ts'
 
 // A real http server with io attached through the same setup server.ts uses, on a random port.
 // Call it in beforeAll and close() in afterAll, only in files that need a socket.
 // Why not a Vitest globalSetup? that runs in a separate context, so test files wouldn't share its socketService
 export async function startSocketServer() {
   const http = createServer(app)
-  socketService.setup(http)
+  socketSetupService.setup(http)
   await new Promise<void>((resolve) => http.listen(0, resolve))
   const url = `http://localhost:${(http.address() as AddressInfo).port}`
 
@@ -43,7 +43,7 @@ export async function startSocketServer() {
   // Disconnect every client first, or an open one keeps Vitest from exiting
   async function close() {
     clients.forEach((client) => client.disconnect())
-    await socketService.close()
+    await socketSetupService.close()
   }
 
   return { url, connectClient, close }

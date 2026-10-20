@@ -15,7 +15,7 @@ import {
 } from '@cat-store/shared'
 import type { AppServer, SocketEvent } from '../../models/socket.ts'
 import { alsService } from '../../services/als.service.ts'
-import { socketService } from '../../services/socket.service.ts'
+import { socketService } from '../../services/socket/socket.service.ts'
 import { catService } from '../cat/cat.service.ts'
 import { chatService } from './chat.service.ts'
 

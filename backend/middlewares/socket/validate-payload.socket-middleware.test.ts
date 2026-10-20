@@ -1,6 +1,6 @@
 import { chatRoomSchema } from '@cat-store/shared'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { socketService } from '../../services/socket.service.ts'
+import { socketService } from '../../services/socket/socket.service.ts'
 import { createFakeSocket } from '../../test/fake-socket.helper.ts'
 import { validatePayload } from './validate-payload.socket-middleware.ts'
 

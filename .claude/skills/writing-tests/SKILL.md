@@ -62,11 +62,11 @@ How to write tests. When to write them lives in `.claude/rules/testing.md`.
   calls for it.
 - Backend socket tests: `startSocketServer()` (`backend/test/socket-server.helper.ts`) in
   `beforeAll`, its `close()` in `afterAll`. It's a real http server on a random port, with io
-  attached through the same `socketService.setup` as `server.ts`.
+  attached through the same `socketSetupService.setup` as `server.ts`.
   - Connect with its `connectClient(cookie?, options?)`, not `io()` directly. The cookie goes
     in `extraHeaders` (`loginToken=${authService.createLoginToken(...)}`), each call is a new
     connection (`forceNew`), and auto-reconnect is off.
-  - `close()` disconnects every client it made, then `socketService.close()`. A client left
+  - `close()` disconnects every client it made, then `socketSetupService.close()`. A client left
     open keeps Vitest from exiting, and a holder left set skips the emit no-op in later tests.
   - Read the server side of a socket with `socketService.getIo().fetchSockets()`, matched by
     the client's `id`.

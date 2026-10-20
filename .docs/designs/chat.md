@@ -504,7 +504,10 @@ for each socket in the room:  chat:presence-changed { catId, count, users }
 - **Socket.io attaches to the existing http server** through a setup function `server.ts` calls,
   never in `app.ts`. Prod gets one server for the FE, `/api` and `/socket.io`. `app.ts` stays the
   bare Express app Supertest uses.
-- **Shutdown: `socketService.close()` (`io.close()`) replaces `http.close()`.** `io.close()`
+- **Setup and close live in `socketSetupService`, apart from `socketService`.** Setup registers
+  the chat routes, while routes, controllers and steps import `socketService`. One file would make
+  an import cycle.
+- **Shutdown: `socketSetupService.close()` (`io.close()`) replaces `http.close()`.** `io.close()`
   disconnects every socket, then closes the http server itself. `http.close()` alone would wait on
   the open WebSockets until the safety timer kills the process. Clients see a transport close, so
   they keep reconnecting through a deploy, and the gap fill brings anything missed.

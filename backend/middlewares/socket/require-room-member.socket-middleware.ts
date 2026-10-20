@@ -1,6 +1,6 @@
 import { HttpError } from '../../models/http-error.ts'
 import type { SocketMiddleware } from '../../models/socket.ts'
-import { socketService } from '../../services/socket.service.ts'
+import { socketService } from '../../services/socket/socket.service.ts'
 
 // You can only act in a room you joined. No DB read: chat:join is the gate (it reads the cat),
 // so membership means the cat existed when the socket joined. Mount after validatePayload (it

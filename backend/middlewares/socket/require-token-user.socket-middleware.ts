@@ -1,6 +1,6 @@
 import { HttpError } from '../../models/http-error.ts'
 import type { SocketMiddleware } from '../../models/socket.ts'
-import { socketService } from '../../services/socket.service.ts'
+import { socketService } from '../../services/socket/socket.service.ts'
 
 // Lets through a logged-in socket whose token hasn't expired since the handshake. Token-only,
 // no DB read: for typing, which is frequent, and where a stale name for a few seconds is harmless.

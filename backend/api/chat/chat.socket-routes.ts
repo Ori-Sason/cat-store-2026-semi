@@ -4,6 +4,7 @@ import {
   CHAT_MSG_ADD,
   CHAT_MSG_REMOVE,
   CHAT_MSG_UPDATE,
+  CHAT_PRESENCE_CHANGED,
   CHAT_TYPING,
   chatMsgRemoveSchema,
   chatMsgSchema,
@@ -18,7 +19,7 @@ import { requireSocketUser } from '../../middlewares/socket/require-socket-user.
 import { requireTokenUser } from '../../middlewares/socket/require-token-user.socket-middleware.ts'
 import { validatePayload } from '../../middlewares/socket/validate-payload.socket-middleware.ts'
 import type { AppServer, AppSocket } from '../../models/socket.ts'
-import { socketService } from '../../services/socket.service.ts'
+import { socketService } from '../../services/socket/socket.service.ts'
 import { chatSocketController } from './chat.socket-controller.ts'
 
 // Every chat event's chain in one place, like chat.routes.ts for REST. Called once per socket,
@@ -66,7 +67,7 @@ export function registerChatSocketRoutes(socket: AppSocket): void {
   )
 }
 
-// Room-level chat events, called once per server by socketService.setup.
+// Room-level chat events, called once per server by socketSetupService.setup.
 // Presence hooks the adapter's join-room / leave-room, not the join / leave controllers. One
 // place covers all three triggers: the adapter emits join-room only when the socket wasn't in the
 // room yet (a repeat join announces nothing), and leave-room after removing the socket (so the
@@ -77,6 +78,22 @@ export function registerChatSocketRoutes(socket: AppSocket): void {
 // nodes' sockets. Fine with one instance
 export function registerChatRoomEvents(io: AppServer): void {
   const { adapter } = io.sockets
-  adapter.on('join-room', (room: string) => socketService.emitPresenceOnCatRoomChange(io, room))
-  adapter.on('leave-room', (room: string) => socketService.emitPresenceOnCatRoomChange(io, room))
+  adapter.on('join-room', (room: string) => _emitPresenceOnCatRoomChange(io, room))
+  adapter.on('leave-room', (room: string) => _emitPresenceOnCatRoomChange(io, room))
+}
+
+// The adapter's join-room / leave-room listener, attached by registerChatRoomEvents. Skips rooms
+// that aren't cat rooms.
+// Takes the io captured at setup, not getIo(): close() clears the holder before io.close(), and
+// every socket's leave-room fires during that close.
+// It runs synchronously inside socket.join / socket.leave / the disconnect cleanup, so a throw
+// would break that join or disconnect. Caught and logged instead
+function _emitPresenceOnCatRoomChange(io: AppServer, room: string): void {
+  const catId = socketService.getCatIdFromRoomName(room)
+  if (!catId) return
+  try {
+    chatSocketController.emitPresence(io, catId)
+  } catch (err) {
+    console.error(`[ws] ${CHAT_PRESENCE_CHANGED} for ${room}: failed to emit`, err)
+  }
 }
