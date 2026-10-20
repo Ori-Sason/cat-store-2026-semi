@@ -662,7 +662,17 @@ describe('chat:typing', () => {
     expect(typerTypings).toEqual([])
   })
 
-  it("drops a guest's typing", async () => {
+  // Typing has no ack, so the log line is what shows which step dropped it. Without
+  // requireTokenUser, a guest would still be dropped, but by a TypeError in the controller (a 500)
+  function _expectDroppedAsUnauthorized(consoleError: ReturnType<typeof vi.spyOn>) {
+    expect(console.warn).toHaveBeenCalledWith(
+      expect.stringMatching(new RegExp(`${CHAT_TYPING} -> 401 UNAUTHORIZED`)),
+    )
+    expect(consoleError).not.toHaveBeenCalled()
+  }
+
+  it("drops a guest's typing as UNAUTHORIZED", async () => {
+    const consoleError = vi.spyOn(console, 'error')
     const guest = await server.connectClient()
     await guest.emitWithAck(CHAT_JOIN, { catId })
     const other = await _joinedClient(NOAM)
@@ -673,6 +683,23 @@ describe('chat:typing', () => {
     await _flush(other)
 
     expect(otherTypings).toEqual([])
+    _expectDroppedAsUnauthorized(consoleError)
+  })
+
+  it('drops the typing of a token that expired after the handshake as UNAUTHORIZED', async () => {
+    const consoleError = vi.spyOn(console, 'error')
+    const typer = await _joinedClient(MAYA)
+    const [serverSocket] = await socketService.getIo().in(catRoom).fetchSockets()
+    serverSocket!.data.tokenExp = Math.floor(Date.now() / 1000) - 1
+    const other = await _joinedClient(NOAM)
+    const otherTypings = _collectTyping(other)
+
+    typer.emit(CHAT_TYPING, { catId, isTyping: true })
+    await _flush(typer)
+    await _flush(other)
+
+    expect(otherTypings).toEqual([])
+    _expectDroppedAsUnauthorized(consoleError)
   })
 
   it('drops the typing of a user who never joined the room', async () => {
