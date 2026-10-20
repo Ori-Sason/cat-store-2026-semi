@@ -553,7 +553,7 @@ REST delete: catService.remove ─▶ io.in(room).socketsLeave(room) ─▶ the 
 - **The deleted-cat redirect for someone online** waits for Part 6 item 2 (see above).
 
 ## Not built (optional)
-- **A per-socket rate limit on `chat:msg-add`.** Nothing stops a logged-in user from flooding a
-  room, and the typing throttle is client-side only. A small token bucket in `socket.data` (e.g. 5
-  messages per 10s) as a chain step would answer a new `RATE_LIMITED` code. A practice project with
-  seeded users isn't a spam target.
+- **A per-socket rate limit.** Nothing stops a user from flooding a room with `chat:msg-add`, or a
+  guest from looping join / leave, which pushes presence to the whole room each time. A token bucket
+  in `socket.data` (e.g. 5 per 10s) as a chain step would answer a new `RATE_LIMITED` code. A
+  practice project with seeded users isn't a spam target.
