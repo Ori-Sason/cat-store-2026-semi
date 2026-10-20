@@ -15,6 +15,7 @@ const fakeSocket = vi.hoisted(() => {
     off: vi.fn(),
     timeout: vi.fn(() => ({ emitWithAck })),
     emitWithAck,
+    connected: false,
   }
   return socket
 })
@@ -85,6 +86,16 @@ describe('socketService reconnect', () => {
 
     expect(fakeSocket.disconnect).not.toHaveBeenCalled()
     expect(fakeSocket.connect).not.toHaveBeenCalled()
+  })
+})
+
+describe('socketService.isConnected', () => {
+  it("follows the socket's connected flag", () => {
+    fakeSocket.connected = true
+    expect(socketService.isConnected()).toBe(true)
+
+    fakeSocket.connected = false
+    expect(socketService.isConnected()).toBe(false)
   })
 })
 

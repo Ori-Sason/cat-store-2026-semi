@@ -30,7 +30,8 @@ export const VIEWER: LoggedInUser = {
 // feed this map, and serverEmit calls whatever is still listening
 export const socketListeners = new Map<string, Set<(payload: unknown) => void>>()
 
-// Resets the mocks and the stores before each test, joins ack with {}, and wires the socket fake.
+// Resets the mocks and the stores before each test, joins ack with {}, the socket is connected,
+// and wires the socket fake.
 // Call it at the top level of the file
 export function setupChatTest() {
   beforeEach(() => {
@@ -38,6 +39,7 @@ export function setupChatTest() {
     useUserMsgStore.setState(useUserMsgStore.getInitialState())
     useLoggedInUserStore.setState(useLoggedInUserStore.getInitialState())
     vi.mocked(socketService.emitWithAck).mockResolvedValue({})
+    vi.mocked(socketService.isConnected).mockReturnValue(true)
     _listenToSocket()
   })
 }

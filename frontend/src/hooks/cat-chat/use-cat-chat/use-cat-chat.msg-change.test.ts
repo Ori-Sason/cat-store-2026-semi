@@ -61,7 +61,7 @@ describe('useCatChat updateMsg and removeMsg', () => {
       const { result } = await renderReadyChat([1, 2])
 
       let saved!: Promise<boolean>
-      act(() => {
+      await act(async () => {
         saved = result.current.updateMsg(makeMsgId(1), 'edited')
       })
 
@@ -88,7 +88,7 @@ describe('useCatChat updateMsg and removeMsg', () => {
       const { result } = await renderReadyChat([1])
 
       let saved!: Promise<boolean>
-      act(() => {
+      await act(async () => {
         saved = result.current.updateMsg(makeMsgId(1), 'edited')
       })
 
@@ -97,6 +97,22 @@ describe('useCatChat updateMsg and removeMsg', () => {
       expect(_textOf(result.current.msgs[0])).toBe('msg 1')
       expect(useUserMsgStore.getState().msg?.txt).toMatch(/^Couldn't save your edit\./)
       expect(useLoggedInUserStore.getState().loggedInUser).toEqual(VIEWER)
+    })
+
+    it('fails at once while offline as a connection error, and sends nothing', async () => {
+      const { result } = await renderReadyChat([1])
+      vi.mocked(socketService.isConnected).mockReturnValue(false)
+
+      await expect(act(() => result.current.updateMsg(makeMsgId(1), 'edited'))).resolves.toBe(false)
+
+      expect(socketService.emitWithAck).not.toHaveBeenCalledWith(
+        'chat:msg-update',
+        expect.anything(),
+      )
+      expect(_textOf(result.current.msgs[0])).toBe('msg 1')
+      expect(useUserMsgStore.getState().msg?.txt).toBe(
+        "Couldn't save your edit. Can't reach the server. Check your connection.",
+      )
     })
 
     it('says the session expired on UNAUTHORIZED, with no draft', async () => {
@@ -120,7 +136,7 @@ describe('useCatChat updateMsg and removeMsg', () => {
       _mockChangeAck(() => ack.promise)
       const { result } = await renderReadyChat([1])
 
-      act(() => void result.current.removeMsg(makeMsgId(1)))
+      await act(async () => void result.current.removeMsg(makeMsgId(1)))
 
       expect(socketService.emitWithAck).toHaveBeenLastCalledWith('chat:msg-remove', {
         catId: CAT_ID,
@@ -144,6 +160,24 @@ describe('useCatChat updateMsg and removeMsg', () => {
       expect(result.current.busyMsgs).toEqual({})
       expect(result.current.msgs[0].isDeleted).toBe(false)
       expect(useUserMsgStore.getState().msg?.txt).toMatch(/^Couldn't delete it\./)
+    })
+
+    // Regression: a buffered remove reached the server before the reconnect's rejoin, and the
+    // FORBIDDEN read as "you don't have permission"
+    it('fails at once while offline as a connection error, and sends nothing', async () => {
+      const { result } = await renderReadyChat([1])
+      vi.mocked(socketService.isConnected).mockReturnValue(false)
+
+      await act(() => result.current.removeMsg(makeMsgId(1)))
+
+      expect(socketService.emitWithAck).not.toHaveBeenCalledWith(
+        'chat:msg-remove',
+        expect.anything(),
+      )
+      expect(result.current.msgs[0].isDeleted).toBe(false)
+      expect(useUserMsgStore.getState().msg?.txt).toBe(
+        "Couldn't delete it. Can't reach the server. Check your connection.",
+      )
     })
 
     it('says the session expired on UNAUTHORIZED', async () => {

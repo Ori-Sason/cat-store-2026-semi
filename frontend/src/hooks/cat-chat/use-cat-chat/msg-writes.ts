@@ -59,7 +59,7 @@ export function resendFailedMsg(roomTracker: ChatRoomTracker, failedMsg: Pending
 export function emitMsgUpdate(roomTracker: ChatRoomTracker, msgId: string, text: string) {
   const payload = { catId: roomTracker.catId, msgId, text } satisfies ChatMsgUpdateInput
   return _emitMsgChange(roomTracker, msgId, 'updating', () =>
-    socketService.emitWithAck<ChatMsgEvent>(CHAT_MSG_UPDATE, payload),
+    _emitWrite(roomTracker, CHAT_MSG_UPDATE, payload),
   )
 }
 
@@ -67,7 +67,7 @@ export function emitMsgUpdate(roomTracker: ChatRoomTracker, msgId: string, text:
 export function emitMsgRemove(roomTracker: ChatRoomTracker, msgId: string) {
   const payload = { catId: roomTracker.catId, msgId } satisfies ChatMsgRemoveInput
   return _emitMsgChange(roomTracker, msgId, 'removing', () =>
-    socketService.emitWithAck<ChatMsgEvent>(CHAT_MSG_REMOVE, payload),
+    _emitWrite(roomTracker, CHAT_MSG_REMOVE, payload),
   )
 }
 
@@ -80,10 +80,7 @@ async function _sendPendingMsg(roomTracker: ChatRoomTracker, pendingMsg: Pending
   const { catId, clientMsgId, text } = pendingMsg
   try {
     const payload = { catId, clientMsgId, text }
-    const { msg } = await socketService.emitWithAck<ChatMsgEvent>(
-      CHAT_MSG_ADD,
-      payload satisfies ChatMsgInput,
-    )
+    const { msg } = await _emitWrite(roomTracker, CHAT_MSG_ADD, payload satisfies ChatMsgInput)
     addMsgs(roomTracker, [msg])
   } catch (err) {
     updateChat(roomTracker, (prev) => ({
@@ -132,6 +129,30 @@ async function _emitMsgChange(
   } finally {
     _setMsgBusy(roomTracker, msgId, null)
   }
+}
+
+// Every write (add, update, remove) goes through here. Offline, it fails at once as a
+// NETWORK_ERROR instead of waiting in socket.io-client's send buffer, which on reconnection will
+// flush that buffer before it fires 'connect', so a buffered write reaches the server before
+// the rejoin's chat:join, finds the new socket outside the room, and gets a FORBIDDEN.
+// chat:join itself keeps buffering: the mount's join can go out before the first connect.
+// Once online, it also waits for the latest join's ack: right after a reconnect, the rejoin is still in
+// flight, and a write sent alongside it could beat it to the server the same way. A failed join
+// fails the write with its error. Checked again after the wait, since the socket may drop meanwhile
+async function _emitWrite(roomTracker: ChatRoomTracker, event: string, payload: unknown) {
+  const assertConnected = () => {
+    if (!socketService.isConnected()) {
+      throw new ApiError(0, 'NETWORK_ERROR', `${event} while offline`)
+    }
+  }
+
+  const verifyConnection = async () => {
+    assertConnected()
+    await roomTracker.joinPromise // right after a reconnect, waits for the rejoin's ack
+    assertConnected()
+  }
+  await verifyConnection()
+  return socketService.emitWithAck<ChatMsgEvent>(event, payload)
 }
 
 function _setMsgBusy(

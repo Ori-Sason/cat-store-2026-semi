@@ -108,11 +108,11 @@ describe('useCatChat typing, sent', () => {
     expect(_sentTyping()).toEqual([])
   })
 
-  it('sends false before the msg on send', () => {
+  it('sends false before the msg on send', async () => {
     const { result } = renderChat()
 
     act(() => result.current.reportTyping('Hi'))
-    act(() => result.current.sendMsg('Hi'))
+    await act(async () => result.current.sendMsg('Hi'))
 
     expect(_sentTyping()).toEqual([true, false])
     const falseOrder = vi.mocked(socketService.emit).mock.invocationCallOrder.at(-1)!

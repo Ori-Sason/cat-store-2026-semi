@@ -17,6 +17,7 @@ type LoggedInUserState = ReturnType<typeof useLoggedInUserStore.getState>
 
 export const socketService = {
   connect,
+  isConnected,
   on,
   off,
   emit,
@@ -41,6 +42,10 @@ function _reconnectOnUserChange(state: LoggedInUserState, prevState: LoggedInUse
   const prevUserId = prevState.loggedInUser?._id ?? null
   if (userId === prevUserId) return
   _socket.disconnect().connect()
+}
+
+function isConnected(): boolean {
+  return _socket.connected
 }
 
 // Server events, plus socket.io-client's own ('connect' fires on every reconnect too).

@@ -58,7 +58,7 @@ describe('useCatChat sendMsg', () => {
     _mockSendAck(() => new Promise(() => {}))
     const { result } = await renderReadyChat([1])
 
-    act(() => result.current.sendMsg('Is she ok with dogs?'))
+    await act(async () => result.current.sendMsg('Is she ok with dogs?'))
 
     expect(result.current.pendingMsgs).toMatchObject([
       {
@@ -82,7 +82,7 @@ describe('useCatChat sendMsg', () => {
     _mockSendAck(() => ack.promise)
     const { result } = await renderReadyChat([1])
 
-    act(() => result.current.sendMsg('Hi'))
+    await act(async () => result.current.sendMsg('Hi'))
     await act(async () => ack.resolve({ msg: _savedMsg(2) }))
 
     expect(result.current.pendingMsgs).toEqual([])
@@ -95,7 +95,7 @@ describe('useCatChat sendMsg', () => {
     _mockSendAck(() => ack.promise)
     const { result } = await renderReadyChat([1])
 
-    act(() => result.current.sendMsg('Hi'))
+    await act(async () => result.current.sendMsg('Hi'))
     act(() => serverEmit('chat:msg-added', { msg: _savedMsg(2) }))
 
     expect(result.current.pendingMsgs).toEqual([])
@@ -107,7 +107,7 @@ describe('useCatChat sendMsg', () => {
     _mockSendAck(() => Promise.reject(new ApiError(0, 'NETWORK_ERROR', 'operation has timed out')))
     const { result } = await renderReadyChat([1])
 
-    act(() => result.current.sendMsg('Hi'))
+    await act(async () => result.current.sendMsg('Hi'))
 
     await waitFor(() => expect(result.current.pendingMsgs[0]?.sendStatus).toBe('failed'))
     expect(result.current.pendingMsgs[0].text).toBe('Hi')
@@ -116,11 +116,39 @@ describe('useCatChat sendMsg', () => {
     expect(chatService.saveDraft).not.toHaveBeenCalled()
   })
 
+  // Regression: a buffered send reached the server before the reconnect's rejoin, as FORBIDDEN
+  it('marks the msg failed at once while offline, and sends nothing', async () => {
+    const { result } = await renderReadyChat([1])
+    vi.mocked(socketService.isConnected).mockReturnValue(false)
+
+    await act(async () => result.current.sendMsg('Hi'))
+
+    await waitFor(() => expect(result.current.pendingMsgs[0]?.sendStatus).toBe('failed'))
+    expect(_sendCalls()).toEqual([])
+    expect(useUserMsgStore.getState().msg).toBeNull()
+  })
+
+  // Regression: right after a reconnect, a send could beat the rejoin to the server, as FORBIDDEN
+  it("holds a send until the rejoin's ack", async () => {
+    const { result } = await renderReadyChat([1])
+    const rejoinAck = deferred<unknown>()
+    vi.mocked(socketService.emitWithAck).mockImplementation((event) =>
+      event === 'chat:join' ? rejoinAck.promise : new Promise(() => {}),
+    )
+    act(() => serverEmit('connect'))
+
+    await act(async () => result.current.sendMsg('Hi'))
+    expect(_sendCalls()).toEqual([])
+
+    await act(async () => rejoinAck.resolve({}))
+    expect(_sendCalls()).toHaveLength(1)
+  })
+
   // A disconnect while the packet was in flight: the server may have saved it after all
   it('turns a failed msg into the saved one when its broadcast arrives late', async () => {
     _mockSendAck(() => Promise.reject(new ApiError(0, 'NETWORK_ERROR', 'timeout')))
     const { result } = await renderReadyChat([1])
-    act(() => result.current.sendMsg('Hi'))
+    await act(async () => result.current.sendMsg('Hi'))
     await waitFor(() => expect(result.current.pendingMsgs[0]?.sendStatus).toBe('failed'))
 
     act(() => serverEmit('chat:msg-added', { msg: _savedMsg(2) }))
@@ -132,7 +160,7 @@ describe('useCatChat sendMsg', () => {
   it('turns a failed msg into the saved one when the gap fill brings it', async () => {
     _mockSendAck(() => Promise.reject(new ApiError(0, 'NETWORK_ERROR', 'disconnected')))
     const { result } = await renderReadyChat([1])
-    act(() => result.current.sendMsg('Hi'))
+    await act(async () => result.current.sendMsg('Hi'))
     await waitFor(() => expect(result.current.pendingMsgs[0]?.sendStatus).toBe('failed'))
     vi.mocked(chatService.getNewerPage).mockResolvedValue({
       msgs: [_savedMsg(2)],
@@ -151,7 +179,7 @@ describe('useCatChat sendMsg', () => {
     _mockSendAck(() => new Promise((_, reject) => (rejectAck = reject)))
     const { result } = await renderReadyChat([1])
 
-    act(() => result.current.sendMsg('Hi'))
+    await act(async () => result.current.sendMsg('Hi'))
     act(() => serverEmit('chat:msg-added', { msg: _savedMsg(2) }))
     await act(async () => rejectAck(new ApiError(0, 'NETWORK_ERROR', 'timeout')))
 
@@ -162,12 +190,12 @@ describe('useCatChat sendMsg', () => {
   it('retries with the same clientMsgId, then shows the saved msg', async () => {
     _mockSendAck(() => Promise.reject(new ApiError(0, 'NETWORK_ERROR', 'timeout')))
     const { result } = await renderReadyChat([1])
-    act(() => result.current.sendMsg('Hi'))
+    await act(async () => result.current.sendMsg('Hi'))
     await waitFor(() => expect(result.current.pendingMsgs[0]?.sendStatus).toBe('failed'))
     const ack = deferred<unknown>()
     _mockSendAck(() => ack.promise)
 
-    act(() => result.current.retrySendMsg(result.current.pendingMsgs[0].clientMsgId))
+    await act(async () => result.current.retrySendMsg(result.current.pendingMsgs[0].clientMsgId))
 
     expect(result.current.pendingMsgs[0].sendStatus).toBe('sending')
     const [first, retried] = _sendCalls()
@@ -180,11 +208,11 @@ describe('useCatChat sendMsg', () => {
   it("doesn't retry once the viewer is no longer the author", async () => {
     _mockSendAck(() => Promise.reject(new ApiError(0, 'NETWORK_ERROR', 'timeout')))
     const { result } = await renderReadyChat([1])
-    act(() => result.current.sendMsg('Hi'))
+    await act(async () => result.current.sendMsg('Hi'))
     await waitFor(() => expect(result.current.pendingMsgs[0]?.sendStatus).toBe('failed'))
 
     act(() => useLoggedInUserStore.setState({ loggedInUser: null }))
-    act(() => result.current.retrySendMsg(result.current.pendingMsgs[0].clientMsgId))
+    await act(async () => result.current.retrySendMsg(result.current.pendingMsgs[0].clientMsgId))
 
     expect(_sendCalls()).toHaveLength(1)
     expect(result.current.pendingMsgs[0].sendStatus).toBe('failed')
@@ -194,7 +222,7 @@ describe('useCatChat sendMsg', () => {
     _mockSendAck(() => Promise.reject(new ApiError(0, 'UNAUTHORIZED', 'Login required')))
     const { result } = await renderReadyChat([1])
 
-    act(() => result.current.sendMsg('Hi'))
+    await act(async () => result.current.sendMsg('Hi'))
 
     await waitFor(() => expect(result.current.pendingMsgs[0]?.sendStatus).toBe('failed'))
     expect(result.current.pendingMsgs[0].text).toBe('Hi')

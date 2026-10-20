@@ -411,6 +411,9 @@ Every fetch and every live event goes through the same rules:
   flight, the server may have saved it. A later broadcast or the gap fill brings its
   `clientMsgId` back.
 - **Only the author can retry.** After a logout, the row keeps its text and a plain "Not sent".
+- **A write goes out only once the room is joined.** Offline, it fails at once as a
+  `NETWORK_ERROR`; online, it waits for the latest join's ack. Otherwise a write buffered offline,
+  or sent right after a reconnect, can reach the server before the rejoin and get `FORBIDDEN`.
 - **No client `retries` / `ackTimeout` options.** They would resend on their own, and stacked on
   the manual retry the attempts multiply. The manual retry keeps the failure visible.
 
