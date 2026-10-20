@@ -170,6 +170,27 @@ $_pill-sizes: (
   background-color: $primary-clr-800;
 }
 
+// A small uppercase label between two hairlines: the chat log's day dividers and the "here now"
+// list's heading, so the list reads as the same panel
+@mixin label-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: $primary-clr-850;
+
+  &::before,
+  &::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background-color: $primary-clr-200;
+  }
+}
+
 // The confirm look, shared by ConfirmModal and the chat's in-panel delete confirm, so the two
 // can't drift apart. The surface and the layout are two mixins: the modal's <dialog> is the
 // surface and keeps no padding (a click on the dialog itself is a backdrop click), so the layout

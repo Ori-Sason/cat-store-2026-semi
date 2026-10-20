@@ -1,0 +1,39 @@
+@use 'setup' as *;
+
+// The count on the header's subtitle line. As a button it reads like the subtitle text, with an
+// underline that firms up on hover
+.chat-presence-count {
+  flex-shrink: 0;
+
+  &:is(button) {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    color: $primary-clr-100;
+    border-radius: 2px;
+    text-decoration: underline;
+    text-decoration-color: rgba($primary-clr-300, 0.6);
+    text-underline-offset: 2px;
+
+    // Lit while the list shows, so the line reads as where the list came from
+    &:hover,
+    &[aria-disabled='true'] {
+      color: $clr-white;
+      text-decoration-color: currentColor;
+    }
+
+    &[aria-disabled='true'] {
+      cursor: default;
+    }
+
+    // Light, so the ring shows on the dark header strip
+    &:focus-visible {
+      outline: 2px solid $primary-clr-300;
+      outline-offset: 2px;
+    }
+
+    svg {
+      flex-shrink: 0;
+    }
+  }
+}

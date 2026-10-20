@@ -1,6 +1,6 @@
 import { act, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import type { ChatMsgWithRefs, LoggedInUser } from '@cat-store/shared'
+import type { ChatMsgWithRefs, ChatPresence, LoggedInUser, UserRef } from '@cat-store/shared'
 import { createMemoryRouter, RouterProvider } from 'react-router'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { useCatChat } from '../../../hooks/cat-chat/use-cat-chat/use-cat-chat'
@@ -427,6 +427,192 @@ describe('CatChat', () => {
       await _open()
 
       expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
+    })
+  })
+
+  describe('presence', () => {
+    const YOU: UserRef = { _id: USER._id, fullname: USER.fullname, isAdmin: false }
+    const OWNER: UserRef = { _id: 'owner-1', fullname: 'Tal Mizrahi', isAdmin: false }
+    const ADMIN: UserRef = { _id: 'user-3', fullname: 'Dana Katz', isAdmin: true }
+    const NOAM = MSG.user!
+
+    function _presence(users: UserRef[]): ChatPresence {
+      return { catId: CAT_ID, count: users.length, users }
+    }
+
+    // Any re-render reads the hook again: a new copy of the same user is one
+    function _rerenderWith(overrides: Partial<CatChatHook>) {
+      _mockChat(overrides)
+      act(() => useLoggedInUserStore.setState({ loggedInUser: { ...USER } }))
+    }
+
+    async function _openList() {
+      await _open()
+      await userEvent.click(screen.getByRole('button', { name: /here now/ }))
+      return screen.getByRole('region', { name: 'Here now' })
+    }
+
+    it('shows a guest the count as plain text', async () => {
+      _mockChat({ presence: { catId: CAT_ID, count: 2, users: null } })
+      _render(null)
+      await _open()
+
+      expect(screen.getByText('2 here now')).toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: /here now/ })).not.toBeInTheDocument()
+    })
+
+    it('shows no line with nobody logged in there', async () => {
+      _mockChat({ presence: { catId: CAT_ID, count: 0, users: null } })
+      _render(null)
+      await _open()
+      expect(screen.queryByText(/here/)).not.toBeInTheDocument()
+    })
+
+    it('shows no line before the first snapshot', async () => {
+      _mockChat()
+      _render()
+      await _open()
+      expect(screen.queryByText(/here/)).not.toBeInTheDocument()
+    })
+
+    // A list of one adds nothing the line didn't say
+    it('shows "Just you here" as plain text', async () => {
+      _mockChat({ presence: _presence([YOU]) })
+      _render()
+      await _open()
+
+      expect(screen.getByText('Just you here')).toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: /here/ })).not.toBeInTheDocument()
+    })
+
+    it("opens the list in the body's place, with the focus on the way back", async () => {
+      _mockChat({ msgs: [MSG], presence: _presence([NOAM, YOU]) })
+      _render()
+      await _openList()
+
+      expect(screen.getByRole('heading', { name: 'Here now' })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: '2 here now' })).toHaveAttribute(
+        'aria-disabled',
+        'true',
+      )
+      expect(screen.getByRole('button', { name: 'Back to chat' })).toHaveFocus()
+      // Hidden, not unmounted, so the log keeps its scroll and an open inline edit
+      expect(document.querySelector('.chat-body')).toHaveAttribute('inert')
+      expect(document.querySelector('.chat-body')).toHaveClass('is-hidden')
+      expect(screen.getByText('Is she ok with dogs?')).toBeInTheDocument()
+    })
+
+    it('lists you first with the You chip, then the others by name with their chips', async () => {
+      _mockChat({ presence: _presence([OWNER, NOAM, YOU, ADMIN]) })
+      _render()
+      const list = await _openList()
+
+      const rows = within(list).getAllByRole('listitem')
+      expect(rows.map((row) => row.querySelector('.name')?.textContent)).toEqual([
+        'Maya Levi',
+        'Dana Katz',
+        'Noam Cohen',
+        'Tal Mizrahi',
+      ])
+      expect(within(rows[0]!).getByText('You')).toBeInTheDocument()
+      expect(within(rows[1]!).getByText('Admin')).toBeInTheDocument()
+      expect(rows[2]!.querySelector('.user-chips')).toBeNull()
+      expect(within(rows[3]!).getByText('Owner')).toBeInTheDocument()
+    })
+
+    it('goes back to the log with the focus on the count', async () => {
+      _mockChat({ presence: _presence([NOAM, YOU]) })
+      _render()
+      await _openList()
+
+      await userEvent.click(screen.getByRole('button', { name: 'Back to chat' }))
+
+      expect(screen.queryByRole('region', { name: 'Here now' })).not.toBeInTheDocument()
+      expect(document.querySelector('.chat-body')).not.toHaveAttribute('inert')
+      expect(screen.getByRole('button', { name: '2 here now' })).toHaveFocus()
+    })
+
+    // "Back to chat" is the way back
+    it('stays on the list on a second click on the count', async () => {
+      _mockChat({ presence: _presence([NOAM, YOU]) })
+      _render()
+      await _openList()
+
+      await userEvent.click(screen.getByRole('button', { name: '2 here now' }))
+
+      expect(screen.getByRole('region', { name: 'Here now' })).toBeInTheDocument()
+    })
+
+    it('goes back to the log by itself when everyone else leaves, with the focus on the panel', async () => {
+      _mockChat({ presence: _presence([NOAM, YOU]) })
+      _render()
+      await _openList()
+
+      _rerenderWith({ presence: _presence([YOU]) })
+
+      expect(screen.queryByRole('region', { name: 'Here now' })).not.toBeInTheDocument()
+      expect(screen.getByText('Just you here')).toBeInTheDocument()
+      expect(screen.getByRole('region', { name: 'Chat' })).toHaveFocus()
+    })
+
+    // A logout from another tab: the socket reconnects as a guest and gets no names
+    it('goes back to the log by itself when the names stop coming', async () => {
+      _mockChat({ presence: _presence([NOAM, YOU]) })
+      _render()
+      await _openList()
+
+      _rerenderWith({ presence: { catId: CAT_ID, count: 2, users: null } })
+
+      expect(screen.queryByRole('region', { name: 'Here now' })).not.toBeInTheDocument()
+      expect(screen.getByText('2 here now')).toBeInTheDocument()
+      expect(screen.getByRole('region', { name: 'Chat' })).toHaveFocus()
+    })
+
+    // Back to the log for good: someone joining again doesn't reopen it
+    it('stays on the log when others come back', async () => {
+      _mockChat({ presence: _presence([NOAM, YOU]) })
+      _render()
+      await _openList()
+      _rerenderWith({ presence: _presence([YOU]) })
+
+      _rerenderWith({ presence: _presence([NOAM, YOU]) })
+
+      expect(screen.queryByRole('region', { name: 'Here now' })).not.toBeInTheDocument()
+    })
+
+    it('closes the delete confirm on the way to the list', async () => {
+      const ownMsg: ChatMsgWithRefs = { ...MSG, user: YOU }
+      _mockChat({ msgs: [ownMsg], presence: _presence([NOAM, YOU]) })
+      _render()
+      await _open()
+      await userEvent.click(screen.getByRole('button', { name: 'Message actions' }))
+      await userEvent.click(screen.getByRole('button', { name: 'Delete' }))
+
+      await userEvent.click(screen.getByRole('button', { name: '2 here now' }))
+
+      expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
+      expect(screen.getByRole('region', { name: 'Here now' })).toBeInTheDocument()
+    })
+
+    it('closes the whole panel on Escape from the list', async () => {
+      _mockChat({ presence: _presence([NOAM, YOU]) })
+      _render()
+      await _openList()
+
+      await userEvent.keyboard('{Escape}')
+
+      expect(screen.queryByRole('region', { name: 'Chat' })).not.toBeInTheDocument()
+    })
+
+    it('reopens on the log', async () => {
+      _mockChat({ presence: _presence([NOAM, YOU]) })
+      _render()
+      await _openList()
+
+      await userEvent.click(screen.getByRole('button', { name: 'Close chat' }))
+      await _open()
+
+      expect(screen.queryByRole('region', { name: 'Here now' })).not.toBeInTheDocument()
     })
   })
 })

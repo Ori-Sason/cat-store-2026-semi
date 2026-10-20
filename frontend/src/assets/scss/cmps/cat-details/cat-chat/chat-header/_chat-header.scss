@@ -23,12 +23,27 @@
       font-size: 1rem;
     }
 
-    p {
-      overflow: hidden;
+    // "About Mitzi · 2 here now": a flex row where only the cat name shrinks, so a long name
+    // truncates and the count stays whole
+    .subtitle {
+      // A grid item doesn't shrink below its content by default, and the name must
+      min-width: 0;
+      display: flex;
+      align-items: baseline;
+      gap: 5px;
       font-size: 0.75rem;
       white-space: nowrap;
-      text-overflow: ellipsis;
       color: $primary-clr-200;
+    }
+
+    .cat-name {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .separator {
+      flex-shrink: 0;
     }
   }
 

@@ -52,23 +52,8 @@
 
   // A line on each side of the label
   .day-divider {
-    display: flex;
-    align-items: center;
-    gap: 10px;
+    @include label-divider;
     padding: $space-2 $space-4 2px;
-    font-size: 0.7rem;
-    font-weight: 700;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    color: $primary-clr-850;
-
-    &::before,
-    &::after {
-      content: '';
-      flex: 1;
-      height: 1px;
-      background-color: $primary-clr-200;
-    }
   }
 
   // No dividers between rows, a small gap instead

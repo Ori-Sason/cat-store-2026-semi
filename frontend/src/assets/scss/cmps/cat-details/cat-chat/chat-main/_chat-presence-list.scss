@@ -1,0 +1,64 @@
+@use 'setup' as *;
+
+// In the body's grid cell, on top of the hidden body
+.chat-presence-list {
+  grid-area: 2 / 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: $space-1 0 $space-3;
+  background-color: $clr-white;
+
+  // A plain text link, not a pill: it's the way back, not a panel control
+  .back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: $space-1;
+    margin: 10px $space-4 6px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: $primary-clr-600;
+    border-radius: 2px;
+
+    &:hover {
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+
+    &:focus-visible {
+      outline: 2px solid $primary-clr-600;
+      outline-offset: 2px;
+    }
+  }
+
+  // Splits the way back from the rows, and names the view
+  h3 {
+    @include label-divider;
+    padding: 6px $space-4 2px;
+  }
+
+  ul {
+    padding-top: $space-1;
+  }
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: $space-2;
+    min-width: 0;
+    padding: $space-2 $space-4;
+    font-size: 0.9rem;
+
+    & + li {
+      margin-top: 2px;
+    }
+  }
+
+  .name {
+    min-width: 0;
+    overflow: hidden;
+    font-weight: 700;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    color: $primary-clr-900;
+  }
+}

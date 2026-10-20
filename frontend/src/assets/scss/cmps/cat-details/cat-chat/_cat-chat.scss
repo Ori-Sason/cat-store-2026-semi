@@ -45,6 +45,12 @@ $_panel-height: 620px;
     display: flex;
     flex-direction: column;
     min-height: 0;
+
+    // Under the "here now" list. Not display: none, which would drop the log's scroll position
+    // and fire its re-pin on the way back (0 → full height). Still laid out, so neither happens
+    &.is-hidden {
+      visibility: hidden;
+    }
   }
 
   // The skeleton sits at the bottom, where the newest msgs will show
