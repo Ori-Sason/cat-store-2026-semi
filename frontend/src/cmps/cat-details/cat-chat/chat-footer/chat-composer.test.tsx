@@ -2,11 +2,8 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { CHAT_MSG_TEXT_MAX_LENGTH } from '@cat-store/shared'
 import { useState } from 'react'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { chatService } from '../../../../services/chat.service'
+import { describe, expect, it, vi } from 'vitest'
 import { ChatComposer } from './chat-composer'
-
-const CAT_ID = 'aaaaaaaaaaaaaaaaaaaaaaaa'
 
 function _render({ isDisabled = false, initialText = '' } = {}) {
   const onSendMsg = vi.fn()
@@ -27,7 +24,6 @@ function ComposerHost({
   const [text, setText] = useState(initialText)
   return (
     <ChatComposer
-      catId={CAT_ID}
       text={text}
       onTextChange={setText}
       isDisabled={isDisabled}
@@ -35,10 +31,6 @@ function ComposerHost({
     />
   )
 }
-
-beforeEach(() => {
-  sessionStorage.clear()
-})
 
 describe('ChatComposer', () => {
   describe('sending', () => {
@@ -114,18 +106,6 @@ describe('ChatComposer', () => {
       const { textarea } = _render({ isDisabled: true })
       expect(textarea).toBeDisabled()
       expect(screen.getByRole('button', { name: 'Send' })).toBeDisabled()
-    })
-  })
-
-  describe('the draft', () => {
-    it('removes the draft once it is sent', async () => {
-      chatService.saveDraft(CAT_ID, 'Can I visit on Sunday?')
-      const { onSendMsg, textarea } = _render({ initialText: 'Can I visit on Sunday?' })
-
-      await userEvent.type(textarea, '{Enter}')
-
-      expect(onSendMsg).toHaveBeenCalledExactlyOnceWith('Can I visit on Sunday?')
-      expect(chatService.getDraft(CAT_ID)).toBeNull()
     })
   })
 })

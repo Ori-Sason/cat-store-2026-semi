@@ -36,10 +36,20 @@ export const CatChat: React.FC<CatChatProps> = ({ catId, catName, catOwnerId }) 
   const isToggledRef = useRef(false)
   // Here, not in the composer: closing the panel unmounts the composer, and its text should
   // survive that. It starts from the draft a send left when the session expired
-  // (see chatService.saveDraft). The cat-details key resets it on a cat switch
-  const [composerText, setComposerText] = useState(() => chatService.getDraft(catId) ?? '')
+  // (see chatService.saveDraft). The cat-details key resets it on a cat switch.
+  // Only for a logged-in user: a guest has no composer, and its "Log in" leaves the page, so a
+  // draft restored then would be lost. It stays in storage for the logged-in mount.
+  // Read once per mount: a login later in this mount restores nothing
+  const [restoredDraft] = useState(() => (loggedInUser && chatService.getDraft(catId)) || null)
+  const [composerText, setComposerText] = useState(restoredDraft ?? '')
   const removeConfirm = useChatMsgRemoveConfirm(chat.msgs, chat.removeMsg, panelRef)
   const presenceList = useChatPresenceList(chat.presence, loggedInUser, panelRef)
+
+  // Restored into composerText, the draft's job is done: the text lives in the state from here,
+  // and a new UNAUTHORIZED saves it again. In an effect, not the initializer, which must stay pure
+  useEffect(() => {
+    if (restoredDraft !== null) chatService.removeDraft(catId)
+  }, [catId, restoredDraft])
 
   useEffect(() => {
     if (!isToggledRef.current) return
@@ -139,7 +149,6 @@ export const CatChat: React.FC<CatChatProps> = ({ catId, catName, catOwnerId }) 
 
           {loggedInUser ? (
             <ChatComposer
-              catId={catId}
               text={composerText}
               onTextChange={onComposerTextChange}
               isDisabled={chat.status !== 'ready'}

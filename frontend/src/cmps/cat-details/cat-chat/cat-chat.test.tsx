@@ -216,12 +216,21 @@ describe('CatChat', () => {
   })
 
   describe('sending', () => {
-    it('starts the composer from the draft an expired session left', async () => {
+    it('starts the composer from the draft an expired session left, and clears it', async () => {
       chatService.saveDraft(CAT_ID, 'Can I visit on Sunday?')
       _mockChat()
       _render()
       await _open()
       expect(screen.getByRole('textbox', { name: 'Message' })).toHaveValue('Can I visit on Sunday?')
+      expect(chatService.getDraft(CAT_ID)).toBeNull()
+    })
+
+    // A guest has no composer, and its "Log in" leaves the page: a draft restored now would be lost
+    it('keeps the draft for later when a guest mounts the chat', () => {
+      chatService.saveDraft(CAT_ID, 'Can I visit on Sunday?')
+      _mockChat()
+      _render(null)
+      expect(chatService.getDraft(CAT_ID)).toBe('Can I visit on Sunday?')
     })
 
     // Closing unmounts the composer, so its text lives in the panel

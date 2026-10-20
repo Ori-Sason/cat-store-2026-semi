@@ -1,10 +1,8 @@
 import type React from 'react'
 import { useChatText } from '../../../../hooks/cat-chat/use-chat-text'
-import { chatService } from '../../../../services/chat.service'
 import { ChatTextCounter } from '../chat-common/chat-text-counter'
 
 interface ChatComposerProps {
-  catId: string
   // Owned by CatChat, so closing the panel (which unmounts this) keeps what was typed
   text: string
   onTextChange: (text: string) => void
@@ -14,7 +12,6 @@ interface ChatComposerProps {
 
 // The textarea and its round send button. Enter sends, Shift+Enter adds a line (useChatText)
 export const ChatComposer: React.FC<ChatComposerProps> = ({
-  catId,
   text,
   onTextChange,
   isDisabled,
@@ -30,8 +27,6 @@ export const ChatComposer: React.FC<ChatComposerProps> = ({
     if (isDisabled || !isValid) return
     onSendMsg(text.trim())
     onTextChange('')
-    // Sent as a new msg now, so it shouldn't come back on the next visit
-    chatService.removeDraft(catId)
     // A click on send leaves focus on the button, which the empty text then disables
     textareaRef.current?.focus()
   }
