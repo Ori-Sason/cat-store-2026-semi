@@ -30,6 +30,8 @@ for one file's own logic stay in it, as `_` functions. Each package's rule lists
 - `.handoffs/` — session handoffs (`<topic>.md`, open decisions first) and review-me
   reports. Gitignored and user-managed: never put handoffs in memory, and leave cleanup
   to the user.
+- `.build-logs/` — how past features were built (`<feature>.md`): stages, commits, what changed
+  on the way. History, not instructions: don't follow it, and don't update it to match the code.
 - `shared/` — `@cat-store/shared`, the wire contract: types, Zod schemas, constants,
   `catFilterService`, `catPermissionService`, `reviewPermissionService`, `chatPermissionService`,
   `sharedUtilService`.
