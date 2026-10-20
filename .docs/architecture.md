@@ -83,6 +83,9 @@ Env: `node --env-file=.env.local`, no dotenv. Prod needs `JWT_SECRET`, Mongo URL
   cookies also need no `withCredentials`. CORS would only come back with split hosting.
   Socket.io needs its own proxy entry (`'/socket.io'` with `ws: true`): its default path is
   `/socket.io/`, so `ws: true` on `/api` wouldn't catch it.
+- **The cat chat: socket writes, REST history.** Its state lives in a hook (`useCatChat`), the
+  one exception to "server data through loaders": live events must merge into the fetched pages.
+  Design and whys: `.docs/designs/chat.md`.
 - **Tests hit a real MongoDB, never mocks of the driver.** A separate database (`catsTest`) in
   the same `db-local` container serves the backend Vitest suite and E2E.
   Why: mocking the driver tests the mock, not the queries. A second database is free.
@@ -110,3 +113,4 @@ Env: `node --env-file=.env.local`, no dotenv. Prod needs `JWT_SECRET`, Mongo URL
 - 2026-10-11 — Collections: `reviews`, read with its author and cat joined via `$lookup`.
 - 2026-10-12 — Compacted to cross-cutting decisions (a major doc edit, so it gets a log line). Module-level decisions moved to code comments, test how-to to the `writing-tests` skill.
 - 2026-10-15 — Socket.io on the Express http server, and the `chatMsgs` collection (the cat chat backend).
+- 2026-10-20 — The cat chat frontend: an app-wide socket connected on app load, the `chat:presence-changed` push, and the design doc in `.docs/designs/chat.md`.

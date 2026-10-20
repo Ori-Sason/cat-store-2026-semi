@@ -6,7 +6,8 @@ The roadmap gives the shape of the project, not a literal script.
 This file covers **what** gets built, **in what order**, and how far along it is.
 Stack, dependencies and the **why** behind decisions live in `architecture.md`.
 
-**Current:** Parts 1–5 and the App header are done. Part 6 is next.
+**Current:** Parts 1–5, the App header and Part 6 item 1 (the cat chat) are done. Part 6
+item 2 is next.
 
 ## Part 1: DB + backend + frontend skeleton (CRUD over cats)
 
@@ -155,7 +156,8 @@ shows buttons that fail with 403. After 3, the UI matches the backend. 4 proves 
 
 ## Part 6: Realtime (Socket.io)
 
-- [ ] 1. Socket.io chat room on `cat-details`, one room per `cat._id`:
+- [x] 1. Socket.io chat room on `cat-details`, one room per `cat._id`. Design:
+   `.docs/designs/chat.md`.
    - Chat log with the author's full name before each message (`username` isn't public).
    - A "X is typing…" indicator.
    - Chat history saved in its own `chatMsgs` collection, not on the cat document, so cat
@@ -167,8 +169,8 @@ shows buttons that fail with 403. After 3, the UI matches the backend. 4 proves 
    - [x] 1a. Backend: Socket.io on the http server, the history route, and the socket events
      for join / leave, send, edit, delete and typing.
    - [x] 1b. Seed: chat msgs for the seed cats, covering paging and every message state.
-   - [ ] 1c. Frontend: the chat panel on `cat-details`, with send, edit, delete, typing and
-     E2E.
+   - [x] 1c. Frontend: the chat panel on `cat-details`, with send, edit, delete, typing,
+     presence ("2 here now") and E2E.
      - Dev proxy first: Socket.io connects on `/socket.io/`, not `/api`. So add a
        `'/socket.io'` entry with `ws: true` to the Vite proxy. `ws: true` on the `/api`
        entry wouldn't catch it.

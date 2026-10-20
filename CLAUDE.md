@@ -22,6 +22,8 @@ for one file's own logic stay in it, as `_` functions. Each package's rule lists
 
 - `.docs/` — hand-written product and architecture docs, plus `roadmap.md` (parts
   with status, open questions). Never create a `docs/` directory.
+- `.docs/designs/` — one design doc per feature (`<feature>.md`): the flow, the decisions and
+  their whys, and the options not chosen. Written when the feature lands.
 - `.claude/rules/` — always-on constraints, listed below. Short by design.
 - `.claude/skills/` — procedural know-how, loaded on demand by task.
 - `.claude/hooks/` — guardrail hooks, wired by `.claude/settings.json`.
@@ -71,8 +73,9 @@ Files with `paths:` frontmatter load only when matching files are touched.
 - Canonical domain terms: `.docs/glossary.md`. Add a new shared term there before
   using it broadly.
 - Roadmap: `.docs/roadmap.md`.
-- Keep these docs and the roadmap updated when API routes, auth rules, or collection
-  shapes change, or when the plan diverges.
+- Feature designs: `.docs/designs/` (e.g. `chat.md`).
+- Keep these docs, the roadmap and the affected design doc updated when API routes, auth
+  rules, or collection shapes change, or when the plan diverges.
 
 ## Calibration
 The user is a full-stack engineer who added DevOps, and this project is practice, so
