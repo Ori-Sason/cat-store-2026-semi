@@ -448,6 +448,17 @@ describe('chat:msg-update', () => {
     expect(ack).toEqual({ error: expect.objectContaining({ code: 'UNAUTHORIZED' }) })
   })
 
+  // Auth runs before membership, like REST
+  it('rejects a guest outside the room with UNAUTHORIZED, not FORBIDDEN', async () => {
+    const author = await _joinedClient(MAYA)
+    const msg = await _addMsg(author)
+    const guest = await server.connectClient()
+
+    const ack = await guest.emitWithAck(CHAT_MSG_UPDATE, _payload(msg))
+
+    expect(ack).toEqual({ error: expect.objectContaining({ code: 'UNAUTHORIZED' }) })
+  })
+
   // The author's own msg, from a socket that never joined: membership, not authorship, decides
   it('rejects the author from a socket outside the room with FORBIDDEN', async () => {
     const author = await _joinedClient(MAYA)
@@ -594,6 +605,16 @@ describe('chat:msg-remove', () => {
     const msg = await _addMsg(author)
     const guest = await server.connectClient()
     await guest.emitWithAck(CHAT_JOIN, { catId })
+
+    const ack = await guest.emitWithAck(CHAT_MSG_REMOVE, _payload(msg))
+
+    expect(ack).toEqual({ error: expect.objectContaining({ code: 'UNAUTHORIZED' }) })
+  })
+
+  it('rejects a guest outside the room with UNAUTHORIZED, not FORBIDDEN', async () => {
+    const author = await _joinedClient(MAYA)
+    const msg = await _addMsg(author)
+    const guest = await server.connectClient()
 
     const ack = await guest.emitWithAck(CHAT_MSG_REMOVE, _payload(msg))
 
