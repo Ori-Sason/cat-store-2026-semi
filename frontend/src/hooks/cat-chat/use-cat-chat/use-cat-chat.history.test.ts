@@ -63,6 +63,24 @@ describe('useCatChat history', () => {
       expect(chatService.getOlderPage).toHaveBeenCalledOnce()
     })
 
+    // Mounted open under StrictMode, each of the two joins starts a first-page fetch. The first
+    // tracker is inactive by the time its fetch lands, so its page must not reach the state
+    it('drops a first page that lands after its tracker went inactive', async () => {
+      const oldFetch = deferred<ChatMsgOlderPage>()
+      const newFetch = deferred<ChatMsgOlderPage>()
+      vi.mocked(chatService.getOlderPage)
+        .mockReturnValueOnce(oldFetch.promise)
+        .mockReturnValueOnce(newFetch.promise)
+      const { result } = renderHook(() => useCatChat(CAT_ID, true), { wrapper: StrictMode })
+      await waitFor(() => expect(chatService.getOlderPage).toHaveBeenCalledTimes(2))
+
+      await act(async () => newFetch.resolve(makePage([2, 3], null)))
+      await act(async () => oldFetch.resolve(makePage([1], null)))
+
+      expect(result.current.status).toBe('ready')
+      expect(idsOf(result.current.msgs)).toEqual([makeMsgId(2), makeMsgId(3)])
+    })
+
     it('does not fetch while the chat is closed', () => {
       const { result } = renderChat()
 
