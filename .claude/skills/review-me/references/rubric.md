@@ -23,7 +23,8 @@ axes define it (2, 5, 10, 12).
 - Per axis give: level, 1–2 moments from the digest as evidence, and confidence
   (high / medium / low). Confidence can't go above the axis's **Visibility**.
 - Place at the level shown **consistently** in the window. A single moment above that is
-  a "signal", not a placement.
+  a "signal", not a placement. Record it in the table's Signal column: the level it points
+  to. Signals are the first sign of growth, so they're tracked from review to review.
 - Use `mid→senior` style when the evidence sits between two levels.
 - Write **not observed** when the window has no evidence. Don't fill it from the
   background file.
@@ -38,6 +39,15 @@ axes define it (2, 5, 10, 12).
     on its axis (e.g. the mechanism picked, whether they tested it).
   - A level quoted anywhere in the digest, e.g. a past review discussed in a session.
   - The user's own view in the invocation note.
+- **Claude's proposals count by what the user did with them.** The judgement is in the
+  response, not in who had the idea first:
+  - Changed it, chose among options with a reason, or pushed back: the user's evidence, at
+    the level the reasoning shows.
+  - Accepted it as is ("ok"): neutral, evidence neither way.
+  - Let a wrong or weak proposal through: evidence against, on that axis.
+  - Claude pushed back on the user's idea: taking or rejecting the pushback with a reason
+    is the user's evidence (axes 5 or 12). Asking Claude to push back isn't held against
+    the user.
 - **Beyond senior** only on the axes that define it, and only when shown in **at least 2
   separate moments** in the window, each by the user. One moment is a beyond-senior signal.
 - **Case against, for every beyond-senior placement.** Before keeping it, write the
@@ -80,7 +90,11 @@ what the user asks for, catches, rejects and sets up, not the code itself.
 |---|---|
 | Junior | Accepts code without asking for tests. Doesn't notice missing edge cases or error paths. |
 | Mid | Expects tests with the change, at the right level of the pyramid. Spots untested edge cases and error paths. Catches readability and naming issues in Claude's output. |
-| Senior | Sets the project's quality standards and builds what enforces them: what gets tested at which level, test infrastructure (helpers, fixtures, a test DB), a testing skill. Spots security gaps (secrets, auth, validation) before they're merged. |
+| Senior | Sets the project's quality standards and builds or extends what enforces them: what gets tested at which level, test infrastructure (helpers, fixtures, a test DB), a testing skill. Spots security gaps (secrets, auth, validation) before they're merged. |
+
+The infrastructure is usually built once, early. In a later window, judge it by extending
+it and holding the standard (e.g. stopping Claude when it skips or weakens a test), not by
+building it again.
 
 ### 4. Delivery
 Visibility: **medium**. Branches, commits and roadmap ticks show it. Ops stays low until
@@ -202,5 +216,6 @@ best practices (code.claude.com/docs/en/best-practices) and features overview
 (code.claude.com/docs/en/features-overview).
 
 v2 (2026-10-21): raised axes 3 and 6 by one level, axis 5's beyond line, and the AI axes
-(the docs' advice is now Mid), added the evidence and case-against rules. Reviews before
+(the docs' advice is now Mid), added the evidence rules (Claude's proposals included), the
+case-against rule and the Signal column. Reviews before
 it were rated on v1.

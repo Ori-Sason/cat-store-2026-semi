@@ -33,7 +33,9 @@ const _localDate = (date) => {
 }
 
 // The max `Last reviewed:` across all reviews, so reviewing an older range later
-// can't move the anchor backwards. File names and mtimes don't matter.
+// can't move the anchor backwards. File names and mtimes don't matter. On a tie, the
+// higher rubric version wins: a re-rating of the same window on a newer rubric
+// replaces the old one as the previous review.
 const _lastReview = () => {
   if (!fs.existsSync(reviewsDir)) return null
   let last = null
@@ -44,7 +46,12 @@ const _lastReview = () => {
     if (!match) continue
     const time = new Date(match[1])
     if (Number.isNaN(time.getTime())) continue
-    if (!last || time > last.time) last = { time, file: name }
+    const version = Number(text.match(/^Rated on rubric v(\d+)/m)?.[1] ?? 1)
+    const isLater =
+      !last ||
+      time > last.time ||
+      (time.getTime() === last.time.getTime() && version > last.version)
+    if (isLater) last = { time, version, file: name }
   }
   return last
 }

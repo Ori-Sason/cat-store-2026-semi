@@ -56,17 +56,10 @@ missed in Claude's output, and where completion gaps showed (or didn't).
 use, rules / skills / hooks / memory hygiene, delegation to subagents, verification
 habits, and how corrections were given.
 
-Benchmark both sections in this order of weight:
-1. **Against the user's own baseline**: the background and the previous Next items. What
-   grew, what's stuck.
-2. **Against the expected level**: place the user per axis by the rubric's "How to place"
-   rules, with evidence and a confidence level. Use this table shape in each section, so a
-   script can read it:
-   `| Axis | Level | Evidence | Confidence |`, rows like `| 1. Technical depth & debugging | **senior** | … | medium |`.
-   Under each table, one line per beyond-senior axis with its case against (the rubric says
-   how). If the rubric is missing, skip placement and say so.
-3. **How to improve**: concrete steps that close the gaps from 1 and 2, tied to this
-   project or the user's courses, not generic advice.
+**Place first, write second.** Place every axis in both sections by the rubric's "How to
+place" rules, with evidence and a confidence level, before writing any prose. Writing the
+strengths first can pull a level up. The layout below is the file's order, not the work
+order.
 
 The user directs Claude more than they write code by hand. The digest shows judgment
 (specs, catches, pushback), not hands-on craft, so lower confidence on craft-heavy
@@ -74,19 +67,50 @@ calls and say so.
 
 Evidence outside the scope can be mentioned, but it doesn't count toward placement.
 
-**The user's note**, if the invocation has one: place every axis from the digest first.
-Then answer the note in its own section, near the top of the report, on the digest's
-evidence. The note can explain a moment, but it's never evidence for a level, and it
-doesn't move one.
+**Report layout.** The same sections in the same order in every review, so the user can
+compare them:
+```text
+# Review: <from>..<to>
+Last reviewed: <ISO> (session <id>)
+Rated on rubric v<N>
 
-Be open. No forced positives, no forced negatives. If a dimension had nothing worth
-saying, say that in one line.
-
-End with:
+## Your note                           ← only when the invocation has one
+## 1. Technical (full-stack)
+### What stood out
+### Where gaps showed
+### Placement against the rubric
+## 2. Context engineering & AI workflow
+### What stood out
+### Where gaps showed
+### Placement against the rubric
+## Benchmark summary
+## Level vs previous review            ← added by the script in step 3, not by you
+## Since last review                   ← only when there's a previous review
+## Next
+```
+- **What stood out / Where gaps showed**: each point says plainly whether it's a strength
+  or a gap, and the moment it rests on. Each gap ends with how to close it, tied to this
+  project or the user's courses, not generic advice.
+- **Placement against the rubric**: this table shape, so a script can read it:
+  `| Axis | Level | Signal | Evidence | Confidence |`, rows like
+  `| 1. Technical depth & debugging | **mid→senior** | senior | … | medium |`.
+  The Level cell holds the bold level only. The Signal cell holds the level a signal
+  points to, or `–` when there's none. Under the table, one line for each axis in the
+  section that has a beyond-senior line in the rubric. If it's placed beyond: its case
+  against (the rubric says how). If not: why not. If the rubric is missing, skip placement
+  and say so.
+- **Benchmark summary**, in this order of weight: against the user's own baseline (the
+  background and the previous Next items), what grew and what's stuck. Then against the
+  expected level: the overall picture of both tables in a few lines.
+- **Your note**: answered on the digest's evidence, after every axis is placed. The note
+  can explain a moment, but it's never evidence for a level, and it doesn't move one.
 - **Since last review**: what happened to each previous Next item. Acting on one is
-  follow-through, reported here. It isn't evidence for a level. Omit the section when
-  there's no previous review.
-- **Next**: 2–3 concrete actions.
+  follow-through, reported here. It isn't evidence for a level.
+- **Next**: 2–3 concrete actions, the biggest gap first.
+
+**No section must be filled.** The layout fixes the order, not the content. If nothing
+stood out, or no gap showed, say so in one line and move on. No forced positives, no
+forced negatives. The report has to be honest.
 
 ## 3. Save and return
 - Write the report to `.handoffs/reviews/YYYY-MM-DD.md` (today's date, `mkdir -p` first).

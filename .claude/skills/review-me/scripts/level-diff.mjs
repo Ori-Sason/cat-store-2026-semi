@@ -20,34 +20,47 @@ const _score = (level) => {
 }
 
 // Placement rows from tables whose header has a "Level" column. Two row shapes exist
-// in old reviews: `| 1. Axis | **level** |` and `| 1 | Axis | **level** |`.
+// in old reviews: `| 1. Axis | **level** |` and `| 1 | Axis | **level** |`. The header
+// gives the column positions, so both shapes read the same way. Reviews before the
+// Signal column have no signals, which is "unknown", not "none".
 const _placements = (file) => {
   const placements = new Map()
-  let isLevelTable = false
+  let columns = null
+  let hasSignals = false
   for (const line of fs.readFileSync(file, 'utf8').split('\n')) {
     if (!line.startsWith('|')) {
-      isLevelTable = false
+      columns = null
       continue
     }
     const cells = line
       .split('|')
       .slice(1, -1)
       .map((cell) => cell.trim())
-    if (cells.some((cell) => /^level$/i.test(cell))) {
-      isLevelTable = true
+    const levelIndex = cells.findIndex((cell) => /^level$/i.test(cell))
+    if (levelIndex !== -1) {
+      const signalIndex = cells.findIndex((cell) => /^signal$/i.test(cell))
+      columns = { level: levelIndex, signal: signalIndex }
+      hasSignals ||= signalIndex !== -1
       continue
     }
-    if (!isLevelTable) continue
+    if (!columns) continue
     const numbered = cells[0].match(/^(\d+)\.?\s*(.*)$/)
     if (!numbered) continue
     const [, axis, inlineName] = numbered
     const name = inlineName || cells[1]
-    const levelCell = inlineName ? cells[1] : cells[2]
-    const level = levelCell?.match(/\*\*(.+?)\*\*/)?.[1].toLowerCase()
-    if (level) placements.set(Number(axis), { name, level })
+    const level = cells[columns.level]?.match(/\*\*(.+?)\*\*/)?.[1].toLowerCase()
+    const signal = _signal(cells[columns.signal])
+    if (level) placements.set(Number(axis), { name, level, signal })
   }
-  return placements
+  return { placements, hasSignals }
 }
+
+const _signal = (cell) => {
+  const text = cell?.replaceAll('*', '').trim().toLowerCase()
+  return text && text !== '–' && text !== '-' ? text : null
+}
+
+const _withSignal = (level, signal) => (signal ? `${level} (signal: ${signal})` : level)
 
 const _rubricVersion = (file) =>
   fs.readFileSync(file, 'utf8').match(/^Rated on rubric v(\d+)/m)?.[1] ?? '1'
@@ -58,21 +71,26 @@ if (!newFile || !previousFile) {
   process.exit(1)
 }
 
-const current = _placements(newFile)
-const previous = _placements(previousFile)
+const { placements: current } = _placements(newFile)
+const { placements: previous, hasSignals: previousHasSignals } = _placements(previousFile)
 if (!current.size) {
   console.error(`No placement table found in ${newFile}.`)
   process.exit(1)
 }
 
+// A same-level axis with a new signal is growth the score can't show yet
 const rows = [...current.entries()]
   .sort(([a], [b]) => a - b)
-  .map(([axis, { name, level }]) => {
-    const before = previous.get(axis)?.level
-    const delta = before ? _score(level) - _score(before) : null
-    const change =
+  .map(([axis, { name, level, signal }]) => {
+    const before = previous.get(axis)
+    const delta = before ? _score(level) - _score(before.level) : null
+    let change =
       delta === null || Number.isNaN(delta) ? '–' : delta > 0 ? '↑' : delta < 0 ? '↓' : '='
-    return `| ${axis}. ${name} | ${before ?? 'not placed'} | ${level} | ${change} |`
+    if (change === '=' && previousHasSignals && signal && signal !== before.signal) {
+      change = '= (new signal)'
+    }
+    const previousCell = before ? _withSignal(before.level, before.signal) : 'not placed'
+    return `| ${axis}. ${name} | ${previousCell} | ${_withSignal(level, signal)} | ${change} |`
   })
 
 const newVersion = _rubricVersion(newFile)
