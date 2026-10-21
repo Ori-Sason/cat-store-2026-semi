@@ -66,8 +66,8 @@ Files with `paths:` frontmatter load only when matching files are touched.
 ## Skills — load when the task calls for it
 - `writing-tests` — how to write and run tests: structure, the test DB helper, mocking,
   per-suite commands. Load it before adding or reviewing tests.
-- `review-me` — user-invoked only (`/review-me [scope]`). Reviews recent sessions in a
-  forked subagent and saves the report to `.handoffs/reviews/`.
+- `review-me` — user-invoked only (`/review-me [scope] [note]`).
+  Reviews recent sessions in a forked subagent and saves the report to `.handoffs/reviews/`.
 
 ## Product and Domain
 - Product definition: `.docs/product-definition.md`.
