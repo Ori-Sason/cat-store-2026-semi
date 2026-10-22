@@ -35,6 +35,15 @@ lower. So:
   transcripts, they're mostly tool output.
 - If the digest says `No sessions in this scope`, stop. Write no file and return
   "Nothing to review since <from>."
+- Read your output style. The main session's style doesn't reach a forked subagent, so the
+  active one is resolved from the settings files and inlined below. If it's empty, the
+  default style is active, so write as you normally would.
+  <output-style>
+  !`node .claude/skills/review-me/scripts/output-style.mjs`
+  </output-style>
+  Write the report's prose in it. The layout, the table shape and the
+  final message's text stay exactly as this skill defines them. Scripts parse the headings
+  and the tables, so the style changes the wording, not the structure.
 - If the digest prints a `Note:` (e.g. no previous review, so the scope fell back to
   today), put it at the top of the report so the user sees it.
 - If the digest says it's large, read it in chunks (redirect to a scratch file, then
@@ -104,6 +113,9 @@ Rated on rubric v<N>
   expected level: the overall picture of both tables in a few lines.
 - **Your note**: answered on the digest's evidence, after every axis is placed. The note
   can explain a moment, but it's never evidence for a level, and it doesn't move one.
+  Open the section with the note itself, so a reader months later knows what the answer
+  replies to: a blockquote of the note when it's one short sentence, otherwise a short summary
+  (a sentence or two) starting with `Note (summary):`.
 - **Since last review**: what happened to each previous Next item. Acting on one is
   follow-through, reported here. It isn't evidence for a level.
 - **Next**: 2–3 concrete actions, the biggest gap first.
