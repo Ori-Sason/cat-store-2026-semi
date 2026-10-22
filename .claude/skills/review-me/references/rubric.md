@@ -25,7 +25,12 @@ axes define it (2, 5, 10, 12).
 - Place at the level shown **consistently** in the window. A single moment above that is
   a "signal", not a placement. Record it in the table's Signal column: the level it points
   to. Signals are the first sign of growth, so they're tracked from review to review.
-- Use `mid→senior` style when the evidence sits between two levels.
+- Weigh all the window's evidence into one level. When one stretch or area is clearly
+  stronger or weaker (e.g. backend vs frontend), name it in the evidence. Don't place it on
+  its own.
+- Use `mid→senior` style when the evidence sits between two levels. On a range placement, a
+  signal points above the range's lower level only when one moment fully meets the upper
+  level's line.
 - Write **not observed** when the window has no evidence. Don't fill it from the
   background file.
 - **What counts as evidence: the user's own moments in the window.** These don't count:
@@ -39,12 +44,18 @@ axes define it (2, 5, 10, 12).
     on its axis (e.g. the mechanism picked, whether they tested it).
   - A level quoted anywhere in the digest, e.g. a past review discussed in a session.
   - The user's own view in the invocation note.
-- **Claude's proposals count by what the user did with them.** The judgement is in the
-  response, not in who had the idea first:
-  - Changed it, chose among options with a reason, or pushed back: the user's evidence, at
-    the level the reasoning shows.
-  - Accepted it as is ("ok"): neutral, evidence neither way.
-  - Let a wrong or weak proposal through: evidence against, on that axis.
+- **Claude's proposals count by the thought process around them.** A decision is a
+  two-sided conversation, and the user decides. Judge the reasoning across the exchange,
+  not who had the idea:
+  - Picking one of Claude's options when the trade-offs are already laid out is a decision
+    on those trade-offs. The user doesn't need to restate them. Judge whether the pick fits
+    the context.
+  - Changing an option, asking before picking, or picking against Claude's recommendation:
+    the user's evidence, at the level the reasoning shows.
+  - A reasoned choice that proved wrong once built, then revisited: not held against the
+    user. Learning by doing is part of the process.
+  - A pattern of accepts or picks that later needed a cleanup or refactor: evidence
+    against, on that axis. One plain "ok" alone is neutral.
   - Claude pushed back on the user's idea: taking or rejecting the pushback with a reason
     is the user's evidence (axes 5 or 12). Asking Claude to push back isn't held against
     the user.
@@ -79,8 +90,8 @@ digest.
 | Mid | Adjusts an existing design when needed. Keeps separation of concerns (layers, shared contract). |
 | Senior | Designs multi-component features with clear API boundaries and data shapes. Names the failure modes up front: partial failure, races, reconnects, concurrency. Knows when to refactor and when to leave it. Weighs the trade-offs of competing options. |
 
-Beyond senior: designs that resist misuse and still stay flexible, plus build-vs-buy and
-framework calls justified by long-term cost.
+Beyond senior, e.g.: designs that resist misuse and still stay flexible, or build-vs-buy
+and framework calls justified by long-term cost.
 
 ### 3. Code quality & testing
 Visibility: **low**. This axis is craft-heavy and Claude writes most of the code. Judge

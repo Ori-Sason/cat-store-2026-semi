@@ -104,10 +104,14 @@ Rated on rubric v<N>
   `| Axis | Level | Signal | Evidence | Confidence |`, rows like
   `| 1. Technical depth & debugging | **mid→senior** | senior | … | medium |`.
   The Level cell holds the bold level only. The Signal cell holds the level a signal
-  points to, or `–` when there's none. Under the table, one line for each axis in the
-  section that has a beyond-senior line in the rubric. If it's placed beyond: its case
-  against (the rubric says how). If not: why not. If the rubric is missing, skip placement
-  and say so.
+  points to, or `–` when there's none. Under the table:
+  - For each axis with a signal: the case for the signal's level (the moment it rests on),
+    the case against, and why it stays a signal and not the placement.
+  - For each axis placed beyond senior: its case against (the rubric says how).
+  - For each axis placed senior, with a beyond-senior line in the rubric and no
+    beyond-senior signal: why it isn't beyond, in one line.
+
+  If the rubric is missing, skip placement and say so.
 - **Benchmark summary**, in this order of weight: against the user's own baseline (the
   background and the previous Next items), what grew and what's stuck. Then against the
   expected level: the overall picture of both tables in a few lines.
