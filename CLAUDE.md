@@ -10,7 +10,8 @@ script. Stack and cross-cutting decisions live in `.docs/architecture.md`.
   Every `.env*` file is local-only, except `.env.example` templates.
 
 ## Guardrails
-- Hooks live in `.claude/hooks/` and only run if wired in `.claude/settings.json`.
+- Hooks live in `.claude/hooks/` and only run if wired in `.claude/settings.json` or in an
+  agent's frontmatter (then only while that agent runs).
 - Settings and hooks are the source of truth for permissions and guardrails. Other docs
   may point to them in a line, but don't restate their rules. If an instruction
   conflicts with a hook, the hook wins.
@@ -26,7 +27,9 @@ for one file's own logic stay in it, as `_` functions. Each package's rule lists
   their whys, and the options not chosen. Written when the feature lands.
 - `.claude/rules/` — always-on constraints, listed below. Short by design.
 - `.claude/skills/` — procedural know-how, loaded on demand by task.
-- `.claude/hooks/` — guardrail hooks, wired by `.claude/settings.json`.
+- `.claude/hooks/` — guardrail hooks, wired by `.claude/settings.json` or an agent's frontmatter.
+- `.claude/agents/` — custom subagents (`<agent>.md`). Scripts only one agent runs go in
+  `.claude/agents/<agent>/scripts/`.
 - `.handoffs/` — session handoffs (`<topic>.md`, open decisions first) and review-me
   reports. Gitignored and user-managed: never put handoffs in memory, and leave cleanup
   to the user.
@@ -68,6 +71,12 @@ Files with `paths:` frontmatter load only when matching files are touched.
   per-suite commands. Load it before adding or reviewing tests.
 - `review-me` — user-invoked only (`/review-me [scope] [note]`).
   Reviews recent sessions in a forked subagent and saves the report to `.handoffs/reviews/`.
+
+## Agents — spawn when the task calls for it
+- `branch-reviewer` — read-only pre-merge review of a branch, or a whole feature, against `main`.
+  Core passes: auth, security, tests, correctness. Returns the report to the main session. The
+  brief gives the base ref, the handoff or design doc, feature-specific focus areas and what
+  was decided against.
 
 ## Product and Domain
 - Product definition: `.docs/product-definition.md`.
