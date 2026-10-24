@@ -51,6 +51,7 @@ Main libraries only. Exact versions and `@types/*` live in each `package.json`.
 - auth: jsonwebtoken, bcrypt, cookie-parser.
 - testing: Vitest everywhere, React Testing Library + jsdom (FE), Supertest and socket.io-client
   (BE), Playwright (E2E).
+- runtime: Node 24 LTS. `.nvmrc` pins the exact version for nvm, root `engines` the allowed range.
 - tooling: oxlint, oxfmt, lefthook.
 
 External services: MongoDB (local in dev, Atlas in prod), Render (hosting).
