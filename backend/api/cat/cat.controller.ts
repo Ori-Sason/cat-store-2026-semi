@@ -1,6 +1,12 @@
 import type { Request, Response } from 'express'
-import { catFilterService, type CatInput } from '@cat-store/shared'
+import {
+  CAT_REMOVED,
+  catFilterService,
+  type CatInput,
+  type CatRemovedEvent,
+} from '@cat-store/shared'
 import { alsService } from '../../services/als.service.ts'
+import { socketService } from '../../services/socket/socket.service.ts'
 import { catService } from './cat.service.ts'
 
 export async function getCats(req: Request, res: Response) {
@@ -36,5 +42,11 @@ export async function updateCat(req: Request<{ id: string }, unknown, CatInput>,
 
 export async function removeCat(req: Request<{ id: string }>, res: Response) {
   await catService.remove(req.params.id)
+  // After the remove: a missing cat throws 404 there, so no event goes out. Lowercased because
+  // room names compare as strings, and the id comes straight from the URL. remove already
+  // proved it's a valid ObjectId.
+  // The controller makes the socket call, not catService, so the service stays transport-agnostic
+  const catId = req.params.id.toLowerCase()
+  socketService.emitAndEmptyCatRoom(catId, CAT_REMOVED, { catId } satisfies CatRemovedEvent)
   res.sendStatus(204) // 204 No Content
 }

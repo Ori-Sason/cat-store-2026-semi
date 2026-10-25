@@ -111,3 +111,12 @@ export const DEFAULT_CAT_FILTER: CatFilter = {
   limit: null,
   ownerId: null,
 }
+
+// Server → the cat's chat room, after a REST delete. The client sends nothing: the server
+// already has the catId from the route. The catId is still in the payload, since every
+// outgoing socket event carries it so the app-wide socket's listeners can drop other cats'
+// events (.docs/designs/chat.md → Socket protocol)
+export const CAT_REMOVED = 'cat:removed'
+export interface CatRemovedEvent {
+  catId: string
+}
