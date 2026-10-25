@@ -6,7 +6,7 @@ The roadmap gives the shape of the project, not a literal script.
 This file covers **what** gets built, **in what order**, and how far along it is.
 Stack, dependencies and the **why** behind decisions live in `architecture.md`.
 
-**Current:** Parts 1–6 and the App header are done. Part 7 (deployment) is in progress: the config is in, the first deploy is next.
+**Current:** Parts 1–6 and the App header are done. Part 7 (deployment) is done: live at https://cat-store-i404.onrender.com.
 
 ## Part 1: DB + backend + frontend skeleton (CRUD over cats)
 
@@ -183,10 +183,10 @@ No image upload.
 
 Design, setup steps and whys: `.docs/designs/deployment.md`.
 
-- [ ] 1. Deploy to Render from a `render.yaml` Blueprint, with MongoDB Atlas as the prod DB.
+- [x] 1. Deploy to Render from a `render.yaml` Blueprint, with MongoDB Atlas as the prod DB.
    Render builds the FE into `backend/public` and Express serves it. `GET /api/health` pings
    Mongo for Render's health check.
-- [ ] 2. CI: GitHub Actions runs lint, typecheck, unit tests and E2E on every push to `main`.
+- [x] 2. CI: GitHub Actions runs lint, typecheck, unit tests and E2E on every push to `main`.
    Render deploys only commits whose checks pass (`autoDeployTrigger: checksPass`).
 
 ## Extras (optional)
