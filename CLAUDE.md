@@ -1,6 +1,6 @@
 # cat-store v2
 
-A rebuild of cat-store (a reskin of the bootcamp "mister-toy" spec). This round,
+A rebuild of cat-store. This round,
 Claude writes the code via plan/auto mode. `.docs/roadmap.md` is the source of truth for
 scope, part order, and progress. Treat it as the shape of the project, not a literal
 script. Stack and cross-cutting decisions live in `.docs/architecture.md`.
@@ -76,7 +76,8 @@ Files with `paths:` frontmatter load only when matching files are touched.
 - `branch-reviewer` — read-only pre-merge review of a branch, or a whole feature, against `main`.
   Core passes: auth, security, tests, correctness. Returns the report to the main session. The
   brief gives the base ref, the handoff or design doc, feature-specific focus areas and what
-  was decided against.
+  was decided against. When the report comes back, show the user the findings and wait. Fix
+  nothing until they pick which findings to act on, even small or verified ones.
 
 ## Product and Domain
 - Product definition: `.docs/product-definition.md`.

@@ -1,6 +1,6 @@
 # cat-store v2 — roadmap
 
-A rebuild of cat-store (a reskin of the bootcamp "mister-toy" spec), this time built with plan/auto mode.
+A rebuild of cat-store, this time built with plan/auto mode.
 The roadmap gives the shape of the project, not a literal script.
 
 This file covers **what** gets built, **in what order**, and how far along it is.
