@@ -23,8 +23,10 @@
 // `.env.production.local`) rather than enumerated, because an enumerated list
 // silently fails open on the one suffix nobody thought of. The template
 // suffixes are then carved back out: `.env.example` / `.sample` / `.template`
-// are committed content agents are allowed to read and write.
-const ENV_SUFFIX = /\.env(?!\.(?:example|sample|template)(?![\w.-]))(?:\.[\w-]+)*(?![\w.-])/.source
+// are committed content agents are allowed to read and write. So is `.env.ci`:
+// CI's throwaway values for a DB that lives only for one job, never a real secret.
+const ENV_SUFFIX = /\.env(?!\.(?:example|sample|template|ci)(?![\w.-]))(?:\.[\w-]+)*(?![\w.-])/
+  .source
 
 // Path fields: the env file must be a whole path segment, so `src/env.ts` and
 // `.envrc` don't match.

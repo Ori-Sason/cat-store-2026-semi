@@ -28,6 +28,8 @@ backend/public
 # Secrets
 .env*
 !.env.example
+# CI's throwaway values (.github/workflows/ci.yml)
+!.env.ci
 
 
 # Claude session handoff (written by context-watch hook or during sessions)

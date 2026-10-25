@@ -7,7 +7,8 @@ script. Stack and cross-cutting decisions live in `.docs/architecture.md`.
 
 ## Security
 - Never commit or expose secrets (JWT secret, Mongo credentials, `.env*` values).
-  Every `.env*` file is local-only, except `.env.example` templates.
+  Every `.env*` file is local-only, except `.env.example` templates and the `.env.ci` files
+  (CI's throwaway values, never a real secret).
 
 ## Guardrails
 - Hooks live in `.claude/hooks/` and only run if wired in `.claude/settings.json` or in an

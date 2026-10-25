@@ -1,0 +1,61 @@
+# Same checks as the lefthook hooks, on GitHub's runner. Render deploys main only after this
+# passes (render.yaml → autoDeployTrigger: checksPass), so a red run keeps prod on the last
+# green commit. Pushes to main only: there's no PR flow, other branches stay local.
+name: CI
+
+on:
+  push:
+    branches: [main]
+
+# A newer push to main makes an older run pointless: only the newest commit can deploy
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      # The committed .env.ci files hold throwaway values. Copy them to the names local runs use:
+      # docker compose reads db-local/.env, and the backend tests and E2E read backend/.env.test
+      - name: Write env files
+        run: |
+          cp db-local/.env.ci db-local/.env
+          cp backend/.env.ci backend/.env.test
+
+      # Not a `services:` container: those start before checkout, so they can't mount
+      # db-local/init/ (the app users). This runs the same image and init script as local.
+      # --wait blocks until the compose healthcheck passes
+      - name: Start MongoDB
+        run: docker compose -f db-local/docker-compose.yaml up -d --wait
+
+      - run: npm ci
+
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+
+      # No browser cache: restoring it takes about as long as the download, and the OS libraries
+      # install either way (.docs/designs/deployment.md)
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
+      # After `npm test`, never alongside it: both wipe catsTest
+      - run: npm run test:e2e
+
+      # Traces of failed specs (playwright.config.ts → trace: 'retain-on-failure')
+      - name: Upload Playwright traces
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-traces
+          path: frontend/test-results
+          retention-days: 7
