@@ -14,6 +14,13 @@ export default defineConfig({
       scss: { loadPaths: [fileURLToPath(new URL('./src/assets/scss', import.meta.url))] },
     },
   },
+  build: {
+    // Express serves the built SPA in prod, so the backend folder holds everything it serves.
+    // Render builds this on deploy; the output is gitignored, never committed
+    outDir: '../backend/public',
+    // outDir sits outside the Vite root, so Vite won't empty it unless told to
+    emptyOutDir: true,
+  },
   server: {
     host: true,
     strictPort: true,

@@ -10,6 +10,8 @@ lerna-debug.log*
 node_modules
 dist
 dist-ssr
+# Vite build output (frontend/vite.config.ts → build.outDir)
+backend/public
 *.local
 
 # Editor directories and files
