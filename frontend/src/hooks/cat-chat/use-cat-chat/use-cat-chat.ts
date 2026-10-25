@@ -1,10 +1,12 @@
 import {
+  CAT_REMOVED,
   CHAT_LEAVE,
   CHAT_MSG_ADDED,
   CHAT_MSG_REMOVED,
   CHAT_MSG_UPDATED,
   CHAT_PRESENCE_CHANGED,
   CHAT_TYPING,
+  type CatRemovedEvent,
   type ChatMsgWithRefs,
   type ChatPresence,
   type ChatRoomInput,
@@ -86,6 +88,12 @@ export function useCatChat(catId: string, isOpen: boolean, isCatDeleting: boolea
       if (presence.catId !== roomTracker.catId) return
       updateChat(roomTracker, (prev) => ({ ...prev, presence }))
     }
+    // The cat was deleted while this viewer was in its room. The same exit as a join's
+    // CAT_NOT_FOUND, so the viewer's own delete skips it the same way
+    const onCatRemoved = ({ catId: removedCatId }: CatRemovedEvent) => {
+      if (removedCatId !== roomTracker.catId) return
+      roomTracker.onCatGone()
+    }
     const onConnect = () => void rejoin(roomTracker)
     // Offline, the count goes stale and nothing would correct it. The rejoin on connect brings a
     // fresh snapshot
@@ -95,6 +103,7 @@ export function useCatChat(catId: string, isOpen: boolean, isCatDeleting: boolea
     socketService.on(CHAT_MSG_REMOVED, onMsgChanged)
     socketService.on(CHAT_TYPING, onTypingEvent)
     socketService.on(CHAT_PRESENCE_CHANGED, onPresenceChanged)
+    socketService.on(CAT_REMOVED, onCatRemoved)
     socketService.on('connect', onConnect)
     socketService.on('disconnect', onDisconnect)
 
@@ -106,6 +115,7 @@ export function useCatChat(catId: string, isOpen: boolean, isCatDeleting: boolea
       socketService.off(CHAT_MSG_REMOVED, onMsgChanged)
       socketService.off(CHAT_TYPING, onTypingEvent)
       socketService.off(CHAT_PRESENCE_CHANGED, onPresenceChanged)
+      socketService.off(CAT_REMOVED, onCatRemoved)
       socketService.off('connect', onConnect)
       socketService.off('disconnect', onDisconnect)
       clearTyperTimeouts(roomTracker)

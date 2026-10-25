@@ -6,8 +6,7 @@ The roadmap gives the shape of the project, not a literal script.
 This file covers **what** gets built, **in what order**, and how far along it is.
 Stack, dependencies and the **why** behind decisions live in `architecture.md`.
 
-**Current:** Parts 1–5, the App header and Part 6 item 1 (the cat chat) are done. Part 6
-item 2 is next.
+**Current:** Parts 1–6 and the App header are done. Part 7 (deployment) is next.
 
 ## Part 1: DB + backend + frontend skeleton (CRUD over cats)
 
@@ -174,8 +173,9 @@ shows buttons that fail with 403. After 3, the UI matches the backend. 4 proves 
      - Dev proxy first: Socket.io connects on `/socket.io/`, not `/api`. So add a
        `'/socket.io'` entry with `ws: true` to the Vite proxy. `ws: true` on the `/api`
        entry wouldn't catch it.
-- [ ] 2. On cat delete, notify the cat's chat room and empty it. Everyone viewing that cat's
-   details goes to `/cat` with a user msg, and later sends can't insert orphan msgs.
+- [x] 2. On cat delete, notify the cat's chat room and empty it. Everyone viewing that cat's
+   details goes to `/cat` with a user msg, and later sends can't insert orphan msgs. Design:
+   `.docs/designs/chat.md` → "When a cat is deleted".
 
 No image upload.
 

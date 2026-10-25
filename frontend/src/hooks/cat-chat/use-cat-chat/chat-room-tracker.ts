@@ -19,7 +19,7 @@ export interface ChatRoomTracker {
   // False once the join effect cleans up. Every async result checks it before touching the state
   isActive: boolean
   setChat: Dispatch<SetStateAction<CatChatState>>
-  // A join found the cat deleted. The hook owns navigate, so it decides where to go
+  // A join or a cat:removed event found the cat deleted. The hook owns navigate, so it decides where to go
   onCatGone: () => void
   joinPromise: Promise<unknown>
   // Set on the first open (and again by a retry). Resolves to the page, or null when the join or
