@@ -165,8 +165,10 @@ money on the free plan.
    "Only select repositories" → add the repo. Render then sees only that repo.
 4. Push `render.yaml` and the CI workflow to `main`.
 5. Render → New → **Blueprint** → pick the repo → fill in the `sync: false` values → Apply.
-   The first deploy runs.
-6. Check the first build log.
+   The first deploy runs. The Blueprint name is only a dashboard label: the service name comes
+   from `render.yaml`.
+6. Check the first build log, then `GET /api/health` on the live URL
+   (https://cat-store-i404.onrender.com).
 7. Seed once, before real users (below).
 
 After that: push to `main` → CI green → deploy. `render.yaml` edits sync on push and win over
@@ -178,10 +180,18 @@ Once, locally, from `backend/`: `node --env-file=.env.prod scripts/seed.ts`.
   only added). Check the DB name first.
 - **One shared `SEED_USERS_PASSWORD` for every seed user, `admin` included.** Insecure, accepted for
   a practice project. No credentials in the README: they're handed out by hand.
+- **`JWT_SECRET` in `.env.prod` is a placeholder.** The seed loads `backend/config/index.ts`, whose
+  `requireEnv` needs the key to exist, but it never signs a token. Keeping the real secret only on
+  Render means a leaked `.env.prod` can't forge logins.
 
 ## Rollback
-In the Render dashboard, roll back to an earlier deploy from the service's deploy history. It
-doesn't touch `main`, so revert the bad commit there too, or the next push deploys it again.
+Render → the service → **Events** → **Rollback** on an earlier successful deploy
+(https://render.com/docs/rollbacks).
+- **It reuses that deploy's build, with no rebuild,** so it's fast. Render keeps only a few recent
+  builds, so old deploys may not be available to roll back to.
+- **A dashboard rollback turns auto-deploy off.** So does Manual Deploy → "Deploy a specific
+  commit". Fix the bad commit on `main` (a revert or a fix), then turn auto-deploy back on in the
+  service's Settings. Until then, pushes don't deploy, even with green CI.
 
 ## Later
 - **Rate-limiting login** (`express-rate-limit`). Behind Render's proxy it needs
