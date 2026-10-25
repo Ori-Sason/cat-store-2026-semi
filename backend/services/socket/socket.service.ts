@@ -10,9 +10,16 @@ import { errorService } from '../error.service.ts'
 
 const _CAT_ROOM_PREFIX = 'cat:'
 
-// The one io instance, so REST controllers can emit too (e.g. a site-wide "cat removed").
+// The one io instance, so REST controllers can emit too (e.g. the cat-removed event).
 // null until setup runs: Supertest uses the app with no http server, so no io
 let io: AppServer | null = null
+
+// Rooms being emptied by emitAndEmptyCatRoom. The presence listener skips them: socketsLeave
+// removes one socket at a time and each leave fires leave-room, so N viewers would get
+// N(N-1)/2 presence snapshots, all after the event that's already sending them away.
+// Per process, like the in-memory adapter's rooms. A multi-node adapter (Redis) would need a
+// shared flag instead (e.g. a key with a TTL)
+const _closingRooms = new Set<string>()
 
 // Set by socketSetupService: setup sets it, close clears it. Don't call it anywhere else: a
 // swapped or cleared io would cut every socket feature off from the live server.
@@ -64,6 +71,26 @@ function getDistinctLiveUsers(sockets: AppSocket[]): UserRef[] {
     userById.set(_id, { _id, fullname, isAdmin })
   }
   return [...userById.values()]
+}
+
+// For REST controllers: tells the cat's room an event, then empties it, so later sends fail
+// requireRoomMember. A no-op until setup runs, so Supertest files need no socket.
+// catId must be lowercased (see getCatRoomName)
+function emitAndEmptyCatRoom(catId: string, event: string, data: unknown): void {
+  if (!io) return
+  const room = getCatRoomName(catId)
+  io.to(room).emit(event, data) // before socketsLeave, or the room is already empty
+  _closingRooms.add(room)
+  try {
+    io.in(room).socketsLeave(room) // sync on the in-memory adapter: the mark covers every leave
+  } finally {
+    _closingRooms.delete(room)
+  }
+}
+
+// True while emitAndEmptyCatRoom is emptying the room
+function isRoomClosing(room: string): boolean {
+  return _closingRooms.has(room)
 }
 
 // Binds one event on one socket to its chain, like an Express route with its middlewares:
@@ -136,4 +163,6 @@ export const socketService = {
   getCatIdFromRoomName,
   getLiveTokenUser,
   getDistinctLiveUsers,
+  emitAndEmptyCatRoom,
+  isRoomClosing,
 }

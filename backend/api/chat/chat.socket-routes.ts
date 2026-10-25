@@ -83,12 +83,14 @@ export function registerChatRoomEvents(io: AppServer): void {
 }
 
 // The adapter's join-room / leave-room listener, attached by registerChatRoomEvents. Skips rooms
-// that aren't cat rooms.
+// that aren't cat rooms, and a room emitAndEmptyCatRoom is emptying: its viewers already got the
+// event that sends them away.
 // Takes the io captured at setup, not getIo(): close() clears the holder before io.close(), and
 // every socket's leave-room fires during that close.
 // It runs synchronously inside socket.join / socket.leave / the disconnect cleanup, so a throw
 // would break that join or disconnect. Caught and logged instead
 function _emitPresenceOnCatRoomChange(io: AppServer, room: string): void {
+  if (socketService.isRoomClosing(room)) return
   const catId = socketService.getCatIdFromRoomName(room)
   if (!catId) return
   try {

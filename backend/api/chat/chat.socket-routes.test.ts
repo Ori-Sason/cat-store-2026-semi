@@ -127,8 +127,10 @@ async function _addMsg(
   return msg
 }
 
-// A round trip on the client's own connection. The server writes a broadcast to a socket before
-// any later ack on it, so after this, every broadcast already sent to the client has arrived
+// Waits until every event the server already sent this client has arrived. Broadcasts have no
+// ack, so a test can't await them directly. One connection keeps its frames in order, so the
+// ack of this join comes after any broadcast sent before it. A repeat join is a no-op: it acks
+// {} and announces no presence. Use it before checking that an event did NOT arrive
 async function _flush(client: ClientSocket): Promise<void> {
   await client.emitWithAck(CHAT_JOIN, { catId })
 }
@@ -853,6 +855,67 @@ describe('chat:presence-changed', () => {
     await maya.client.emitWithAck(CHAT_JOIN, { catId })
 
     expect(maya.presences).toHaveLength(1)
+  })
+
+  describe('emitAndEmptyCatRoom', () => {
+    const TEST_EVENT = 'test:event'
+
+    // A round trip that doesn't rejoin: _flush's join of catId would put the client back in the
+    // emptied room. An unknown cat acks CAT_NOT_FOUND and joins nothing
+    async function _flushOutside(client: ClientSocket): Promise<void> {
+      await client.emitWithAck(CHAT_JOIN, { catId: new ObjectId().toHexString() })
+    }
+
+    // Every client gets the event before it's taken out of the room. Each presence snapshot it
+    // gets is logged in the same list, so the order shows
+    function _collectEventAndPresence(client: ClientSocket): string[] {
+      const events: string[] = []
+      client.on(TEST_EVENT, () => events.push(TEST_EVENT))
+      client.on(CHAT_PRESENCE_CHANGED, () => events.push(CHAT_PRESENCE_CHANGED))
+      return events
+    }
+
+    it('sends the room the event, then empties it with no presence snapshots', async () => {
+      const guest = await server.connectClient()
+      await guest.emitWithAck(CHAT_JOIN, { catId })
+      const clients = [await _joinedClient(MAYA), await _joinedClient(NOAM), guest]
+      // The joins' own snapshots must land before the logs start. A repeat join announces nothing
+      for (const client of clients) await _flush(client)
+      const eventLogs = clients.map(_collectEventAndPresence)
+
+      socketService.emitAndEmptyCatRoom(catId, TEST_EVENT, {})
+      for (const client of clients) await _flushOutside(client)
+
+      for (const eventLog of eventLogs) expect(eventLog).toEqual([TEST_EVENT])
+      expect(await _socketIdsIn(catRoom)).toEqual([])
+    })
+
+    it('sends presence again on a later join to the same cat', async () => {
+      await _joinedClient(MAYA)
+      socketService.emitAndEmptyCatRoom(catId, TEST_EVENT, {})
+      const noam = await _presenceClient(NOAM)
+
+      await noam.client.emitWithAck(CHAT_JOIN, { catId })
+
+      expect(noam.presences).toEqual([{ catId, count: 1, users: [_userRef(NOAM)] }])
+    })
+
+    it("leaves another cat's room alone", async () => {
+      const otherCat = _buildCat()
+      const otherCatId = otherCat._id.toHexString()
+      const cats = await mongoService.getCollection<CatDoc>(CAT_COLLECTION)
+      await cats.insertOne(otherCat)
+      const other = await server.connectClient(_loginCookie(NOAM))
+      await other.emitWithAck(CHAT_JOIN, { catId: otherCatId })
+      const events = _collectEventAndPresence(other)
+
+      socketService.emitAndEmptyCatRoom(catId, TEST_EVENT, {})
+      await _flushOutside(other)
+
+      expect(events).toEqual([])
+      const otherRoom = socketService.getCatRoomName(otherCatId)
+      expect(await _socketIdsIn(otherRoom)).toEqual([other.id])
+    })
   })
 
   // The listener runs inside socket.join, so a throw there must not reach the join

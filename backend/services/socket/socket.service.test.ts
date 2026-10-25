@@ -12,6 +12,15 @@ const LOGGED_IN_USER: LoggedInUser = {
   isAdmin: false,
 }
 
+describe('socketService.emitAndEmptyCatRoom', () => {
+  // REST controllers call it, and Supertest runs them with no io
+  it('does nothing before setup, instead of throwing', () => {
+    expect(() =>
+      socketService.emitAndEmptyCatRoom('652f1c2e9b1e8a3d4c5b6a79', 'anything', {}),
+    ).not.toThrow()
+  })
+})
+
 describe('socketService.on', () => {
   const EVENT = 'test:event'
 
