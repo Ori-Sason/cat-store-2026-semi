@@ -6,7 +6,7 @@ The roadmap gives the shape of the project, not a literal script.
 This file covers **what** gets built, **in what order**, and how far along it is.
 Stack, dependencies and the **why** behind decisions live in `architecture.md`.
 
-**Current:** Parts 1–6 and the App header are done. Part 7 (deployment) is next.
+**Current:** Parts 1–6 and the App header are done. Part 7 (deployment) is in progress: the config is in, the first deploy is next.
 
 ## Part 1: DB + backend + frontend skeleton (CRUD over cats)
 
@@ -181,25 +181,20 @@ No image upload.
 
 ## Part 7: Deployment
 
-- [ ] 1. Deploy to Render, with MongoDB Atlas as the prod DB. Express serves the built FE from `backend/public`.
-   **Open:** the Render build/start steps aren't configured yet.
+Design, setup steps and whys: `.docs/designs/deployment.md`.
 
-### Prod checklist
-
-Before the first real deploy. This turns into a `deploy` skill once Part 7 starts.
-
-- `JWT_SECRET` set on the host, different from the local one (`openssl rand -base64 32`). Without it the server refuses to start.
-- Mongo connection env vars point at the prod DB (e.g. Atlas).
-- `NODE_ENV=production`, so the auth cookie gets `secure` and 500 errors don't leak internals.
-- Node version pinned (root `engines` or `.nvmrc`), since running `.ts` directly needs a recent Node.
-- Consider rate-limiting login (`express-rate-limit`).
-- Consider a logger that reads `requestId` / `tokenUser` from the per-request context.
+- [ ] 1. Deploy to Render from a `render.yaml` Blueprint, with MongoDB Atlas as the prod DB.
+   Render builds the FE into `backend/public` and Express serves it. `GET /api/health` pings
+   Mongo for Render's health check.
+- [ ] 2. CI: GitHub Actions runs lint, typecheck, unit tests and E2E on every push to `main`.
+   Render deploys only commits whose checks pass (`autoDeployTrigger: checksPass`).
 
 ## Extras (optional)
 
 - [ ] Pagination on the cat list.
-- [ ] CI: GitHub Actions runs lint, typecheck and tests on every push and PR, with a `mongo`
-   service container for the backend tests. Most useful before the Part 7 deploy.
+- [ ] Rate-limit login (`express-rate-limit`). Behind Render's proxy it needs
+   `app.set('trust proxy', 1)`, or every request shares one IP.
+- [ ] A request logger that reads `requestId` / `tokenUser` from the per-request context.
 - [ ] User management: an admin can ban a user, and a user can delete their own account.
    Needs the delete / ban policy decided first (see Open questions).
 
@@ -207,7 +202,6 @@ Before the first real deploy. This turns into a `deploy` skill once Part 7 start
 
 Single home for open questions. Once one is decided, record the answer in `architecture.md` → Decisions if it's cross-cutting, otherwise in a code comment next to the code, and remove it here.
 
-- Deploy: Render build/start steps.
 - User delete / ban policy (Extras → User management): what happens to the user's cats and
   reviews: keep them, remove them, or split by event (a self-delete vs a ban). Until then, the
   read side hides both: a review whose author is gone and a cat whose owner is gone (inner joins,

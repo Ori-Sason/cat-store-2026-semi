@@ -44,13 +44,16 @@ for one file's own logic stay in it, as `_` functions. Each package's rule lists
   Not Next.js.
 - `backend/` — Express 5 + native `mongodb` driver (no Mongoose) + Socket.io. Node runs `.ts`
   directly (type stripping), env via `--env-file`.
-- `db-local/` — docker-compose for the local MongoDB.
+- `db-local/` — docker-compose for the local MongoDB (CI runs the same one).
+- `.github/workflows/` — CI (`ci.yml`). `render.yaml` — the Render Blueprint (prod deploy).
+  Both: `.docs/designs/deployment.md`.
 - `learning-notes/` — the user's study notes. Edit only when asked.
 
 npm workspaces: install from the root, run with `npm run <script> -w <pkg>`
 (shortcuts: `npm run dev:fe`, `npm run dev:be`, `npm run test:e2e`).
 
 Git hooks: lefthook (`lefthook.yml`). Format, lint and typecheck on commit, tests on push.
+CI repeats the checks on push to `main`, and Render deploys only green commits.
 A fresh clone needs `npm run hooks:install` once (`.npmrc` has `ignore-scripts`).
 
 ## Rules — always in context
@@ -86,7 +89,7 @@ Files with `paths:` frontmatter load only when matching files are touched.
 - Canonical domain terms: `.docs/glossary.md`. Add a new shared term there before
   using it broadly.
 - Roadmap: `.docs/roadmap.md`.
-- Feature designs: `.docs/designs/` (e.g. `chat.md`).
+- Feature designs: `.docs/designs/` (e.g. `chat.md`, `deployment.md`).
 - Keep these docs, the roadmap and the affected design doc updated when API routes, auth
   rules, or collection shapes change, or when the plan diverges.
 

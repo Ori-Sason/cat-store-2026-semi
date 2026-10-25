@@ -9,7 +9,8 @@ dev:  browser ──▶ Vite :5173 ──(proxy /api, /socket.io)──▶ Expre
 test: Vitest + Supertest (in memory) ─────────────────────────▶ MongoDB `catsTest`
       Vitest + socket.io-client ──▶ Express + Socket.io :0 ───▶ MongoDB `catsTest`
 e2e:  Playwright ──▶ Vite :5174 ──(proxy /api, /socket.io)──▶ Express :8001 ──▶ MongoDB `catsTest`
-prod: browser ──▶ Express (static FE + /api + socket.io) ──▶ MongoDB (Atlas)
+prod: browser ──▶ Express on Render (static FE + /api + socket.io) ──▶ MongoDB (Atlas)
+ship: push main ──▶ GitHub Actions (lint, typecheck, unit, E2E) ──green──▶ Render build + deploy
 ```
 
 ## Components
@@ -54,9 +55,8 @@ Main libraries only. Exact versions and `@types/*` live in each `package.json`.
 - runtime: Node 24 LTS. `.nvmrc` pins the exact version for nvm, root `engines` the allowed range.
 - tooling: oxlint, oxfmt, lefthook.
 
-External services: MongoDB (local in dev, Atlas in prod), Render (hosting).
-Env: `node --env-file=.env.local`, no dotenv. Prod needs `JWT_SECRET`, Mongo URL,
-`NODE_ENV=production`.
+External services: MongoDB (local in dev, Atlas in prod), Render (hosting), GitHub Actions (CI).
+Env: `node --env-file=.env.local`, no dotenv. In prod, Render sets the env vars (`render.yaml`).
 
 ## Decisions
 - **npm workspaces, and `shared/` has no build step.** Its `exports` points at `.ts` files:
@@ -94,6 +94,11 @@ Env: `node --env-file=.env.local`, no dotenv. Prod needs `JWT_SECRET`, Mongo URL
   per database, each with `readWrite` on its own database only.
   Why: least privilege. And since tests wipe their database, a test config pointing at `cats`
   by mistake fails on auth instead of deleting dev data.
+- **Deploy: a Render Blueprint, gated by CI.** `render.yaml` defines one free web service that
+  builds the FE into `backend/public` on every deploy, and deploys only commits whose GitHub
+  Actions checks pass. One instance, since socket.io state lives in process memory.
+  Why: prod stays on the last green commit without a PR flow, and no build output is committed.
+  Design and whys: `.docs/designs/deployment.md`.
 - **E2E runs through the Playwright CLI, headless. No browser-driving MCP.**
   Why: the CLI only reports pass/fail, while driving a browser step by step through an MCP
   costs many tokens per run.
@@ -115,3 +120,4 @@ Env: `node --env-file=.env.local`, no dotenv. Prod needs `JWT_SECRET`, Mongo URL
 - 2026-10-12 — Compacted to cross-cutting decisions (a major doc edit, so it gets a log line). Module-level decisions moved to code comments, test how-to to the `writing-tests` skill.
 - 2026-10-15 — Socket.io on the Express http server, and the `chatMsgs` collection (the cat chat backend).
 - 2026-10-20 — The cat chat frontend: an app-wide socket connected on app load, the `chat:presence-changed` push, and the design doc in `.docs/designs/chat.md`.
+- 2026-10-25 — Prod topology: Render (Blueprint) with Atlas, CI on GitHub Actions gating the deploy, `GET /api/health`.
