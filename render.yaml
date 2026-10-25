@@ -1,0 +1,53 @@
+# Render Blueprint: one web service, where Express serves both the API and the built SPA.
+# Create it with Render → New → Blueprint. Edits here sync on push to main and win over the
+# dashboard for the fields they set. Spec: https://render.com/docs/blueprint-spec
+services:
+  - type: web
+    name: cat-store
+    runtime: node
+    # Free: sleeps after 15 min without inbound traffic, cold start ~1 min.
+    # One instance only: socket.io presence and rooms live in process memory, so a second
+    # instance would need a Redis adapter
+    plan: free
+    # Fixed at creation. Closest Render region to the Atlas cluster (eu-west-1, Ireland)
+    region: frankfurt
+    branch: main
+    # No rootDir: npm workspaces build from the repo root.
+    # --include=dev: NODE_ENV=production below applies to the build too, and without the flag
+    # npm ci skips vite / tsc / sass. The FE builds into backend/public (frontend/vite.config.ts),
+    # then prune keeps only runtime deps. Type stripping needs no typescript at runtime
+    buildCommand: npm ci --include=dev && npm run build -w frontend && npm prune --omit=dev
+    startCommand: npm start -w backend
+    # Deploy only after GitHub's checks on the commit pass (.github/workflows/ci.yml). A red run
+    # keeps prod on the last green commit. A commit with no checks at all doesn't deploy either
+    autoDeployTrigger: checksPass
+    # A commit that touches only these paths doesn't deploy: tooling, docs and notes, not the
+    # app. An ignore list, not an allow list, so a new app folder deploys by default.
+    # .nvmrc and .npmrc stay out of it: they change the build (Node version, npm ci behavior)
+    buildFilter:
+      ignoredPaths:
+        - .build-logs/**
+        - .claude/**
+        - .docs/**
+        - .github/**
+        - .gitignore
+        - .oxfmtrc.json
+        - .oxlintrc.json
+        - learning-notes/**
+    # Traffic switches to a new deploy only once this answers 2xx (it pings Mongo)
+    healthCheckPath: /api/health
+    # Node version: from .nvmrc
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # Generated once, when the Blueprint creates the service. Survives deploys, restarts and
+      # sleep. Changing it in the dashboard logs every user out (that's also how to rotate it)
+      - key: JWT_SECRET
+        generateValue: true
+      # sync: false → Render asks for the value on the first Blueprint apply only. A sync: false
+      # key added later isn't asked for: set it in the dashboard by hand. A missing one makes
+      # requireEnv (backend/config/index.ts) throw at boot, so the deploy fails
+      - key: MONGODB_URI
+        sync: false
+      - key: MONGODB_DATABASE
+        sync: false
