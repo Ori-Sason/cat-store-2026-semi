@@ -6,7 +6,7 @@ import {
   CHAT_MSG_UPDATED,
   CHAT_PRESENCE_CHANGED,
   CHAT_TYPING,
-  type CatRemovedEvent,
+  type CatRemoved,
   type ChatMsgWithRefs,
   type ChatPresence,
   type ChatRoomInput,
@@ -90,7 +90,7 @@ export function useCatChat(catId: string, isOpen: boolean, isCatDeleting: boolea
     }
     // The cat was deleted while this viewer was in its room. The same exit as a join's
     // CAT_NOT_FOUND, so the viewer's own delete skips it the same way
-    const onCatRemoved = ({ catId: removedCatId }: CatRemovedEvent) => {
+    const onCatRemoved = ({ catId: removedCatId }: CatRemoved) => {
       if (removedCatId !== roomTracker.catId) return
       roomTracker.onCatGone()
     }

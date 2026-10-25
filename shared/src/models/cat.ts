@@ -117,6 +117,6 @@ export const DEFAULT_CAT_FILTER: CatFilter = {
 // outgoing socket event carries it so the app-wide socket's listeners can drop other cats'
 // events (.docs/designs/chat.md → Socket protocol)
 export const CAT_REMOVED = 'cat:removed'
-export interface CatRemovedEvent {
+export interface CatRemoved {
   catId: string
 }

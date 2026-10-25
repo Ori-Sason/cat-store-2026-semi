@@ -3,7 +3,7 @@ import { ObjectId } from 'mongodb'
 import type { Socket as ClientSocket } from 'socket.io-client'
 import request from 'supertest'
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
-import { CAT_REMOVED, CHAT_JOIN, CHAT_MSG_ADD, type CatRemovedEvent } from '@cat-store/shared'
+import { CAT_REMOVED, CHAT_JOIN, CHAT_MSG_ADD, type CatRemoved } from '@cat-store/shared'
 import { app } from '../../app.ts'
 import { CAT_COLLECTION, type CatDoc } from '../../models/cat.ts'
 import { CHAT_MSG_COLLECTION, type ChatMsgDoc } from '../../models/chat.ts'
@@ -90,8 +90,8 @@ afterEach(() => {
 async function _viewer(user?: UserDoc) {
   const client = await server.connectClient(user && _loginCookie(user))
   await client.emitWithAck(CHAT_JOIN, { catId })
-  const removedEvents: CatRemovedEvent[] = []
-  client.on(CAT_REMOVED, (event: CatRemovedEvent) => removedEvents.push(event))
+  const removedEvents: CatRemoved[] = []
+  client.on(CAT_REMOVED, (event: CatRemoved) => removedEvents.push(event))
   return { client, removedEvents }
 }
 

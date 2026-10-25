@@ -1,10 +1,5 @@
 import type { Request, Response } from 'express'
-import {
-  CAT_REMOVED,
-  catFilterService,
-  type CatInput,
-  type CatRemovedEvent,
-} from '@cat-store/shared'
+import { CAT_REMOVED, catFilterService, type CatInput, type CatRemoved } from '@cat-store/shared'
 import { alsService } from '../../services/als.service.ts'
 import { socketService } from '../../services/socket/socket.service.ts'
 import { catService } from './cat.service.ts'
@@ -47,6 +42,6 @@ export async function removeCat(req: Request<{ id: string }>, res: Response) {
   // proved it's a valid ObjectId.
   // The controller makes the socket call, not catService, so the service stays transport-agnostic
   const catId = req.params.id.toLowerCase()
-  socketService.emitAndEmptyCatRoom(catId, CAT_REMOVED, { catId } satisfies CatRemovedEvent)
+  socketService.emitAndEmptyCatRoom(catId, CAT_REMOVED, { catId } satisfies CatRemoved)
   res.sendStatus(204) // 204 No Content
 }

@@ -65,7 +65,8 @@ Socket events:
   to carry the ids (`ChatMsgUpdateInput` carries `catId` and `msgId`).
 - A server → client payload is named for what it reports, with no suffix and no schema, since
   the client never sends it: `ChatTyping` (`ChatTypingInput` plus the typer's `user`),
-  `ChatPresence` (`{ catId, count, users }`, `users: null` for a guest socket).
+  `ChatPresence` (`{ catId, count, users }`, `users: null` for a guest socket), `CatRemoved`
+  (`{ catId }`).
 
 Avoid for all of them: `*Dto`, `New*`, `*Payload`, `*ToSave`, `Populated*`, `*Summary`, and
 page names (`CatDetails`, `Profile`, `ReviewDetails`) as type names. Also avoid:
