@@ -168,13 +168,15 @@ describe('DELETE /api/cats/:id → cat:removed', () => {
   // remove. The owner check is fed the cat here, while the DB no longer has it
   it('sends nothing when the remove finds the cat already gone (404)', async () => {
     const viewer = await _viewer(VIEWER)
-    vi.spyOn(catService, 'getById').mockResolvedValueOnce(cat)
+    const getById = vi.spyOn(catService, 'getById').mockResolvedValueOnce(cat)
     const cats = await mongoService.getCollection<CatDoc>(CAT_COLLECTION)
     await cats.deleteOne({ _id: cat._id })
 
     const res = await _deleteCat(catId, CAT_OWNER)
     await _flush(viewer.client)
 
+    // Else the owner check's own 404 (same code) would pass this test without reaching remove
+    expect(getById).toHaveBeenCalled()
     expect(res.status).toBe(404)
     expect(res.body).toMatchObject({ code: 'CAT_NOT_FOUND' })
     expect(viewer.removedEvents).toEqual([])

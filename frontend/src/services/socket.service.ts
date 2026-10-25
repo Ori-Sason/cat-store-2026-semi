@@ -6,8 +6,8 @@ import { errorService } from './error.service'
 // The server's DB write is awaited before the ack (~ms), so 5s means the connection is the problem
 const ACK_TIMEOUT_MS = 5_000
 
-// One socket for the whole app: the cat chat joins rooms on it, and site-wide notifications
-// (roadmap Part 6 item 2) need it on every page.
+// One socket for the whole app: the cat chat joins rooms on it, and one connection serves every
+// cat page, with no handshake per page.
 // No URL: it connects to the page's own origin, and Vite proxies /socket.io to Express in dev
 // (vite.config.ts). The handshake carries the loginToken cookie on its own, since it's same-origin.
 // autoConnect is off so importing this module (e.g. in a test) never opens a connection
