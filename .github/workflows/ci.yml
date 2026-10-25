@@ -6,6 +6,17 @@ name: CI
 on:
   push:
     branches: [main]
+    # A commit that touches only these paths skips CI. Keep this a subset of render.yaml →
+    # buildFilter.ignoredPaths: a commit with no checks never deploys (checksPass), so a path
+    # ignored here but not there would silently block a deploy.
+    # Not ignored here, though Render ignores them: .github/** (a workflow change must run the
+    # workflow) and the oxlint / oxfmt configs (CI runs those tools)
+    paths-ignore:
+      - .build-logs/**
+      - .claude/**
+      - .docs/**
+      - .gitignore
+      - learning-notes/**
 
 # A newer push to main makes an older run pointless: only the newest commit can deploy
 concurrency:

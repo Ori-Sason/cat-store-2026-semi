@@ -122,7 +122,10 @@ auto-deploy off**: fix `main`, then turn auto-deploy back on in Settings.
   service fits (a month is ~744 h).
 - Health checks: answer within 5 s. 15 s of failures → no traffic, 60 s → restart. A deploy whose
   checks never pass within 15 min is cancelled, and the old instance keeps serving.
-- A commit with zero CI checks doesn't deploy under `checksPass` (e.g. `[skip ci]`).
+- A commit with zero CI checks doesn't deploy under `checksPass` (e.g. `[skip ci]`). So CI's
+  `on.push.paths-ignore` must be a subset of Render's `buildFilter.ignoredPaths`, minus
+  `.github/**` (a workflow change must run the workflow). Neither file can import the list:
+  cross-reference them in comments.
 - One instance only, unless socket state moves to a shared adapter (e.g. Redis).
 
 ## Later, for a real project

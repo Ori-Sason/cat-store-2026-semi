@@ -23,7 +23,9 @@ services:
     autoDeployTrigger: checksPass
     # A commit that touches only these paths doesn't deploy: tooling, docs and notes, not the
     # app. An ignore list, not an allow list, so a new app folder deploys by default.
-    # .nvmrc and .npmrc stay out of it: they change the build (Node version, npm ci behavior)
+    # .nvmrc and .npmrc stay out of it: they change the build (Node version, npm ci behavior).
+    # .github/workflows/ci.yml → paths-ignore must stay a subset of this list
+    # (the reason is next to it)
     buildFilter:
       ignoredPaths:
         - .build-logs/**

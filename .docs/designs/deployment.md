@@ -29,6 +29,10 @@ Render:  autoDeployTrigger: checksPass
   The pre-push hook guards the remote, CI guards prod.
 - **A commit with no checks doesn't deploy either.** That includes a `[skip ci]` commit.  
   A commit that only touches tooling, docs or notes is skipped on purpose (`buildFilter.ignoredPaths`).
+- **CI skips docs-only commits too** (`paths-ignore` in `ci.yml`). Its list must stay a subset of
+  Render's: a path CI skips but Render doesn't would leave that commit with no checks, so it would
+  never deploy. CI still runs for `.github/**` (a workflow change must run the workflow) and the
+  oxlint / oxfmt configs (CI runs those tools).
 
 ## Render
 One web service from a Blueprint (`render.yaml`): `plan: free`, `region: frankfurt`, one instance.
