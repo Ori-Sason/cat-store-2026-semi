@@ -19,6 +19,8 @@ const ERROR_MSG_MAP: Record<ClientErrorCode, string> = {
   FORBIDDEN: "You don't have permission to do that.",
 
   INTERNAL: GENERIC_MSG,
+  // Only GET /api/health returns it, and the FE never calls that. The map must cover every code
+  SERVICE_UNAVAILABLE: GENERIC_MSG,
   NETWORK_ERROR: "Can't reach the server. Check your connection.",
   UNKNOWN: GENERIC_MSG,
 }

@@ -16,6 +16,7 @@ export const ERROR_CODES = [
   'FORBIDDEN',
 
   'INTERNAL',
+  'SERVICE_UNAVAILABLE', // GET /api/health when Mongo doesn't answer
 ] as const
 
 export type ErrorCode = (typeof ERROR_CODES)[number]

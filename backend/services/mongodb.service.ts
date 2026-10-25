@@ -77,6 +77,12 @@ async function _ensureIndexes(db: Db) {
   )
 }
 
+// The health check's "can the app serve data" probe: a round trip to the server, no collection
+async function ping() {
+  const db = await connect()
+  await db.command({ ping: 1 })
+}
+
 async function close() {
   if (!client) return
   const oldClient = client
@@ -89,4 +95,5 @@ export const mongoService = {
   connect,
   close,
   getCollection,
+  ping,
 }
