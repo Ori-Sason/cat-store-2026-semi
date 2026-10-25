@@ -1,6 +1,6 @@
 # Chat design
 
-The live chat on `cat-details`: one room per cat. Roadmap Part 6 item 1.
+The live chat on `cat-details`: one room per cat. Roadmap Part 6.
 
 This doc covers the flow and the decisions behind it. Each "Not chosen" list exists so a later
 session doesn't propose a rejected option again. Payload details live in
@@ -22,6 +22,8 @@ session doesn't propose a rejected option again. Payload details live in
     place. Both reasons are the same: later replies to it still make sense.
 - **User chips:** Owner and Admin next to the name, as on reviews. There's no You chip: a row
   style marks your own messages (see "UI").
+- **Cat deleted:** everyone on its page goes to the cat list with a user msg (see "When a cat is
+  deleted").
 
 ## The big picture
 ```
@@ -179,6 +181,7 @@ Commands (client → server) are present tense. Facts (server → clients) are p
 | `chat:msg-remove` | `{ catId, msgId }` | `{ msg }` (the tombstone) or `{ error }` | `chat:msg-removed { msg }` |
 | `chat:typing` | `{ catId, isTyping }` | none | `chat:typing { catId, user, isTyping }`, sender excluded |
 | (a join, a leave, a disconnect) | | | `chat:presence-changed { catId, count, users }`, per socket |
+| (a REST cat delete) | | | `cat:removed { catId }`, then the room is emptied |
 
 - **Broadcasts go to the whole room, the sender included** (`io.to(room)`, not `socket.to(room)`).
   The reason: Socket.io drops a late ack, but not a late event.
@@ -194,6 +197,7 @@ Commands (client → server) are present tense. Facts (server → clients) are p
   exception: it excludes the sending socket (ack is not needed).
 - **Every outgoing event carries `catId`.** The FE socket is app-wide, so the hook drops events
   for a cat it's not showing (e.g. a late event from the room it just left).
+- **`cat:removed` lives in `shared/src/models/cat.ts`**, not with the chat events: it's a cat fact.
 - **`{ error }` is the HTTP error body** (`ApiErrorBody`, the same `ERROR_CODES`, plus the
   `requestId`). `CHAT_MSG_NOT_FOUND` is the only new code.
 - **`user` on the wire is always a `UserRef`.** The handshake user is a full `LoggedInUser`,
@@ -222,7 +226,7 @@ Commands (client → server) are present tense. Facts (server → clients) are p
 
 - **A failed check rejects the event. The server never disconnects the socket.** When the server
   disconnects a socket, the client doesn't reconnect by itself. The user would be left with a dead
-  socket, and Part 6 item 2's notifications ride on it too.
+  socket, and the `cat:removed` event rides on it too.
 - Expiry is caught on the next write, not the moment the token expires. A timer per socket isn't
   worth it for a chat.
 
@@ -354,9 +358,9 @@ first open → await the join ack → GET the last 50 → merge with the events 
 close / reopen → only the panel toggles: the room stays joined, the state stays in the hook
 unmount → typing false → chat:leave
 ```
-- **The socket connects on app load**, not on the cat page: Part 6 item 2's notifications need it
-  everywhere. It connects after the `/me` check, so the handshake carries the cookie `/me` just
-  read.
+- **The socket connects on app load**, not on the cat page: one connection serves every cat page,
+  with no handshake per page. It connects after the `/me` check, so the handshake carries the
+  cookie `/me` just read.
 - **Join on page load, fetch on open.** A visitor who never opens the chat pays only the join, and
   a closed chat still feeds the unread badge.
 - **Join before fetching.** A message sent between the join and the fetch arrives as a live event,
@@ -486,6 +490,13 @@ for each socket in the room:  chat:presence-changed { catId, count, users }
   delta would leave the count wrong for good.
 - **A loop over the room's sockets, not one `io.to(room).emit`**, so guests never get the names.
 - **An expired token counts as a guest**, the same check as `requireTokenUser`.
+- **A room being emptied announces nothing.** `socketsLeave` removes one socket at a time, and
+  each leave fires `leave-room`, which sends a snapshot to every socket still in the room.
+  - With N viewers, the 1st leave sends N-1 snapshots, the 2nd N-2, … the last 0. That sums to
+    N(N-1)/2 (4 viewers: 3 + 2 + 1 + 0 = 6).
+  - All of them come after the `cat:removed` that already sends those viewers away.
+  - So `emitAndEmptyCatRoom` marks the room while it empties it (sync on the in-memory adapter),
+    and the listener skips a marked room.
 
 ### UI
 - **The count sits on the header's subtitle:** "About Mitzi · 2 here now", or "Just you here".
@@ -499,6 +510,10 @@ for each socket in the room:  chat:presence-changed { catId, count, users }
   `disconnecting` needs the leaver filtered out by hand.
 - *A pull on click* (`chat:presence` with an ack). The count needs live updates anyway, so the push
   already carries the list.
+- *Letting a cat delete spam the room with presence*, instead of the closing mark ("A room being
+  emptied announces nothing" above). 100 viewers would get 4,950 useless snapshots, all sent
+  synchronously inside the DELETE handler. The rate limit in "Not built" wouldn't stop it either:
+  it limits what clients send, and this spam starts on the server.
 
 ## Backend setup
 - **Socket.io attaches to the existing http server** through a setup function `server.ts` calls,
@@ -516,8 +531,9 @@ for each socket in the room:  chat:presence-changed { catId, count, users }
 - **`connectionStateRecovery` stays off.** By default it restores the old `socket.data` user for up
   to 2 minutes without re-running the handshake auth. Its sessions also live in process memory, so
   a deploy drops them anyway. Rejoin + gap fill already cover it.
-- **`socketService` holds `io`, so REST controllers can emit** (Part 6 item 2). Its emit is a no-op
-  until `io` is set, so the Supertest files need no socket.
+- **`socketService` holds `io`, so REST controllers can emit**: `emitAndEmptyCatRoom` sends
+  `cat:removed` (see "When a cat is deleted"). It's a no-op until `io` is set, so the Supertest
+  files need no socket.
 - **Join is async and leave isn't**, so a fast leave could run while the join is still reading the
   cat, and the join would then land for good. `socket.data.wantedCatIds` fixes it: join adds the
   `catId`, leave removes it, and join calls `socket.join` only if it's still wanted.
@@ -527,25 +543,51 @@ cookie is what matters, and `sameSite: 'strict'` keeps it off a socket opened fr
 That socket is a guest, and a guest can only read a chat that's public anyway.
 
 ## When a cat is deleted
-**Built:** `catService.remove` deletes the cat's `chatMsgs`. A client that rejoins a deleted cat
-gets `CAT_NOT_FOUND`, and the FE goes to `/cat` with a user msg.
-- **Except on the viewer's own delete.** A join in flight during the delete also gets
-  `CAT_NOT_FOUND`, so the chat would replace "Cat deleted" with "This cat was deleted". It's a
-  race between the REST `DELETE` and `chat:join`.
+`catService.remove` deletes the cat's `chatMsgs`. Then the cat's room is told and emptied:
+```
+Owner: DELETE /api/cats/:id → requireCatOwner → removeCat
+  catService.remove (cat, reviews, chatMsgs)          a 404 throws here → no event
+  socketService.emitAndEmptyCatRoom(catId, 'cat:removed', { catId })
+    io.to(cat:<id>).emit                              every viewer, guests included
+    io.in(room).socketsLeave(room)                    later sends fail membership → no orphans
+  204
+
+Viewer's tab: cat:removed { catId }
+  another cat's id → drop (a late event from a room just left)
+  else onCatGone → "This cat was deleted" + navigate('/cat', { replace: true })
+```
+- **The room is exactly the audience.** Everyone viewing a cat's details is in its room.
+- **The redirect is the join's.** A rejoin that gets `CAT_NOT_FOUND` calls the same `onCatGone`.
+  So a socket that was offline during the delete still lands on `/cat` when it reconnects.
+- **Except on the viewer's own delete.** The deleter's tab is in the room too, and a join in
+  flight during the delete also gets `CAT_NOT_FOUND`. Either would replace "Cat deleted" with
+  "This cat was deleted".
   Solution: cat-details passes `isCatDeleting` (its delete fetcher isn't idle), and the chat skips
   its redirect meanwhile.
   *Not chosen:* `useNavigation()`. A fetcher submit leaves it `idle`.
+- **The cat controller emits, not `catService`**, so the service stays transport-agnostic. It
+  lowercases the id first: the id comes straight from the URL, and room names compare as strings.
+- **Two races are left, both accepted.** An orphan is never shown: the history route 404s on a
+  missing cat.
+  - *A send in flight.* A send that passed the membership check just before `socketsLeave` can
+    insert an orphan. Reviews accept the same race.
+  - *A join in flight.* A join whose cat read lands before the delete, and whose `socket.join`
+    runs after `socketsLeave`, joins the dead room. It missed the event, so its page stays and
+    its sends save orphans until a reload or a reconnect. It needs a join within the same few ms
+    as the DELETE.
+    *Not chosen:* clearing `wantedCatIds` on the emptied room's sockets (stops the orphans, not the
+    stuck page), plus a cat re-read in a cancelled join (closes it fully). Real code for a window
+    that's practically never hit.
 
-**Planned with Part 6 item 2** (the site-wide notifications):
-```
-REST delete: catService.remove ─▶ io.in(room).socketsLeave(room) ─▶ the site-wide "cat removed" event
-                                                                     ─▶ a page showing that cat goes to /cat
-```
-- Once the room is emptied, every send fails membership (`FORBIDDEN`). `FORBIDDEN` can't tell
-  "deleted" from "never joined", so the event, or the rejoin's `CAT_NOT_FOUND`, is what redirects.
-- **The race that's left:** a send that passed the membership check just before `socketsLeave` can
-  insert an orphan. Reviews accept the same race, and the history route 404s on a missing cat, so
-  an orphan is never shown.
+**Not chosen:**
+- *A site-wide event.* The room already is the audience, so there are no user rooms and no actor
+  filtering. A list viewer isn't told an item was removed (shops like Amazon don't either), and a
+  refetch on every delete would load the backend for nothing.
+- *The client that gets `CAT_NOT_FOUND` tells the room.* Only `chat:join` reads the cat, so a viewer
+  already in the room never gets it. A client-sent "cat deleted" would also let anyone kick a room.
+- *Clients leave on their own* (`cat:removed` → `chat:leave`). Each leave still fires a presence
+  snapshot, so it's the same N(N-1)/2 frames spread over time (see "Presence → Mechanism"). The server would still need its own
+  cleanup for offline or malicious clients.
 
 ## Known limits
 - **An edit or delete of an older message during a socket drop is missed until a reload.** The
@@ -554,9 +596,9 @@ REST delete: catService.remove ─▶ io.in(room).socketsLeave(room) ─▶ the 
   hint, not a full unread count.
 - **Presence:**
   - A token expiring doesn't re-announce, so the count can lag until the room's next change.
-  - Adapter events are per process. With a multi-node adapter (e.g. Redis), each node would see
-    only its own sockets. Fine for one Render instance.
-- **The deleted-cat redirect for someone online** waits for Part 6 item 2 (see above).
+  - Adapter events, and the mark on a room being emptied, are per process. With a multi-node
+    adapter (e.g. Redis), each node would see only its own sockets, and the mark would need a
+    shared flag (e.g. a key with a TTL). Fine for one Render instance.
 
 ## Not built (optional)
 - **A per-socket rate limit.** Nothing stops a user from flooding a room with `chat:msg-add`, or a

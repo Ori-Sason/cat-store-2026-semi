@@ -40,7 +40,7 @@ makes every cat structured and searchable, and gives every owner a public track 
 
 **Live features**
 - Per-cat chat room with a typing indicator and saved history.
-- Site-wide notification when a cat or review is added, edited, or deleted.
+- When a cat is deleted, everyone viewing it is sent to the cat list with a message.
 
 **Insights & About**
 - Dashboard: median price (with range) and % in stock, per label.
