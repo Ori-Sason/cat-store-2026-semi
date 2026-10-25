@@ -1,6 +1,9 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { createBrowserRouter, RouterProvider } from 'react-router'
+import { createBrowserRouter } from 'react-router'
+// The react-router/dom one, not react-router's: only it wires ReactDOM.flushSync, so a
+// navigation or fetcher's flushSync option works (the cat delete in cat-details.tsx uses it)
+import { RouterProvider } from 'react-router/dom'
 import { routes } from './router'
 import { authService } from './services/auth.service'
 import { socketService } from './services/socket.service'

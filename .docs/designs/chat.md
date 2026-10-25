@@ -563,7 +563,9 @@ Viewer's tab: cat:removed { catId }
   flight during the delete also gets `CAT_NOT_FOUND`. Either would replace "Cat deleted" with
   "This cat was deleted".
   Solution: cat-details passes `isCatDeleting` (its delete fetcher isn't idle), and the chat skips
-  its redirect meanwhile.
+  its redirect meanwhile. The submit uses `flushSync`, so the flag is already committed before
+  the request goes out. In a transition, which is react-router's default, `cat:removed` could
+  arrive first.
   *Not chosen:* `useNavigation()`. A fetcher submit leaves it `idle`.
 - **The cat controller emits, not `catService`**, so the service stays transport-agnostic. It
   lowercases the id first: the id comes straight from the URL, and room names compare as strings.

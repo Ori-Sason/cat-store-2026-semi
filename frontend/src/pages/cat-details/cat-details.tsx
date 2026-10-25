@@ -22,7 +22,13 @@ export const CatDetails: React.FC = () => {
 
   function onConfirmDelete() {
     setIsConfirmOpen(false)
-    void fetcher.submit(null, { method: 'delete' })
+    // flushSync: commit the 'submitting' state (isDeleting = true) right now, before the DELETE
+    // request goes out. By default react-router puts it in a startTransition, which React can
+    // commit later. The server sends cat:removed to this cat's chat room before the 204, and
+    // this tab is in that room. If the event wins the race against that commit, the chat still
+    // sees isCatDeleting false and redirects with "This cat was deleted" instead of the action's
+    // "Cat deleted"
+    void fetcher.submit(null, { method: 'delete', flushSync: true })
   }
 
   return (
