@@ -4,6 +4,9 @@ A community marketplace for cats. Owners list cats with a price, labels and a ph
 browse and filter cats, read reviews, and chat live with others looking at the same cat. The
 handover happens off-platform, at one of Cat Store's pickup points.
 
+**Live:** https://cat-store-i404.onrender.com (free hosting: the first visit after 15 idle minutes
+takes about a minute to wake up).
+
 ![Cat Store demo: browse, filter, open a cat, chat live](.docs/assets/demo.gif)
 
 ## Features
