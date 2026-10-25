@@ -66,12 +66,6 @@ function getDistinctLiveUsers(sockets: AppSocket[]): UserRef[] {
   return [...userById.values()]
 }
 
-// Site-wide emit for REST controllers. Does nothing until setup runs, so Supertest files need
-// no change when their controllers start emitting. In prod server.ts always sets io
-function emit(event: string, data: unknown): void {
-  io?.emit(event, data)
-}
-
 // Binds one event on one socket to its chain, like an Express route with its middlewares:
 //   on(socket, CHAT_MSG_ADD, validatePayload(chatMsgSchema), requireSocketUser, controller.addMsg)
 // Each event runs in its own ALS store (setup-als never runs outside Express), so services read
@@ -142,5 +136,4 @@ export const socketService = {
   getCatIdFromRoomName,
   getLiveTokenUser,
   getDistinctLiveUsers,
-  emit,
 }

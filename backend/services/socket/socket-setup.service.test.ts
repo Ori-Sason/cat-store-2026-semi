@@ -26,7 +26,7 @@ describe('socketSetupService.close', () => {
     await server.close()
 
     expect(() => socketService.getIo()).toThrow('No io')
-    expect(() => socketService.emit('anything', {})).not.toThrow()
+    expect(socketService.hasIo()).toBe(false)
   })
 })
 

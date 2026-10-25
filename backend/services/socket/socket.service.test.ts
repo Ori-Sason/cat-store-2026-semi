@@ -12,13 +12,6 @@ const LOGGED_IN_USER: LoggedInUser = {
   isAdmin: false,
 }
 
-describe('socketService.emit', () => {
-  // REST controllers emit through it, and Supertest runs them with no io
-  it('does nothing before setup, instead of throwing', () => {
-    expect(() => socketService.emit('anything', {})).not.toThrow()
-  })
-})
-
 describe('socketService.on', () => {
   const EVENT = 'test:event'
 

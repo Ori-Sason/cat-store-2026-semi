@@ -174,7 +174,8 @@ shows buttons that fail with 403. After 3, the UI matches the backend. 4 proves 
      - Dev proxy first: Socket.io connects on `/socket.io/`, not `/api`. So add a
        `'/socket.io'` entry with `ws: true` to the Vite proxy. `ws: true` on the `/api`
        entry wouldn't catch it.
-- [ ] 2. When any user adds, edits or deletes a cat or a review, notify all connected users.
+- [ ] 2. On cat delete, notify the cat's chat room and empty it. Everyone viewing that cat's
+   details goes to `/cat` with a user msg, and later sends can't insert orphan msgs.
 
 No image upload.
 
