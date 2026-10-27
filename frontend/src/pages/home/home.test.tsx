@@ -130,10 +130,12 @@ describe('Home', () => {
     )
   })
 
-  it('tags the Meet step as Soon, with no link', async () => {
+  // Reviews and chat are live, so the Meet step lost its Soon pill
+  it('shows the Meet step without a Soon tag or a link', async () => {
     await _render()
 
-    const meet = screen.getByRole('heading', { name: 'Meet Soon' }).closest('li')!
+    const meet = screen.getByRole('heading', { name: 'Meet' }).closest('li')!
+    expect(meet.querySelector('.soon')).toBeNull()
     expect(meet.querySelector('a')).toBeNull()
   })
 

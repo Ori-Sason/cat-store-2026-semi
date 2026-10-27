@@ -5,7 +5,7 @@ interface HowItWorksStep {
   title: string
   txt: string
   link?: { to: string; txt: string }
-  isSoon?: boolean // the feature isn't built yet (reviews and chat come in Parts 5–6)
+  isSoon?: boolean // the feature isn't built yet: shows a "Soon" pill next to the title
 }
 
 const _STEPS: HowItWorksStep[] = [
@@ -17,7 +17,6 @@ const _STEPS: HowItWorksStep[] = [
   {
     title: 'Meet',
     txt: 'Read reviews of the cat and chat live with others looking at it.',
-    isSoon: true,
   },
   {
     title: 'Pick up',
